@@ -33,26 +33,23 @@ export async function GET(request: Request) {
       }),
     });
 
-    const data = await response.json();
-
     if (!response.ok) {
-      return NextResponse.json({ error: data.error }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to fetch token" },
+        { status: 500 }
+      );
     }
 
-    const { access_token, expires_in, refresh_token, scope, token_type } = data;
-    const expires_at = new Date().getTime() + expires_in * 1000;
+    const data: {
+      access_token: string;
+      expires_in: number;
+      scope: "https://www.googleapis.com/auth/youtube.readonly";
+      token_type: "Bearer";
+    } = await response.json();
 
-    return NextResponse.json(
-      {
-        access_token,
-        expires_in,
-        refresh_token,
-        scope,
-        token_type,
-        expires_at,
-      },
-      { status: 200 }
-    );
+    const expires_at = new Date().getTime() + data.expires_in * 1000;
+
+    return NextResponse.json({ ...data, expires_at }, { status: 200 });
   } catch (error) {
     if (error instanceof Error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
