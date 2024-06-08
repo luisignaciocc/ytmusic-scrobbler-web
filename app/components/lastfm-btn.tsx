@@ -41,13 +41,16 @@ export default async function Component() {
     );
   }
 
+  // on localhost, we need to add the param cb=http://localhost:3000/api/callback/lastfm to the url
+  const isLocalHost =
+    process.env.VERCEL_ENV !== "production" &&
+    process.env.VERCEL_ENV !== "preview";
+  const url = `https://www.last.fm/api/auth/?api_key=${LAST_FM_API_KEY}${
+    isLocalHost ? "&cb=http://localhost:3000/api/callback/lastfm" : ""
+  }`;
+
   return (
-    <a
-      href={`https://www.last.fm/api/auth/?api_key=${LAST_FM_API_KEY}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block"
-    >
+    <a href={url} target="_blank" rel="noopener noreferrer" className="block">
       Authorize Last.fm
     </a>
   );

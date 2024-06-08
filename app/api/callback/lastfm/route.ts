@@ -15,8 +15,6 @@ export async function GET(request: Request) {
   const session = await getServerSession();
   const { LAST_FM_API_KEY, LAST_FM_API_SECRET } = process.env;
 
-  console.log({ session });
-
   if (
     !session?.user?.email ||
     !LAST_FM_API_KEY ||
