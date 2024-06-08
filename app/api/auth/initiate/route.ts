@@ -11,7 +11,7 @@ export async function GET() {
   }
 
   try {
-    const authorizationUrl = `https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${GOOGLE_REDIRECT_URI}&scope=https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/userinfo.profile&access_type=offline`;
+    const authorizationUrl = `https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${GOOGLE_REDIRECT_URI}&scope=https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/userinfo.profile&access_type=offline&prompt=consent`;
 
     return NextResponse.json({ authorizationUrl }, { status: 200 });
   } catch (error) {

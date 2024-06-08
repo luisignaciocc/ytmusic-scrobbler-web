@@ -45,12 +45,12 @@ export async function GET(request: Request) {
 
     const data: {
       access_token: string;
+      refresh_token?: string;
       expires_in: number;
       scope: string;
       token_type: "Bearer";
+      id_token?: string;
     } = await response.json();
-
-    console.log({ scope: data.scope });
 
     const expires_at = new Date().getTime() + data.expires_in * 1000;
 
@@ -90,7 +90,7 @@ export async function GET(request: Request) {
           name: userInfo.name,
           picture: userInfo.picture,
           googleAccessToken: data.access_token,
-          googleRefreshToken: null,
+          googleRefreshToken: data.refresh_token,
           googleTokenExpires: expires_at,
         },
       });
@@ -104,12 +104,13 @@ export async function GET(request: Request) {
           picture: userInfo.picture,
           googleAccessToken: data.access_token,
           googleTokenExpires: expires_at,
+          googleRefreshToken: data.refresh_token,
         },
       });
     }
 
     return NextResponse.json(
-      { name: userInfo.name, picture: userInfo.picture },
+      { name: userInfo.name, picture: userInfo.picture, ...data },
       { status: 200 }
     );
   } catch (error) {

@@ -15,6 +15,16 @@ export async function GET(request: Request) {
     );
   }
 
+  const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI } =
+    process.env;
+
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+    return NextResponse.json(
+      { error: "Env vars not set up correctly" },
+      { status: 500 }
+    );
+  }
+
   try {
     const res = await fetch("https://music.youtube.com", {
       headers: {
@@ -41,7 +51,68 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const accessToken = user.googleAccessToken;
+    if (
+      !user.googleAccessToken ||
+      !user.googleRefreshToken ||
+      !user.googleTokenExpires
+    ) {
+      return NextResponse.json(
+        { error: "User not authenticated" },
+        { status: 401 }
+      );
+    }
+
+    let accessToken = user.googleAccessToken;
+    if (user.googleTokenExpires < new Date().getTime()) {
+      try {
+        const response = await fetch("https://oauth2.googleapis.com/token", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            client_id: GOOGLE_CLIENT_ID,
+            client_secret: GOOGLE_CLIENT_SECRET,
+            refresh_token: user.googleRefreshToken,
+            grant_type: "refresh_token",
+          }),
+        });
+
+        if (!response.ok) {
+          return NextResponse.json(
+            { error: "Failed to fetch token" },
+            { status: 500 }
+          );
+        }
+
+        const data: {
+          access_token: string;
+          expires_in: number;
+        } = await response.json();
+
+        const expires_at = new Date().getTime() + data.expires_in * 1000;
+        accessToken = data.access_token;
+
+        await prisma.user.update({
+          where: {
+            googleId: user.googleId,
+          },
+          data: {
+            googleAccessToken: data.access_token,
+            googleTokenExpires: expires_at,
+          },
+        });
+      } catch (error) {
+        if (error instanceof Error) {
+          return NextResponse.json({ error: error.message }, { status: 500 });
+        } else {
+          return NextResponse.json(
+            { error: "An unknown error occurred refreshing the user token" },
+            { status: 500 }
+          );
+        }
+      }
+    }
 
     const res2 = await fetch("https://music.youtube.com/youtubei/v1/browse", {
       method: "POST",
@@ -72,8 +143,6 @@ export async function GET(request: Request) {
     });
 
     const data = await res2.json();
-
-    // return NextResponse.json({ data }, { status: 200 });
 
     const results: YTAPIResponse =
       data.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer
