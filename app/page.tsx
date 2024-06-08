@@ -1,4 +1,5 @@
 import LoginButton from "./components/login-btn";
+import LastfmButton from "./components/lastfm-btn";
 
 export default function Home() {
   return (
@@ -6,6 +7,7 @@ export default function Home() {
       <div>
         <h1>Authorize Your Application</h1>
         <LoginButton />
+        <LastfmButton />
       </div>
     </main>
   );

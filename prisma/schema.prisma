@@ -24,4 +24,6 @@ model User {
   googleRefreshToken String?
   googleTokenExpires BigInt?
   googleIdToken      String?
+  lastFmSessionKey   String?
+  lastFmUsername     String?
 }
