@@ -26,4 +26,15 @@ model User {
   googleIdToken      String?
   lastFmSessionKey   String?
   lastFmUsername     String?
+  Songs              Song[]
+}
+
+model Song {
+  id      String   @id @default(cuid())
+  title   String
+  artist  String
+  album   String?
+  addedAt DateTime
+  user    User     @relation(fields: [userId], references: [id])
+  userId  String
 }

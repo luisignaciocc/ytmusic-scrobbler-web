@@ -1,23 +1,33 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { log } from "console";
+import getServerSession from "@/helpers/get-server-session";
+import { parseStringPromise } from "xml2js";
+import crypto from "crypto";
+import hashRequest from "@/helpers/hash-request";
 
 const prisma = new PrismaClient();
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get("id");
+export async function GET() {
+  const session = await getServerSession();
+  const userEmail = session?.user?.email;
 
-  if (!id) {
-    return NextResponse.json(
-      { error: "Not user id provided" },
-      { status: 400 }
-    );
+  if (!userEmail) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = process.env;
+  const {
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    LAST_FM_API_KEY,
+    LAST_FM_API_SECRET,
+  } = process.env;
 
-  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+  if (
+    !GOOGLE_CLIENT_ID ||
+    !GOOGLE_CLIENT_SECRET ||
+    !LAST_FM_API_KEY ||
+    !LAST_FM_API_SECRET
+  ) {
     return NextResponse.json(
       { error: "Env vars not set up correctly" },
       { status: 500 }
@@ -42,11 +52,11 @@ export async function GET(request: Request) {
 
     const user = await prisma.user.findUnique({
       where: {
-        id: id,
+        email: userEmail,
       },
     });
 
-    if (!user) {
+    if (!user || !user.lastFmSessionKey) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
@@ -113,35 +123,46 @@ export async function GET(request: Request) {
       }
     }
 
-    const res2 = await fetch("https://music.youtube.com/youtubei/v1/browse", {
-      method: "POST",
-      cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Goog-Visitor-Id": visitorId,
-        Authorization: `Bearer ${accessToken}`,
-        Cookie: "SOCS=CAI",
-        Origin: "https://music.youtube.com",
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-        Referer: "https://music.youtube.com/",
-      },
-      body: JSON.stringify({
-        context: {
-          client: {
-            clientName: "WEB_REMIX",
-            clientVersion: "0.1",
-            hl: "en",
-            gl: "US",
-            experimentsToken: "",
-            utcOffsetMinutes: 0,
+    const [musicResponse] = await Promise.all([
+      fetch("https://music.youtube.com/youtubei/v1/browse", {
+        method: "POST",
+        cache: "no-store",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Visitor-Id": visitorId,
+          Authorization: `Bearer ${accessToken}`,
+          Cookie: "SOCS=CAI",
+          Origin: "https://music.youtube.com",
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+          Referer: "https://music.youtube.com/",
+        },
+        body: JSON.stringify({
+          context: {
+            client: {
+              clientName: "WEB_REMIX",
+              clientVersion: "0.1",
+              hl: "en",
+              gl: "US",
+              experimentsToken: "",
+              utcOffsetMinutes: 0,
+            },
+          },
+          browseId: "FEmusic_history",
+        }),
+      }),
+      // delete song older tah 24h
+      prisma.song.deleteMany({
+        where: {
+          userId: user.id,
+          addedAt: {
+            lt: new Date(new Date().getTime() - 24 * 60 * 60 * 1000),
           },
         },
-        browseId: "FEmusic_history",
       }),
-    });
+    ]);
 
-    const data = await res2.json();
+    const data = await musicResponse.json();
 
     const results: YTAPIResponse =
       data.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer
@@ -171,7 +192,6 @@ export async function GET(request: Request) {
           const flexColumns = musicResponsiveListItemRenderer?.flexColumns;
 
           if (!flexColumns) {
-            console.log("No flexColumn");
             return;
           }
 
@@ -200,8 +220,6 @@ export async function GET(request: Request) {
           );
 
           if (!watchEndpointFlexColumn || !browseEndpointFlexColumnArtist) {
-            console.log("No watch or browse endpoint");
-            console.log(JSON.stringify(flexColumns, null, 2));
             return;
           }
 
@@ -223,12 +241,82 @@ export async function GET(request: Request) {
               album: album!,
               playedAt,
             });
-          } else {
-            console.log("No title or artist");
           }
         }
       );
     });
+
+    songs
+      .filter((song) => song.playedAt === "Today")
+      .forEach(async (song) => {
+        try {
+          const savedSong = await prisma.song.findFirst({
+            where: {
+              title: song.title,
+              artist: song.artist,
+              album: song.album,
+              userId: user.id,
+            },
+          });
+          if (!savedSong) {
+            const url = new URL("http://ws.audioscrobbler.com/2.0/");
+
+            const params = {
+              album: song.album,
+              api_key: LAST_FM_API_KEY,
+              method: "track.scrobble",
+              timestamp: (
+                Math.floor(new Date().getTime() / 1000) - 30
+              ).toString(),
+              track: song.title,
+              artist: song.artist,
+              sk: user.lastFmSessionKey!,
+            };
+
+            const requestHash = hashRequest(params, LAST_FM_API_SECRET);
+
+            const urlParams = new URLSearchParams(params);
+            urlParams.append("api_sig", requestHash);
+
+            url.search = urlParams.toString();
+
+            const res = await fetch(url, {
+              method: "POST",
+            });
+
+            const text = await res.text();
+
+            const result: LastFmScrobbleResponse = await parseStringPromise(
+              text
+            );
+
+            const scrobbles = result.lfm.scrobbles?.[0].$;
+            const accepted = scrobbles?.accepted;
+            const ignored = scrobbles?.ignored;
+
+            if (accepted === "0" && ignored === "0") {
+              console.error("Error scrobbling song", result);
+            } else if (accepted === "0") {
+              console.error(
+                "Song scrobble was ignored",
+                result.lfm.scrobbles?.[0].scrobble[0].ignoredMessage
+              );
+            } else {
+              await prisma.song.create({
+                data: {
+                  title: song.title,
+                  artist: song.artist,
+                  album: song.album,
+                  addedAt: new Date(),
+                  userId: user.id,
+                },
+              });
+            }
+          }
+        } catch (error) {
+          console.error("Error saving song", error);
+        }
+      });
 
     return NextResponse.json({ songs }, { status: 200 });
   } catch (error) {
@@ -284,3 +372,62 @@ type YTAPIResponse = {
     }[];
   };
 }[];
+
+type LastFmScrobbleResponse = {
+  lfm: {
+    $: {
+      status: "ok" | "failed";
+    };
+    scrobbles?: [
+      {
+        $: {
+          ignored: "0" | "1";
+          accepted: "1" | "0";
+        };
+        scrobble: [
+          {
+            track: [
+              {
+                _: string;
+                $: {
+                  corrected: "0";
+                };
+              }
+            ];
+            artist: [
+              {
+                _: string;
+                $: {
+                  corrected: "0";
+                };
+              }
+            ];
+            album: [
+              {
+                _: string;
+                $: {
+                  corrected: "0";
+                };
+              }
+            ];
+            albumArtist: [
+              {
+                $: {
+                  corrected: "0";
+                };
+              }
+            ];
+            timestamp: [string];
+            ignoredMessage: [
+              {
+                $: {
+                  code: "0";
+                };
+              }
+            ];
+          }
+        ];
+      }
+    ];
+  };
+};

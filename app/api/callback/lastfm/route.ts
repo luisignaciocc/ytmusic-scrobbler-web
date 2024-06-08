@@ -1,5 +1,4 @@
 // https://www.last.fm/api/accounts
-import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import getServerSession from "@/helpers/get-server-session";
 import { parseStringPromise } from "xml2js";
