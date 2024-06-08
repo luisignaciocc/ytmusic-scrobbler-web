@@ -13,3 +13,13 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
+
+model User {
+  id                 String  @id @default(cuid())
+  googleId           String  @unique
+  name               String
+  picture            String
+  googleAccessToken  String
+  googleRefreshToken String?
+  googleTokenExpires Int?
+}

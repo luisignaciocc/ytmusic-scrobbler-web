@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -43,13 +46,58 @@ export async function GET(request: Request) {
     const data: {
       access_token: string;
       expires_in: number;
-      scope: "https://www.googleapis.com/auth/youtube.readonly";
+      scope: string;
       token_type: "Bearer";
     } = await response.json();
 
     const expires_at = new Date().getTime() + data.expires_in * 1000;
 
-    return NextResponse.json({ ...data, expires_at }, { status: 200 });
+    const userInfoResponse = await fetch(
+      "https://www.googleapis.com/oauth2/v1/userinfo?alt=json",
+      {
+        headers: {
+          Authorization: `Bearer ${data.access_token}`,
+        },
+      }
+    );
+
+    if (!userInfoResponse.ok) {
+      return NextResponse.json(
+        { error: "Failed to fetch user info" },
+        { status: 500 }
+      );
+    }
+    const userInfo: {
+      id: string;
+      name: string;
+      given_name: string;
+      family_name: string;
+      picture: string;
+    } = await userInfoResponse.json();
+
+    const user = await prisma.user.findUnique({
+      where: {
+        googleId: userInfo.id,
+      },
+    });
+
+    if (!user) {
+      await prisma.user.create({
+        data: {
+          googleId: userInfo.id,
+          name: userInfo.name,
+          picture: userInfo.picture,
+          googleAccessToken: data.access_token,
+          googleRefreshToken: null,
+          googleTokenExpires: expires_at,
+        },
+      });
+    }
+
+    return NextResponse.json(
+      { name: userInfo.name, picture: userInfo.picture },
+      { status: 200 }
+    );
   } catch (error) {
     if (error instanceof Error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
