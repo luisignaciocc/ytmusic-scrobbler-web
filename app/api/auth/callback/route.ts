@@ -50,6 +50,8 @@ export async function GET(request: Request) {
       token_type: "Bearer";
     } = await response.json();
 
+    console.log({ scope: data.scope });
+
     const expires_at = new Date().getTime() + data.expires_in * 1000;
 
     const userInfoResponse = await fetch(
@@ -75,7 +77,7 @@ export async function GET(request: Request) {
       picture: string;
     } = await userInfoResponse.json();
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findFirst({
       where: {
         googleId: userInfo.id,
       },
@@ -89,6 +91,18 @@ export async function GET(request: Request) {
           picture: userInfo.picture,
           googleAccessToken: data.access_token,
           googleRefreshToken: null,
+          googleTokenExpires: expires_at,
+        },
+      });
+    } else {
+      await prisma.user.update({
+        where: {
+          googleId: userInfo.id,
+        },
+        data: {
+          name: userInfo.name,
+          picture: userInfo.picture,
+          googleAccessToken: data.access_token,
           googleTokenExpires: expires_at,
         },
       });
