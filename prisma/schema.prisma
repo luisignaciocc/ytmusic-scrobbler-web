@@ -18,8 +18,10 @@ model User {
   id                 String  @id @default(cuid())
   googleId           String  @unique
   name               String
+  email              String  @unique
   picture            String
   googleAccessToken  String
   googleRefreshToken String?
   googleTokenExpires BigInt?
+  googleIdToken      String?
 }
