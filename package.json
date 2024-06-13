@@ -1,32 +1,14 @@
 {
-  "name": "yt-music-scrobbler-web",
+  "name": "yt-music-scrobbler",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "vercel-build": "prisma generate && prisma migrate deploy && next build"
-  },
-  "dependencies": {
-    "@prisma/client": "^5.15.0",
-    "next": "^14.2.3",
-    "next-auth": "^4.24.7",
-    "prisma": "^5.15.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "xml2js": "^0.6.2"
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint"
   },
   "devDependencies": {
-    "@types/node": "^20.14.2",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@types/xml2js": "^0.4.14",
-    "eslint": "^8.57.0",
-    "eslint-config-next": "14.2.3",
-    "postcss": "^8.4.38",
-    "tailwindcss": "^3.4.4",
-    "typescript": "^5.4.5"
-  }
+    "turbo": "^2.0.3"
+  },
+  "packageManager": "pnpm@9.3.0"
 }
