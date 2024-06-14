@@ -6,7 +6,7 @@ interface Props {
 }
 
 function SessionAuthProvider({ children }: Props) {
-  return <SessionProvider session={null}>{children}</SessionProvider>;
+  return <SessionProvider>{children}</SessionProvider>;
 }
 
 export default SessionAuthProvider;
