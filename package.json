@@ -5,10 +5,15 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "lint": "turbo run lint"
+    "lint": "turbo run lint",
+    "migrate": "dotenv -- pnpm --filter prisma-config run migrate",
+    "generate": "dotenv -- pnpm --filter prisma-config run generate"
   },
   "devDependencies": {
-    "turbo": "^2.0.3"
+    "turbo": "^2.0.4"
   },
-  "packageManager": "pnpm@9.3.0"
+  "packageManager": "pnpm@9.3.0",
+  "dependencies": {
+    "dotenv-cli": "^7.4.2"
+  }
 }

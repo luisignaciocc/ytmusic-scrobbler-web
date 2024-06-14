@@ -1,5 +1,5 @@
 {
-  "name": "yt-music-scrobbler-web",
+  "name": "web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -13,7 +13,6 @@
     "@prisma/client": "^5.15.0",
     "next": "^14.2.3",
     "next-auth": "^4.24.7",
-    "prisma": "^5.15.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "xml2js": "^0.6.2"
