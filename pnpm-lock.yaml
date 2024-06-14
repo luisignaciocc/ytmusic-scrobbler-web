@@ -19,8 +19,8 @@ importers:
   apps/web:
     dependencies:
       '@prisma/client':
-        specifier: ^5.15.0
-        version: 5.15.0(prisma@5.15.0)
+        specifier: workspace:../../packages/prisma-config/node_modules/@prisma/client
+        version: link:../../packages/prisma-config/node_modules/@prisma/client
       next:
         specifier: ^14.2.3
         version: 14.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -86,8 +86,8 @@ importers:
         specifier: ^4.0.2
         version: 4.0.2(@nestjs/common@10.3.9(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.3.9(@nestjs/common@10.3.9(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.3.9)(reflect-metadata@0.2.2)(rxjs@7.8.1))
       '@prisma/client':
-        specifier: ^5.15.0
-        version: 5.15.0(prisma@5.15.0)
+        specifier: workspace:../../packages/prisma-config/node_modules/@prisma/client
+        version: link:../../packages/prisma-config/node_modules/@prisma/client
       bull:
         specifier: ^4.13.0
         version: 4.13.0

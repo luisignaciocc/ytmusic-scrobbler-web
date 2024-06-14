@@ -5,6 +5,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppProducer } from './app.producer';
 import { AppConsumer } from './app.consumer';
+import { PrismaService } from './prisma.service';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { AppConsumer } from './app.consumer';
     }),
   ],
   controllers: [AppController],
-  providers: [AppProducer, AppConsumer],
+  providers: [AppProducer, AppConsumer, PrismaService],
+  exports: [PrismaService],
 })
 export class AppModule {}
