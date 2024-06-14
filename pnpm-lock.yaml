@@ -66,9 +66,9 @@ importers:
 
   apps/workers:
     dependencies:
-      '@nestjs/bullmq':
+      '@nestjs/bull':
         specifier: ^10.1.1
-        version: 10.1.1(@nestjs/common@10.3.9(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.3.9(@nestjs/common@10.3.9(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.3.9)(reflect-metadata@0.2.2)(rxjs@7.8.1))(bullmq@5.8.1)
+        version: 10.1.1(@nestjs/common@10.3.9(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.3.9(@nestjs/common@10.3.9(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.3.9)(reflect-metadata@0.2.2)(rxjs@7.8.1))(bull@4.13.0)
       '@nestjs/common':
         specifier: ^10.0.0
         version: 10.3.9(reflect-metadata@0.2.2)(rxjs@7.8.1)
@@ -545,12 +545,12 @@ packages:
       '@nestjs/common': ^8.0.0 || ^9.0.0 || ^10.0.0
       '@nestjs/core': ^8.0.0 || ^9.0.0 || ^10.0.0
 
-  '@nestjs/bullmq@10.1.1':
-    resolution: {integrity: sha512-afYx1wYCKtXEu1p0S1+qw2o7QaZWr/EQgF7Wkt3YL8RBIECy5S4C450gv/cRGd8EZjlt6bw8hGCLqR2Q5VjHpQ==}
+  '@nestjs/bull@10.1.1':
+    resolution: {integrity: sha512-fbhgXNk1DpV27M8hdGH94iNJ7YonZRYyusmHb2qvvYMRBxkuzN0Hjf02jYCNUiPvCpn+WZBeEiYlYK30x3HkAQ==}
     peerDependencies:
       '@nestjs/common': ^8.0.0 || ^9.0.0 || ^10.0.0
       '@nestjs/core': ^8.0.0 || ^9.0.0 || ^10.0.0
-      bullmq: ^3.0.0 || ^4.0.0 || ^5.0.0
+      bull: ^3.3 || ^4.0.0
 
   '@nestjs/cli@10.3.2':
     resolution: {integrity: sha512-aWmD1GLluWrbuC4a1Iz/XBk5p74Uj6nIVZj6Ov03JbTfgtWqGFLtXuMetvzMiHxfrHehx/myt2iKAPRhKdZvTg==}
@@ -1267,9 +1267,6 @@ packages:
   bull@4.13.0:
     resolution: {integrity: sha512-XAAhHeXtW+luEYuid3shGv25ErmsegrVXMukbP7AqNUgRgiTnRnIGdjPyzmHu3/Tjm6jNdODqLHJ12t07fyUrQ==}
     engines: {node: '>=12'}
-
-  bullmq@5.8.1:
-    resolution: {integrity: sha512-t6BTH3J6T7exR+1C1NtQYekCgzkzEnxzBKU8Qit2YVgoJyTsu/xlHk7z/6g088uv1qD6XtHtV5Aiur/sUewTQA==}
 
   busboy@1.6.0:
     resolution: {integrity: sha512-8SFQbg/0hQ9xy3UNTB0YEnsNBbWfhf7RtnzpL7TkBiTBRfrQ9Fxcnz7VJsleJpyp6rVLvXiuORqjlHi5q+PYuA==}
@@ -4406,12 +4403,12 @@ snapshots:
       '@nestjs/core': 10.3.9(@nestjs/common@10.3.9(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.3.9)(reflect-metadata@0.2.2)(rxjs@7.8.1)
       tslib: 2.6.2
 
-  '@nestjs/bullmq@10.1.1(@nestjs/common@10.3.9(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.3.9(@nestjs/common@10.3.9(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.3.9)(reflect-metadata@0.2.2)(rxjs@7.8.1))(bullmq@5.8.1)':
+  '@nestjs/bull@10.1.1(@nestjs/common@10.3.9(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.3.9(@nestjs/common@10.3.9(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.3.9)(reflect-metadata@0.2.2)(rxjs@7.8.1))(bull@4.13.0)':
     dependencies:
       '@nestjs/bull-shared': 10.1.1(@nestjs/common@10.3.9(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.3.9(@nestjs/common@10.3.9(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.3.9)(reflect-metadata@0.2.2)(rxjs@7.8.1))
       '@nestjs/common': 10.3.9(reflect-metadata@0.2.2)(rxjs@7.8.1)
       '@nestjs/core': 10.3.9(@nestjs/common@10.3.9(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.3.9)(reflect-metadata@0.2.2)(rxjs@7.8.1)
-      bullmq: 5.8.1
+      bull: 4.13.0
       tslib: 2.6.2
 
   '@nestjs/cli@10.3.2':
@@ -5292,18 +5289,6 @@ snapshots:
       msgpackr: 1.10.2
       semver: 7.6.2
       uuid: 8.3.2
-    transitivePeerDependencies:
-      - supports-color
-
-  bullmq@5.8.1:
-    dependencies:
-      cron-parser: 4.9.0
-      ioredis: 5.4.1
-      msgpackr: 1.10.2
-      node-abort-controller: 3.1.1
-      semver: 7.6.2
-      tslib: 2.6.3
-      uuid: 9.0.1
     transitivePeerDependencies:
       - supports-color
 

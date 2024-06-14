@@ -1,4 +1,4 @@
-import { InjectQueue } from '@nestjs/bullmq';
+import { InjectQueue } from '@nestjs/bull';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Queue } from 'bull';

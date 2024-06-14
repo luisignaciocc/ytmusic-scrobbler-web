@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
-import { BullModule } from '@nestjs/bullmq';
+import { BullModule } from '@nestjs/bull';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppService } from './app.service';
@@ -13,7 +13,7 @@ import { CronModule } from './cron/cron.module';
     BullModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        connection: {
+        redis: {
           host: configService.get('REDIS_HOST'),
           port: configService.get('REDIS_PORT'),
         },
