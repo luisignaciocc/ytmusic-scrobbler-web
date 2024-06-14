@@ -4,17 +4,19 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { Queue } from 'bull';
 
 @Injectable()
-export class CronService {
+export class AppProducer {
   constructor(
     @InjectQueue('scrobbler')
-    private readonly scrobblerQueue: Queue,
+    private readonly queue: Queue,
   ) {}
-  private readonly logger = new Logger(CronService.name);
+  private readonly logger = new Logger(AppProducer.name);
 
   @Cron(CronExpression.EVERY_5_MINUTES, {
     name: 'scrobble',
   })
   scrobble() {
-    this.scrobblerQueue.addBulk([]);
+    this.queue.add('scrobble', {
+      userId: 'string',
+    });
   }
 }

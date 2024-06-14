@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
 import { BullModule } from '@nestjs/bull';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
-import { AppService } from './app.service';
-import { CronModule } from './cron/cron.module';
+import { AppController } from './app.controller';
+import { AppProducer } from './app.producer';
+import { AppConsumer } from './app.consumer';
 
 @Module({
   imports: [
@@ -20,9 +20,11 @@ import { CronModule } from './cron/cron.module';
       }),
       inject: [ConfigService],
     }),
-    CronModule,
+    BullModule.registerQueue({
+      name: 'scrobbler',
+    }),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppProducer, AppConsumer],
 })
 export class AppModule {}
