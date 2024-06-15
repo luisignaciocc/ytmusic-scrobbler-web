@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { redirect } from "next/navigation";
 import { parseStringPromise } from "xml2js";
 
-import getServerSession from "@/helpers/get-server-session";
+import getServerSession from "@/lib/get-server-session";
 
 const prisma = new PrismaClient();
 
