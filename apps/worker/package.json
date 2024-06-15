@@ -13,7 +13,7 @@
     "start:prod": "node dist/main",
     "type-check": "tsc --pretty --noEmit",
     "lint": "eslint 'src/**/*.{ts,tsx,js,jsx}' --fix",
-    "prebuild": "pnpm generate && migrate deploy && next build"
+    "prebuild": "pnpm --workspace-root run generate && pnpm --workspace-root run migrate deploy"
   },
   "dependencies": {
     "@nestjs/bull": "^10.1.1",
