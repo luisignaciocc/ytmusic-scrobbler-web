@@ -5,6 +5,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "format": "prettier --write .",
     "lint": "turbo run lint",
     "migrate": "dotenv -- pnpm --filter prisma-config run migrate",
     "generate": "dotenv -- pnpm --filter prisma-config run generate"

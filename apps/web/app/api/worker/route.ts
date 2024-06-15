@@ -30,7 +30,7 @@ export async function GET() {
   ) {
     return NextResponse.json(
       { error: "Env vars not set up correctly" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -67,7 +67,7 @@ export async function GET() {
     ) {
       return NextResponse.json(
         { error: "User not authenticated" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -90,7 +90,7 @@ export async function GET() {
         if (!response.ok) {
           return NextResponse.json(
             { error: "Failed to fetch token" },
-            { status: 500 }
+            { status: 500 },
           );
         }
 
@@ -117,7 +117,7 @@ export async function GET() {
         } else {
           return NextResponse.json(
             { error: "An unknown error occurred refreshing the user token" },
-            { status: 500 }
+            { status: 500 },
           );
         }
       }
@@ -198,7 +198,7 @@ export async function GET() {
           const watchEndpointFlexColumn = flexColumns.find(
             (flexColumn) =>
               flexColumn.musicResponsiveListItemFlexColumnRenderer?.text
-                ?.runs?.[0]?.navigationEndpoint?.watchEndpoint
+                ?.runs?.[0]?.navigationEndpoint?.watchEndpoint,
           );
 
           const browseEndpointFlexColumnArtist = flexColumns.find(
@@ -207,7 +207,7 @@ export async function GET() {
                 ?.runs?.[0]?.navigationEndpoint?.browseEndpoint
                 ?.browseEndpointContextSupportedConfigs
                 ?.browseEndpointContextMusicConfig?.pageType ===
-              "MUSIC_PAGE_TYPE_ARTIST"
+              "MUSIC_PAGE_TYPE_ARTIST",
           );
 
           const browseEndpointFlexColumnAlbum = flexColumns.find(
@@ -216,7 +216,7 @@ export async function GET() {
                 ?.runs?.[0]?.navigationEndpoint?.browseEndpoint
                 ?.browseEndpointContextSupportedConfigs
                 ?.browseEndpointContextMusicConfig?.pageType ===
-              "MUSIC_PAGE_TYPE_ALBUM"
+              "MUSIC_PAGE_TYPE_ALBUM",
           );
 
           if (!watchEndpointFlexColumn || !browseEndpointFlexColumnArtist) {
@@ -242,7 +242,7 @@ export async function GET() {
               playedAt,
             });
           }
-        }
+        },
       );
     });
 
@@ -286,9 +286,8 @@ export async function GET() {
 
             const text = await res.text();
 
-            const result: LastFmScrobbleResponse = await parseStringPromise(
-              text
-            );
+            const result: LastFmScrobbleResponse =
+              await parseStringPromise(text);
 
             const scrobbles = result.lfm.scrobbles?.[0].$;
             const accepted = scrobbles?.accepted;
@@ -299,7 +298,7 @@ export async function GET() {
             } else if (accepted === "0") {
               console.error(
                 "Song scrobble was ignored",
-                result.lfm.scrobbles?.[0].scrobble[0].ignoredMessage
+                result.lfm.scrobbles?.[0].scrobble[0].ignoredMessage,
               );
             } else {
               await prisma.song.create({
@@ -325,7 +324,7 @@ export async function GET() {
     } else {
       return NextResponse.json(
         { error: "An unknown error occurred" },
-        { status: 500 }
+        { status: 500 },
       );
     }
   }
@@ -363,7 +362,7 @@ type YTAPIResponse = {
                       };
                     };
                   };
-                }
+                },
               ];
             };
           };
@@ -392,7 +391,7 @@ type LastFmScrobbleResponse = {
                 $: {
                   corrected: "0";
                 };
-              }
+              },
             ];
             artist: [
               {
@@ -400,7 +399,7 @@ type LastFmScrobbleResponse = {
                 $: {
                   corrected: "0";
                 };
-              }
+              },
             ];
             album: [
               {
@@ -408,14 +407,14 @@ type LastFmScrobbleResponse = {
                 $: {
                   corrected: "0";
                 };
-              }
+              },
             ];
             albumArtist: [
               {
                 $: {
                   corrected: "0";
                 };
-              }
+              },
             ];
             timestamp: [string];
             ignoredMessage: [
@@ -423,11 +422,11 @@ type LastFmScrobbleResponse = {
                 $: {
                   code: "0";
                 };
-              }
+              },
             ];
-          }
+          },
         ];
-      }
+      },
     ];
   };
 };

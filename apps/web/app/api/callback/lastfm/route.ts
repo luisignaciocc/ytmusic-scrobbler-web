@@ -38,7 +38,7 @@ export async function GET(request: Request) {
       .createHash("md5")
       .update(
         `api_key${LAST_FM_API_KEY}methodauth.getSessiontoken${token}${LAST_FM_API_SECRET}`,
-        "utf-8"
+        "utf-8",
       )
       .digest("hex");
 
@@ -50,9 +50,8 @@ export async function GET(request: Request) {
 
     const text = await res.text();
 
-    const { lfm }: LastFmCallbackSessionResponse = await parseStringPromise(
-      text
-    );
+    const { lfm }: LastFmCallbackSessionResponse =
+      await parseStringPromise(text);
 
     if (!lfm || lfm.$.status === "failed" || !lfm.session?.[0]?.key?.[0]) {
       console.error("Last.fm session failed", lfm.error?.[0]._);
@@ -77,7 +76,7 @@ export async function GET(request: Request) {
     if (error instanceof Error) {
       console.error(
         "An error occurred while processing the lastfm callback",
-        error.message
+        error.message,
       );
       return redirect("/");
     } else {
@@ -97,7 +96,7 @@ type LastFmCallbackSessionResponse = {
         name: [string];
         key?: [string];
         subscriber: [string];
-      }
+      },
     ];
     error?: [
       {
@@ -105,7 +104,7 @@ type LastFmCallbackSessionResponse = {
         $: {
           code: string;
         };
-      }
+      },
     ];
   };
 };

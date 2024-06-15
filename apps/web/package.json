@@ -7,7 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint --fix",
-    "format": "prettier --write .",
     "type-check": "tsc --pretty --noEmit",
     "vercel-build": "pnpm --filter prisma-config run generate && pnpm --filter prisma-config run migrate deploy && next build"
   },
