@@ -7,17 +7,18 @@
     "dev": "turbo run dev",
     "format": "prettier --write .",
     "lint": "turbo run lint",
-    "migrate": "dotenv -- pnpm --filter prisma-config run migrate",
-    "generate": "dotenv -- pnpm --filter prisma-config run generate"
+    "generate": "prisma generate",
+    "migrate": "prisma migrate dev"
   },
   "devDependencies": {
-    "@prisma/client": "^5.15.0",
     "prettier": "^3.3.2",
+    "prisma": "^5.15.0",
     "turbo": "^2.0.4",
     "typescript": "^5.4.5"
   },
   "packageManager": "pnpm@9.3.0",
   "dependencies": {
+    "@prisma/client": "^5.15.0",
     "dotenv-cli": "^7.4.2"
   }
 }

@@ -2,10 +2,6 @@
   "name": "eslint-config-custom",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "generate": "prisma generate",
-    "migrate": "prisma migrate dev"
-  },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.13.0",
     "@typescript-eslint/parser": "^7.13.0",
