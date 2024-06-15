@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import * as crypto from "crypto";
 
 export default function hashRequest(
   params: Record<string, string>,
