@@ -1,9 +1,7 @@
 module.exports = {
   extends: [
     "plugin:@typescript-eslint/recommended",
-    "next/core-web-vitals",
     "prettier",
-    "plugin:storybook/recommended",
     "plugin:deprecation/recommended",
   ],
   plugins: ["unused-imports", "simple-import-sort"],
