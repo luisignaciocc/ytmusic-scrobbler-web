@@ -1,8 +1,8 @@
 import { Processor, Process } from "@nestjs/bull";
 import { Logger, OnModuleInit } from "@nestjs/common";
-import { Job } from "bull";
 import { PrismaService } from "./prisma.service";
 
+import { Job } from "bull";
 @Processor("scrobbler")
 export class AppConsumer implements OnModuleInit {
   constructor(private readonly prisma: PrismaService) {}

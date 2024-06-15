@@ -8,9 +8,6 @@ module.exports = {
   ],
   plugins: ["unused-imports", "simple-import-sort"],
   parser: "@typescript-eslint/parser",
-  parserOptions: {
-    project: "./tsconfig.json",
-  },
   rules: {
     "no-console": [
       2,
