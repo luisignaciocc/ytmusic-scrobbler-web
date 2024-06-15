@@ -1,9 +1,10 @@
 // https://www.last.fm/api/accounts
 import { PrismaClient } from "@prisma/client";
-import getServerSession from "@/helpers/get-server-session";
-import { parseStringPromise } from "xml2js";
 import crypto from "crypto";
 import { redirect } from "next/navigation";
+import { parseStringPromise } from "xml2js";
+
+import getServerSession from "@/helpers/get-server-session";
 
 const prisma = new PrismaClient();
 

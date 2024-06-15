@@ -8,6 +8,9 @@
     "type-check": {
       "dependsOn": ["^type-check"]
     },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
     "dev": {
       "persistent": true,
       "cache": false

@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "next lint --fix",
+    "format": "prettier --write .",
+    "type-check": "tsc --pretty --noEmit",
     "vercel-build": "pnpm --filter prisma-config run generate && pnpm --filter prisma-config run migrate deploy && next build"
   },
   "dependencies": {
@@ -22,10 +24,10 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@types/xml2js": "^0.4.14",
-    "eslint": "^8.57.0",
-    "eslint-config-next": "14.2.3",
+    "eslint-config": "*",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.4",
-    "typescript": "^5.4.5"
+    "ts-config": "*",
+    "typescript": "workspace:../../packages/ts-config/node_modules/typescript"
   }
 }

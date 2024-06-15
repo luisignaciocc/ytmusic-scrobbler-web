@@ -1,5 +1,6 @@
-import getServerSession from "@/helpers/get-server-session";
 import { PrismaClient } from "@prisma/client";
+
+import getServerSession from "@/helpers/get-server-session";
 
 const prisma = new PrismaClient();
 

@@ -1,5 +1,5 @@
-import LoginButton from "./components/login-btn";
 import LastfmButton from "./components/lastfm-btn";
+import LoginButton from "./components/login-btn";
 
 export default function Home() {
   return (
