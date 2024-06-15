@@ -1,3 +1,4 @@
+import { PrismaClient } from "@prisma/client";
 import type {
   GetServerSidePropsContext,
   NextApiRequest,
@@ -6,7 +7,6 @@ import type {
 import type { NextAuthOptions, Session } from "next-auth";
 import { getServerSession } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 

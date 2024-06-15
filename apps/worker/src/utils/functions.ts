@@ -11,6 +11,5 @@ export default function hashRequest(
     string += params[key];
   });
   string += secretKey;
-  console.log({ string });
   return crypto.createHash("md5").update(string, "utf8").digest("hex");
 }
