@@ -259,7 +259,7 @@ export class AppConsumer implements OnModuleInit {
 
       songs
         .filter((song) => song.playedAt === "Today")
-        .forEach(async (song) => {
+        .forEach(async (song, index) => {
           try {
             const savedSong = await this.prisma.song.findFirst({
               where: {
@@ -277,7 +277,8 @@ export class AppConsumer implements OnModuleInit {
                 api_key: LAST_FM_API_KEY,
                 method: "track.scrobble",
                 timestamp: (
-                  Math.floor(new Date().getTime() / 1000) - 30
+                  Math.floor(new Date().getTime() / 1000) -
+                  30 * (index + 1)
                 ).toString(),
                 track: song.title,
                 artist: song.artist,
@@ -329,6 +330,7 @@ export class AppConsumer implements OnModuleInit {
             return job.discard();
           }
         });
+      this.logger.debug(`Scrobbling for user ${userId} done at ${new Date()}`);
     } catch (error) {
       this.logger.error(`Error scrobbling for user ${userId}`);
       this.logger.error(error);
