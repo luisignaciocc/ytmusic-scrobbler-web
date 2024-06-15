@@ -27,7 +27,6 @@
     "eslint-config": "*",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.4",
-    "ts-config": "*",
-    "typescript": "workspace:../../packages/ts-config/node_modules/typescript"
+    "ts-config": "*"
   }
 }

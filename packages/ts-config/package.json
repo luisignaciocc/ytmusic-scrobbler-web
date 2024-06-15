@@ -5,8 +5,5 @@
   "files": [
     "nextjs.json",
     "nextjs.json"
-  ],
-  "devDependencies": {
-    "typescript": "^5.4.5"
-  }
+  ]
 }
