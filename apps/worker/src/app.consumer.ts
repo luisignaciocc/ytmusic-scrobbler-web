@@ -1,4 +1,4 @@
-import { Process,Processor } from "@nestjs/bull";
+import { Process, Processor } from "@nestjs/bull";
 import { Logger, OnModuleInit } from "@nestjs/common";
 import { Job } from "bull";
 
