@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "type-check": "tsc --pretty --noEmit",
-    "vercel-build": "pnpm --filter prisma-config run generate && pnpm --filter prisma-config run migrate deploy && next build"
+    "vercel-build": "pnpm generate && migrate deploy && next build"
   },
   "dependencies": {
     "@prisma/client": "*",

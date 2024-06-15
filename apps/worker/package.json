@@ -10,7 +10,9 @@
     "dev:debug": "dotenv -e ../../.env -- nest start --debug --watch",
     "build": "dotenv -e ../../.env -- nest build",
     "start": "dotenv -e ../../.env -- nest start",
-    "start:prod": "node dist/main"
+    "start:prod": "node dist/main",
+    "type-check": "tsc --pretty --noEmit",
+    "prebuild": "pnpm generate && migrate deploy && next build"
   },
   "dependencies": {
     "@nestjs/bull": "^10.1.1",

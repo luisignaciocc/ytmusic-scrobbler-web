@@ -19,6 +19,7 @@ model User {
   googleId           String  @unique
   name               String
   email              String  @unique
+  isActive           Boolean @default(false)
   picture            String
   googleAccessToken  String
   googleRefreshToken String?
