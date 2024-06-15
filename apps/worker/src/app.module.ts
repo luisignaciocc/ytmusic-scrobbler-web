@@ -1,3 +1,6 @@
+import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
+import { ExpressAdapter } from "@bull-board/express";
+import { BullBoardModule } from "@bull-board/nestjs";
 import { BullModule } from "@nestjs/bull";
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
@@ -19,6 +22,14 @@ import { PrismaService } from "./prisma.service";
     }),
     BullModule.registerQueue({
       name: "scrobbler",
+    }),
+    BullBoardModule.forRoot({
+      route: "/dashboard",
+      adapter: ExpressAdapter,
+    }),
+    BullBoardModule.forFeature({
+      name: "scrobbler",
+      adapter: BullMQAdapter,
     }),
   ],
   controllers: [AppController],
