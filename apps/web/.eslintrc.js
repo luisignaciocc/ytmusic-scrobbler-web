@@ -4,7 +4,6 @@ const path = require("path");
 module.exports = {
   extends: [
     path.resolve(__dirname, "../../eslint-preset"),
-    "next/babel",
     "next/core-web-vitals",
   ],
   parserOptions: {
