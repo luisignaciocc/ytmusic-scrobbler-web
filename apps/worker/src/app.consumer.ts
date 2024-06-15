@@ -1,9 +1,9 @@
-import { Processor, Process } from '@nestjs/bull';
-import { Logger, OnModuleInit } from '@nestjs/common';
-import { Job } from 'bull';
-import { PrismaService } from './prisma.service';
+import { Processor, Process } from "@nestjs/bull";
+import { Logger, OnModuleInit } from "@nestjs/common";
+import { Job } from "bull";
+import { PrismaService } from "./prisma.service";
 
-@Processor('scrobbler')
+@Processor("scrobbler")
 export class AppConsumer implements OnModuleInit {
   constructor(private readonly prisma: PrismaService) {}
   private readonly logger = new Logger(AppConsumer.name);
@@ -14,10 +14,10 @@ export class AppConsumer implements OnModuleInit {
     this.logger.debug(`connected`);
   }
 
-  @Process('scrobble')
+  @Process("scrobble")
   async scrobble(
     job: Job<{
-      userId: 'string';
+      userId: "string";
     }>,
   ) {
     const { userId } = job.data;
