@@ -6,18 +6,11 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
     "dev": "dotenv -e ../../.env -- nest start --watch",
-    "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "dev:debug": "dotenv -e ../../.env -- nest start --debug --watch",
+    "build": "dotenv -e ../../.env -- nest build",
+    "start": "dotenv -e ../../.env -- nest start",
+    "start:prod": "node dist/main"
   },
   "dependencies": {
     "@nestjs/bull": "^10.1.1",
@@ -36,35 +29,14 @@
     "@nestjs/schematics": "^10.1.1",
     "@nestjs/testing": "^10.3.9",
     "@types/express": "^4.17.21",
-    "@types/jest": "^29.5.12",
     "@types/node": "^20.14.2",
     "@types/supertest": "^6.0.2",
     "dotenv-cli": "^7.4.2",
     "eslint-config-custom": "*",
-    "jest": "^29.7.0",
     "source-map-support": "^0.5.21",
     "supertest": "^6.3.4",
-    "ts-config": "^20.10.0",
-    "ts-jest": "^29.1.4",
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
   }
 }

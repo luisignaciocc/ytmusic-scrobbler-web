@@ -8,16 +8,19 @@ importers:
 
   .:
     dependencies:
+      '@prisma/client':
+        specifier: ^5.15.0
+        version: 5.15.0(prisma@5.15.0)
       dotenv-cli:
         specifier: ^7.4.2
         version: 7.4.2
     devDependencies:
-      '@prisma/client':
-        specifier: ^5.15.0
-        version: 5.15.0(prisma@5.15.0)
       prettier:
         specifier: ^3.3.2
         version: 3.3.2
+      prisma:
+        specifier: ^5.15.0
+        version: 5.15.0
       turbo:
         specifier: ^2.0.4
         version: 2.0.4
@@ -197,15 +200,6 @@ importers:
       prettier-plugin-tailwindcss:
         specifier: ^0.6.4
         version: 0.6.4(prettier@3.3.2)
-
-  packages/prisma-config:
-    dependencies:
-      '@prisma/client':
-        specifier: 5.15.0
-        version: 5.15.0(prisma@5.15.0)
-      prisma:
-        specifier: ^5.15.0
-        version: 5.15.0
 
   packages/ts-config: {}
 

@@ -6,7 +6,6 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint --fix",
     "type-check": "tsc --pretty --noEmit",
     "vercel-build": "pnpm --filter prisma-config run generate && pnpm --filter prisma-config run migrate deploy && next build"
   },
@@ -25,7 +24,6 @@
     "@types/xml2js": "^0.4.14",
     "eslint-config-custom": "*",
     "postcss": "^8.4.38",
-    "tailwindcss": "^3.4.4",
-    "ts-config": "^20.10.0"
+    "tailwindcss": "^3.4.4"
   }
 }
