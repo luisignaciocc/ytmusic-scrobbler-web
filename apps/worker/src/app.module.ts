@@ -2,11 +2,11 @@ import { Module } from "@nestjs/common";
 import { BullModule } from "@nestjs/bull";
 import { ConfigModule } from "@nestjs/config";
 import { ScheduleModule } from "@nestjs/schedule";
-import { AppController } from "./app.controller";
 import { AppProducer } from "./app.producer";
 import { AppConsumer } from "./app.consumer";
 import { PrismaService } from "./prisma.service";
 
+import { AppController } from "./app.controller";
 @Module({
   imports: [
     ConfigModule.forRoot(),

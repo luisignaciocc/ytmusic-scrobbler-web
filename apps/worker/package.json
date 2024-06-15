@@ -12,6 +12,7 @@
     "start": "dotenv -e ../../.env -- nest start",
     "start:prod": "node dist/main",
     "type-check": "tsc --pretty --noEmit",
+    "lint": "eslint --fix",
     "prebuild": "pnpm generate && migrate deploy && next build"
   },
   "dependencies": {
