@@ -17,7 +17,7 @@ export const authConfig = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       authorization: {
         params: {
-          // prompt: "consent", // Uncomment to force the consent screen to appear every time
+          prompt: "consent", // Uncomment to force the consent screen to appear every time
           access_type: "offline",
           response_type: "code",
           scope:
