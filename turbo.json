@@ -3,17 +3,18 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "type-check": {
-      "dependsOn": ["^type-check"]
+      "outputs": []
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "outputs": []
     },
     "dev": {
       "persistent": true,
       "cache": false
     }
-  }
+  },
+  "globalDependencies": ["**/package.json", "**/tsconfig.json"]
 }
