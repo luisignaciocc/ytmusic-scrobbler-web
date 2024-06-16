@@ -316,6 +316,7 @@ export class AppConsumer implements OnModuleInit {
                   result.lfm.scrobbles?.[0].scrobble[0].ignoredMessage,
                 );
               } else {
+                songsScrobbled++;
                 await this.prisma.song.create({
                   data: {
                     title: song.title,
@@ -325,7 +326,6 @@ export class AppConsumer implements OnModuleInit {
                     userId: user.id,
                   },
                 });
-                songsScrobbled++;
               }
             }
           } catch (error) {
