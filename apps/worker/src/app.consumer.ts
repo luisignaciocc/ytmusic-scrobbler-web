@@ -257,9 +257,12 @@ export class AppConsumer implements OnModuleInit {
         );
       });
 
+      let songsReproducedToday = 0;
+      let songsScrobbled = 0;
       songs
         .filter((song) => song.playedAt === "Today")
         .forEach(async (song, index) => {
+          songsReproducedToday++;
           try {
             const savedSong = await this.prisma.song.findFirst({
               where: {
@@ -322,6 +325,7 @@ export class AppConsumer implements OnModuleInit {
                     userId: user.id,
                   },
                 });
+                songsScrobbled++;
               }
             }
           } catch (error) {
@@ -331,6 +335,10 @@ export class AppConsumer implements OnModuleInit {
           }
         });
       this.logger.debug(`Scrobbling for user ${userId} done at ${new Date()}`);
+      return {
+        songsReproducedToday,
+        songsScrobbled,
+      };
     } catch (error) {
       this.logger.error(`Error scrobbling for user ${userId}`);
       this.logger.error(error);
