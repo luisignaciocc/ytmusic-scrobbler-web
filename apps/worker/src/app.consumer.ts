@@ -335,6 +335,7 @@ export class AppConsumer implements OnModuleInit {
           }
         });
       this.logger.debug(`Scrobbling for user ${userId} done at ${new Date()}`);
+      await job.progress(100);
       return {
         songsReproducedToday,
         songsScrobbled,
