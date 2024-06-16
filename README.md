@@ -23,3 +23,23 @@ pm2 startup
 # if not first time
 pm2 restart yt-music-scrobbler-worker
 ```
+
+## web local development
+
+1. install [pnpm](https://pnpm.io/es/installation)
+
+2. install libraries with:
+
+```bash
+pnpm install
+```
+
+3. set environment variables
+
+4. create a new branch
+
+5. start development server with:
+
+```bash
+pnpm dev --filter web
+```
