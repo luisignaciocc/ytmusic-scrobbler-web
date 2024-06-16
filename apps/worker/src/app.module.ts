@@ -22,6 +22,15 @@ import { PrismaService } from "./prisma.service";
     }),
     BullModule.registerQueue({
       name: "scrobbler",
+      defaultJobOptions: {
+        timeout: 15000,
+        removeOnComplete: {
+          age: 12 * 60 * 60,
+        },
+        removeOnFail: {
+          age: 3 * 24 * 60 * 60,
+        },
+      },
     }),
     BullBoardModule.forRoot({
       route: "/dashboard",
