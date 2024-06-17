@@ -64,7 +64,7 @@ importers:
   apps/web:
     dependencies:
       '@prisma/client':
-        specifier: ^5.15.0
+        specifier: '*'
         version: 5.15.0(prisma@5.15.0)
       '@radix-ui/react-icons':
         specifier: ^1.3.0
@@ -152,7 +152,7 @@ importers:
         specifier: ^4.0.2
         version: 4.0.2(@nestjs/common@10.3.9(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.3.9(@nestjs/common@10.3.9(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.3.9)(reflect-metadata@0.2.2)(rxjs@7.8.1))
       '@prisma/client':
-        specifier: ^5.15.0
+        specifier: '*'
         version: 5.15.0(prisma@5.15.0)
       bull:
         specifier: ^4.13.0
