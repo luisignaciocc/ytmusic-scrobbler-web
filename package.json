@@ -12,8 +12,8 @@
     "migrate": "prisma migrate dev"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^7.13.0",
-    "@typescript-eslint/parser": "^7.13.0",
+    "@typescript-eslint/eslint-plugin": "^7.13.1",
+    "@typescript-eslint/parser": "^7.13.1",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-config-turbo": "^2.0.4",
@@ -23,7 +23,7 @@
     "eslint-plugin-storybook": "^0.8.0",
     "eslint-plugin-unused-imports": "^4.0.0",
     "prettier": "^3.3.2",
-    "prettier-plugin-tailwindcss": "^0.6.4",
+    "prettier-plugin-tailwindcss": "^0.6.5",
     "prisma": "^5.15.0",
     "turbo": "^2.0.4",
     "typescript": "^5.4.5"
