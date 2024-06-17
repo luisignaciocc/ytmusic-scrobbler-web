@@ -24,14 +24,14 @@ export class AppConsumer implements OnModuleInit {
     }>,
   ) {
     const { userId } = job.data;
-    this.logger.debug(`Scrobbling for user ${userId}`);
+    this.logger.debug(`Scrobbling for user ${userId} at ${new Date()}`);
     const user = await this.prisma.user.findFirst({
       where: {
         id: userId,
       },
     });
     if (!user) {
-      this.logger.error(`User ${userId} not found`);
+      job.log(`User ${userId} not found`);
       return job.discard();
     }
 
@@ -48,7 +48,7 @@ export class AppConsumer implements OnModuleInit {
       !LAST_FM_API_KEY ||
       !LAST_FM_API_SECRET
     ) {
-      this.logger.error(`Missing environment variables`);
+      job.log(`Missing environment variables`);
       return job.discard();
     }
 
@@ -69,7 +69,7 @@ export class AppConsumer implements OnModuleInit {
       }
 
       if (!user.lastFmSessionKey) {
-        this.logger.error(`User ${userId} is not authenticated with Last.fm`);
+        job.log(`User ${userId} is not authenticated with Last.fm`);
         return job.discard();
       }
 
@@ -78,7 +78,7 @@ export class AppConsumer implements OnModuleInit {
         !user.googleRefreshToken ||
         !user.googleTokenExpires
       ) {
-        this.logger.error(`User ${userId} is not authenticated with Google`);
+        job.log(`User ${userId} is not authenticated with Google`);
         return job.discard();
       }
 
@@ -99,7 +99,7 @@ export class AppConsumer implements OnModuleInit {
           });
 
           if (!response.ok) {
-            this.logger.error(`Error refreshing user token for ${userId}`);
+            job.log(`Error refreshing user token for ${userId}`);
             return job.discard();
           }
 
@@ -122,11 +122,11 @@ export class AppConsumer implements OnModuleInit {
           });
         } catch (error) {
           if (error instanceof Error) {
-            this.logger.error(`Error refreshing user token for ${userId}`);
-            this.logger.error(error);
+            job.log(`Error refreshing user token for ${userId}`);
+            job.log(error.message);
             return job.discard();
           } else {
-            this.logger.error(`Error refreshing user token for ${userId}`);
+            job.log(`Error refreshing user token for ${userId}`);
             return job.discard();
           }
         }
@@ -178,7 +178,7 @@ export class AppConsumer implements OnModuleInit {
           ?.content?.sectionListRenderer?.contents;
 
       if (!results) {
-        this.logger.error(`No results found for user ${userId}`);
+        job.log(`No results found for user ${userId}`);
         return job.discard();
       }
 
@@ -258,7 +258,6 @@ export class AppConsumer implements OnModuleInit {
       });
 
       let songsReproducedToday = 0;
-      let songsScrobbled = 0;
       songs
         .filter((song) => song.playedAt === "Today")
         .forEach(async (song, index) => {
@@ -309,14 +308,16 @@ export class AppConsumer implements OnModuleInit {
               const ignored = scrobbles?.ignored;
 
               if (accepted === "0" && ignored === "0") {
-                console.error("Error scrobbling song", result);
+                job.log("Error scrobbling song " + song.title);
               } else if (accepted === "0") {
-                console.error(
-                  "Song scrobble was ignored",
-                  result.lfm.scrobbles?.[0].scrobble[0].ignoredMessage,
+                job.log(
+                  "Song scrobble was ignored " +
+                    result.lfm.scrobbles?.[0].scrobble[0].ignoredMessage,
                 );
               } else {
-                songsScrobbled++;
+                job.log(
+                  `Scrobbled song ${song.title} by ${song.artist} - user ${userId}`,
+                );
                 await this.prisma.song.create({
                   data: {
                     title: song.title,
@@ -329,8 +330,8 @@ export class AppConsumer implements OnModuleInit {
               }
             }
           } catch (error) {
-            this.logger.error(`Error scrobbling song for user ${userId}`);
-            this.logger.error(error);
+            job.log(`Error scrobbling song for user ${userId}`);
+            job.log(error);
             return job.discard();
           }
         });
@@ -338,11 +339,10 @@ export class AppConsumer implements OnModuleInit {
       await job.progress(100);
       return {
         songsReproducedToday,
-        songsScrobbled,
       };
     } catch (error) {
-      this.logger.error(`Error scrobbling for user ${userId}`);
-      this.logger.error(error);
+      job.log(`Error scrobbling for user ${userId}`);
+      job.log(error);
       return job.discard();
     }
   }
