@@ -137,18 +137,34 @@ export default function Home() {
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
                   Important
                 </h2>
-                <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                  Since YouTube Music does not provide an official API, our
-                  service relies on scraping techniques to get the necessary
-                  data. This has been working well for our use case, but it has
-                  some limitations like not being able to get the exact time of
-                  when a song was played.
-                  <br /> To mitigate this, we use the time when the song was
-                  scrobbled, which is the time when our server received the
-                  data. Currently our process is set to run every 5 minutes, so
-                  the time when a song is scrobbled can be up to 5 minutes after
-                  it was played.
-                </p>
+                <div className="space-y-4">
+                  <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
+                    Since YouTube Music does not provide an official API, our
+                    service relies on scraping techniques to get the necessary
+                    data. This has been working well for our use case, but it
+                    has some limitations like not being able to get the exact
+                    time of when a song was played.
+                  </p>
+                  <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
+                    To mitigate this, we use the time when the song was
+                    scrobbled, which is the time when our server received the
+                    data. Currently our process is set to run every 5 minutes,
+                    so the time when a song is scrobbled can be up to 5 minutes
+                    after it was played.
+                  </p>
+                  <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
+                    With the button below you can start and stop the process of
+                    scrobbling your plays from YouTube Music. If you have any
+                    questions or feedback, feel free to reach out to us at{" "}
+                    <a
+                      href="mailto:me@luisignacio.cc"
+                      className="underline text-blue-500"
+                    >
+                      me@luisignacio.cc
+                    </a>
+                    .
+                  </p>
+                </div>
               </div>
             </div>
             <div className="flex justify-center mt-8">
@@ -173,48 +189,60 @@ export default function Home() {
               </div>
             </div>
             <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 lg:grid-cols-2 lg:gap-12">
-              <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6 space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="rounded-full bg-gray-300 dark:bg-gray-700 w-12 h-12 flex items-center justify-center text-2xl">
-                    🎵
+              <a
+                href="https://www.last.fm/user/end_me_plz"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="rounded-full bg-gray-300 dark:bg-gray-700 w-12 h-12 flex items-center justify-center text-2xl">
+                      🎵
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold">Emilio Cabezas</h3>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">
+                        Music Enthusiast
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-xl font-bold">Jane Doe</h3>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">
-                      Music Enthusiast
-                    </p>
-                  </div>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    &quot;Scrobbler has been a game-changer for me. It&apos;s so
+                    easy to use and has helped me discover so much new music
+                    based on my listening habits. Highly recommend!&quot;
+                  </p>
                 </div>
-                <p className="text-gray-500 dark:text-gray-400">
-                  &quot;Scrobbler has been a game-changer for me. It&apos;s so
-                  easy to use and has helped me discover so much new music based
-                  on my listening habits. Highly recommend!&quot;
-                </p>
-              </div>
-              <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6 space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="rounded-full bg-gray-300 dark:bg-gray-700 w-12 h-12 flex items-center justify-center text-2xl">
-                    🎧
+              </a>
+              <a
+                href="https://www.last.fm/user/luisignaciocc"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="rounded-full bg-gray-300 dark:bg-gray-700 w-12 h-12 flex items-center justify-center text-2xl">
+                      🎧
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold">Ignacio Collantes</h3>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">
+                        Music Lover
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-xl font-bold">John Smith</h3>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">
-                      Music Lover
-                    </p>
-                  </div>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    &quot;I&apos;ve been using Scrobbler for years and it&apos;s
+                    the best way to keep track of my music listening habits. The
+                    integration with Last.fm is seamless and I love being able
+                    to see my stats and discover new artists.&quot;
+                  </p>
                 </div>
-                <p className="text-gray-500 dark:text-gray-400">
-                  &quot;I&apos;ve been using Scrobbler for years and it&apos;s
-                  the best way to keep track of my music listening habits. The
-                  integration with Last.fm is seamless and I love being able to
-                  see my stats and discover new artists.&quot;
-                </p>
-              </div>
+              </a>
             </div>
           </div>
         </section>
       </main>
-      <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
+      <footer className="flex flex-col gap-2 py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
         <p className="text-xs text-gray-500 dark:text-gray-400">
           © {new Date().getFullYear()} Boconó Labs. All rights reserved.
         </p>
