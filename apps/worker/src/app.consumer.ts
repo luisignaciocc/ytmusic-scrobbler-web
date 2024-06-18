@@ -103,10 +103,15 @@ export class AppConsumer implements OnModuleInit {
         }
       }
 
-      const [songs] = await Promise.all([
+      const [songs, songsOnDB] = await Promise.all([
         getYTMusicHistory({
           visitorId,
           accessToken,
+        }),
+        this.prisma.song.count({
+          where: {
+            userId: user.id,
+          },
         }),
         // delete song older tah 24h
         this.prisma.song.deleteMany({
@@ -121,11 +126,22 @@ export class AppConsumer implements OnModuleInit {
 
       let songsReproducedToday = 0;
       let songsScrobbled = 0;
-      for await (const song of songs.filter(
-        (song) => song.playedAt === "Today",
-      )) {
+      for (const song of songs.filter((song) => song.playedAt === "Today")) {
         songsReproducedToday++;
         try {
+          if (songsOnDB === 0) {
+            // First time scrobbling, don't send all the previous songs to Last.fm
+            await this.prisma.song.create({
+              data: {
+                title: song.title,
+                artist: song.artist,
+                album: song.album,
+                addedAt: new Date(),
+                userId: user.id,
+              },
+            });
+            continue;
+          }
           const savedSong = await this.prisma.song.findFirst({
             where: {
               title: song.title,
