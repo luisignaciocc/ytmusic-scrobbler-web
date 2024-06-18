@@ -25,10 +25,10 @@ import { PrismaService } from "./prisma.service";
       defaultJobOptions: {
         timeout: 15000,
         removeOnComplete: {
-          age: 12 * 60 * 60,
+          age: 3 * 60 * 60, // 3 hours
         },
         removeOnFail: {
-          age: 3 * 24 * 60 * 60,
+          age: 6 * 60 * 60, // 6 hours
         },
       },
     }),

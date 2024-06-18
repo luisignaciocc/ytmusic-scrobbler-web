@@ -40,10 +40,13 @@ export class AppProducer implements OnModuleInit {
     });
 
     this.queue.addBulk(
-      activeUsers.map((user) => ({
+      activeUsers.map((user, index) => ({
         name: "scrobble",
         data: {
           userId: user.id,
+        },
+        opts: {
+          delay: index * 1000,
         },
       })),
     );
