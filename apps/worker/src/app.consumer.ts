@@ -73,17 +73,16 @@ export class AppConsumer implements OnModuleInit {
         return job.discard();
       }
 
-      if (
-        !user.googleAccessToken ||
-        !user.googleRefreshToken ||
-        !user.googleTokenExpires
-      ) {
+      if (!user.googleRefreshToken) {
         job.log(`User ${userId} is not authenticated with Google`);
         return job.discard();
       }
 
       let accessToken = user.googleAccessToken;
-      if (user.googleTokenExpires < new Date().getTime()) {
+      if (
+        !user.googleTokenExpires ||
+        user.googleTokenExpires < new Date().getTime()
+      ) {
         try {
           const response = await fetch("https://oauth2.googleapis.com/token", {
             method: "POST",
