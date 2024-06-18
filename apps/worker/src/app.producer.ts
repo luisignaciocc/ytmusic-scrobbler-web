@@ -29,7 +29,6 @@ export class AppProducer implements OnModuleInit {
         isActive: true,
         NOT: {
           lastFmSessionKey: null,
-          googleAccessToken: null,
           googleRefreshToken: null,
         },
       },
