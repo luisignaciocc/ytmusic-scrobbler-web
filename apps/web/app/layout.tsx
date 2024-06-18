@@ -28,6 +28,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     title: "YouTube Music Scrobbler",
+    url: "https://scrobbler.bocono-labs.com",
     description:
       "Automatically track your listening activity on YouTube Music with Last.fm",
     siteName: "YouTube Music Scrobbler",
