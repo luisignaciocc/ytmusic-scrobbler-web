@@ -200,7 +200,9 @@ export default function Home() {
                       🎵
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold">Emilio Cabezas</h3>
+                      <h3 className="text-xl font-bold dark:text-gray-300">
+                        Emilio Cabezas
+                      </h3>
                       <p className="text-gray-500 dark:text-gray-400 text-sm">
                         Music Enthusiast
                       </p>
@@ -224,7 +226,9 @@ export default function Home() {
                       🎧
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold">Ignacio Collantes</h3>
+                      <h3 className="text-xl font-bold dark:text-gray-300">
+                        Ignacio Collantes
+                      </h3>
                       <p className="text-gray-500 dark:text-gray-400 text-sm">
                         Music Lover
                       </p>
