@@ -243,6 +243,19 @@ export default function Home() {
                 </div>
               </a>
             </div>
+            <div className="mt-8 text-center">
+              <p>
+                If you enjoy using our service and would like to support us,{" "}
+                <a
+                  href="https://www.buymeacoffee.com/luisignaciocc"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline text-blue-500"
+                >
+                  buy us a coffee
+                </a>
+              </p>
+            </div>
           </div>
         </section>
       </main>
