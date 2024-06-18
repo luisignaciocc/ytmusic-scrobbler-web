@@ -27,14 +27,10 @@ export class AppProducer implements OnModuleInit {
     const activeUsers = await this.prisma.user.findMany({
       where: {
         isActive: true,
-        lastFmSessionKey: {
-          not: null,
-        },
-        googleAccessToken: {
-          not: null,
-        },
-        googleRefreshToken: {
-          not: null,
+        NOT: {
+          lastFmSessionKey: null,
+          googleAccessToken: null,
+          googleRefreshToken: null,
         },
       },
       select: {
