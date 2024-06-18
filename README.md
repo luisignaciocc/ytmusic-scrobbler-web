@@ -1,76 +1,28 @@
-# YouTube Music to Last.fm Scrobbler Monorepo
+dame un readme para un repositorio (en ingles)
 
-This monorepo, managed with `pnpm` and `turborepo`, contains two applications designed to create a Last.fm scrobbler using YouTube Music history. The solution operates on a server and supports multiple users.
+el repositorio es un monorepo con pnpm y turborepo, consta de dos aplicaciones y la finalidad es hacer un scrobbler de lastfm que funcione con el historial de youtube music que se ejecute en un servidor y funcione para multiples usuarios. consta de una app web hecha con nextjs que se encarga de los flujos de autenticacion para obtener las keys de google y de lastfm, y una app nextjs que esta corriendo en un servidor, que corre un proceso cada 5 minutos y toma el historial de youtube y lo manda a lastfm. el proceso del background utiliza bullmq para los procesos workers. adicionalmente en el servidor de la app nestjs, se puede acceder a un dashboard para ver el estado de los procesos.
 
-## Overview
+para levantar en local la app necesitamos tener pnpm instalado, tenemos un archivo docker-compose.yml que nos puede servir para levantar una base de datos postgres. necesitaremos hacer varias cosas para obtener las variables de entorno.
 
-- **Web App**: Built with Next.js, handles authentication flows to obtain Google and Last.fm keys.
-- **Server App**: Built with NestJS, runs a background process every 5 minutes to fetch YouTube Music history and send it to Last.fm. It uses `BullMQ` for worker processes. Additionally, it includes a dashboard for monitoring process status.
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+los obtenemos de crear en google cloud una aplicacion de google con ID de clientes OAuth 2.0, los permisos deben ser YouTube Data API v3 (/auth/youtube), en origenes autorizados: http://localhost:3000, en URI de redireccionamiento autorizados http://localhost:3000/api/auth/callback/google
+NEXTAUTH_SECRET es un token para encryptar el json de la sesion
 
-## Local Setup
+LAST_FM_API_KEY y LAST_FM_API_SECRET se deben obtener creando una app de lastfm, y DASHBOARD_PASSWORD es la password del usuario admin con el que se protege el /dashboard de los procesos background.
 
-### Prerequisites
+la app web corre en el puerto 3000 y el background en el 4000
 
-- `pnpm` must be installed.
-- A `docker-compose.yml` file is available to set up a PostgreSQL database.
+una vez instalado todo se debe migrar la base de datos con pnpm migrate
 
-### Environment Variables
+para iniciar el servidor de desarrollo del front se ejecuta
 
-You will need to set several environment variables to run the applications:
+pnpm dev --filter web
 
-- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`: Obtain these by creating a Google Cloud application with OAuth 2.0 client IDs. Set the permissions to `YouTube Data API v3 (/auth/youtube)`, authorized origins to `http://localhost:3000`, and authorized redirect URIs to `http://localhost:3000/api/auth/callback/google`.
-- `NEXTAUTH_SECRET`: A token for encrypting the session JSON.
-- `LAST_FM_API_KEY` and `LAST_FM_API_SECRET`: Obtain these by creating an app on Last.fm.
-- `DASHBOARD_PASSWORD`: The password for the admin user protecting the background processes dashboard.
+y para iniciar los workers se ejecuta pnpm dev --filter worker
 
-### Running the Applications
+como orm se usa prisma.
 
-1. **Database Migration**:
+la logica de los workers es que tenemos un producer (en app.producer.ts) que envia los mensajes para que se ejecuten, cada 5 minutos, obteniendo todos los usuarios que estan activos en la base de datos, y tenemos un consumer (app.consumer.ts) que es donde esta el codigo que ejetuta el scrobbleo.
 
-   ```bash
-   pnpm migrate
-   ```
-
-2. **Start the Development Server for the Web App**:
-
-   ```bash
-   pnpm dev --filter web
-   ```
-
-3. **Start the Workers**:
-   ```bash
-   pnpm dev --filter worker
-   ```
-
-### Ports
-
-- The web app runs on port `3000`.
-- The background worker app runs on port `4000`.
-
-## Architecture
-
-### ORM
-
-- Uses Prisma as the ORM.
-
-### Worker Logic
-
-- **Producer** (`app.producer.ts`): Sends messages to be executed every 5 minutes, fetching all active users from the database.
-- **Consumer** (`app.consumer.ts`): Contains the code that performs the scrobbling.
-
-### Web App
-
-- Contains several buttons for authorizing Google and Last.fm.
-- Displays some system information.
-
-## Docker
-
-- A `docker-compose.yml` file is provided to set up a PostgreSQL database.
-
-## Additional Information
-
-For detailed instructions on setting up Google and Last.fm applications, please refer to their respective documentation.
-
----
-
-**Note**: Ensure all environment variables are correctly set before starting the applications.
+del lado del front tenemos varios botones para autorizar a google y a lastfm, tambien un poco de info del sistema.
