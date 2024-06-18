@@ -1,28 +1,81 @@
-dame un readme para un repositorio (en ingles)
+# Last.fm Scrobbler for YouTube Music History
 
-el repositorio es un monorepo con pnpm y turborepo, consta de dos aplicaciones y la finalidad es hacer un scrobbler de lastfm que funcione con el historial de youtube music que se ejecute en un servidor y funcione para multiples usuarios. consta de una app web hecha con nextjs que se encarga de los flujos de autenticacion para obtener las keys de google y de lastfm, y una app nextjs que esta corriendo en un servidor, que corre un proceso cada 5 minutos y toma el historial de youtube y lo manda a lastfm. el proceso del background utiliza bullmq para los procesos workers. adicionalmente en el servidor de la app nestjs, se puede acceder a un dashboard para ver el estado de los procesos.
+This repository is a monorepo managed by pnpm and Turborepo that consists of two applications:
 
-para levantar en local la app necesitamos tener pnpm instalado, tenemos un archivo docker-compose.yml que nos puede servir para levantar una base de datos postgres. necesitaremos hacer varias cosas para obtener las variables de entorno.
+- **Web App**: A Next.js application that handles authentication flows for obtaining Google and Last.fm API keys.
+- **Background App**: A Next.js application running on a server that runs a process every 5 minutes to fetch YouTube history and send it to Last.fm.
 
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-los obtenemos de crear en google cloud una aplicacion de google con ID de clientes OAuth 2.0, los permisos deben ser YouTube Data API v3 (/auth/youtube), en origenes autorizados: http://localhost:3000, en URI de redireccionamiento autorizados http://localhost:3000/api/auth/callback/google
-NEXTAUTH_SECRET es un token para encryptar el json de la sesion
+## Features
 
-LAST_FM_API_KEY y LAST_FM_API_SECRET se deben obtener creando una app de lastfm, y DASHBOARD_PASSWORD es la password del usuario admin con el que se protege el /dashboard de los procesos background.
+- Scrobbles YouTube Music history to Last.fm
+- Supports multiple users
+- Web app for authentication and user management
+- Background process for efficient scrobbling
+- Dashboard to monitor background process status
 
-la app web corre en el puerto 3000 y el background en el 4000
+## Technology Stack
 
-una vez instalado todo se debe migrar la base de datos con pnpm migrate
+- **Frontend**: Next.js
+- **Backend**: Next.js, BullMQ
+- **Database**: PostgreSQL
+- **ORM**: Prisma
+- **Package Manager**: pnpm
+- **Build System**: Turborepo
 
-para iniciar el servidor de desarrollo del front se ejecuta
+## Local Setup
 
-pnpm dev --filter web
+### Prerequisites
 
-y para iniciar los workers se ejecuta pnpm dev --filter worker
+- pnpm installed
+- Docker installed
 
-como orm se usa prisma.
+### Environment Variables
 
-la logica de los workers es que tenemos un producer (en app.producer.ts) que envia los mensajes para que se ejecuten, cada 5 minutos, obteniendo todos los usuarios que estan activos en la base de datos, y tenemos un consumer (app.consumer.ts) que es donde esta el codigo que ejetuta el scrobbleo.
+- `GOOGLE_CLIENT_ID`: Obtain from creating a Google OAuth 2.0 client ID in Google Cloud Platform
+- `GOOGLE_CLIENT_SECRET`: Obtain from creating a Google OAuth 2.0 client ID in Google Cloud Platform
+- `NEXTAUTH_SECRET`: A token to encrypt the session JSON
+- `LAST_FM_API_KEY`: Obtain from creating a Last.fm app
+- `LAST_FM_API_SECRET`: Obtain from creating a Last.fm app
+- `DASHBOARD_PASSWORD`: Password for the admin user to protect the background process dashboard
 
-del lado del front tenemos varios botones para autorizar a google y a lastfm, tambien un poco de info del sistema.
+### Setup Steps
+
+1. Clone the repository
+2. Set the required environment variables
+3. Run `docker-compose up -d` to start the PostgreSQL database
+4. Run `pnpm migrate` to migrate the database
+5. Run `pnpm dev --filter web` to start the frontend development server (port 3000)
+6. Run `pnpm dev --filter worker` to start the background workers (port 4000)
+
+## Usage
+
+### Web App
+
+- Navigate to `http://localhost:3000` in your browser
+- Authorize Google and Last.fm access
+- View your scrobbling history and manage settings
+
+### Dashboard
+
+- Navigate to `http://localhost:4000/dashboard` in your browser
+- Enter the `DASHBOARD_PASSWORD` to access the dashboard
+- Monitor the status of background processes
+
+## Development
+
+- Make changes to the code in the respective directories (`web` for frontend, `worker` for background)
+- Save changes
+- The corresponding application will automatically reload in development mode
+
+## Additional Notes
+
+- The worker logic uses a producer-consumer pattern to efficiently handle scrobbling tasks.
+- The frontend provides buttons for authorizing Google and Last.fm access, as well as system information.
+
+## Contributing
+
+Contributions are welcome! Please follow the standard GitHub contribution guidelines.
+
+## License
+
+This project is licensed under the MIT License.
