@@ -9,8 +9,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -30,11 +30,12 @@ model User {
 }
 
 model Song {
-  id      String   @id @default(cuid())
-  title   String
-  artist  String
-  album   String?
-  addedAt DateTime
-  user    User     @relation(fields: [userId], references: [id])
-  userId  String
+  id            String   @id @default(cuid())
+  title         String
+  artist        String
+  album         String?
+  arrayPosition Int      @default(0)
+  addedAt       DateTime
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String
 }

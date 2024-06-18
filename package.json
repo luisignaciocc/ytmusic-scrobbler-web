@@ -5,7 +5,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "format": "prettier --write .",
+    "format": "prettier --write . && prisma format",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
     "generate": "prisma generate",
