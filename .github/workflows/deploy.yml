@@ -41,7 +41,10 @@ jobs:
             export PATH=$PATH:/home/$REMOTE_USER/.nvm/versions/node/v22.3.0/bin:/home/$REMOTE_USER/.local/share/pnpm
             cd $REMOTE_DIR
             git pull
+            pkill turbo
+            pm2 stop yt-music-scrobbler-worker
             pnpm install
             pnpm build --filter worker
-            pm2 restart yt-music-scrobbler-worker
+            pm2 start yt-music-scrobbler-worker
+            pkill turbo
           EOF
