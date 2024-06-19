@@ -112,6 +112,9 @@ importers:
       '@types/xml2js':
         specifier: ^0.4.14
         version: 0.4.14
+      dotenv-cli:
+        specifier: ^7.4.2
+        version: 7.4.2
       eslint-config-next:
         specifier: ^14.2.4
         version: 14.2.4(eslint@8.57.0)(typescript@5.4.5)
