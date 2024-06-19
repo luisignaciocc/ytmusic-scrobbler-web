@@ -74,8 +74,23 @@ const PrivacyPolicy = () => (
         storage is completely secure.
       </p>
 
+      <h2 className="text-2xl font-semibold mb-4">6. Limited Use</h2>
+      <p className="mb-6 text-justify">
+        Youtube Music Scrobbler&apos;s use and transfer to any other app of
+        information received from Google APIs will adhere to{" "}
+        <a
+          href="https://developers.google.com/terms/api-services-user-data-policy"
+          target="_blank"
+          rel="noreferrer"
+          className="underline text-blue-500"
+        >
+          Google API Services User Data Policy
+        </a>
+        , including the Limited Use requirements.
+      </p>
+
       <h2 className="text-2xl font-semibold mb-4">
-        6. Your Data Protection Rights
+        7. Your Data Protection Rights
       </h2>
       <p className="mb-6 text-justify">
         Depending on your location, you may have the following rights regarding
@@ -113,7 +128,7 @@ const PrivacyPolicy = () => (
       </ul>
 
       <h2 className="text-2xl font-semibold mb-4">
-        7. International Data Transfers
+        8. International Data Transfers
       </h2>
       <p className="mb-6 text-justify">
         Your information, including personal data, may be transferred to and
@@ -127,7 +142,7 @@ const PrivacyPolicy = () => (
         information represents your agreement to that transfer.
       </p>
 
-      <h2 className="text-2xl font-semibold mb-4">8. Retention of Data</h2>
+      <h2 className="text-2xl font-semibold mb-4">9. Retention of Data</h2>
       <p className="mb-6 text-justify">
         We will retain your personal data only for as long as is necessary for
         the purposes set out in this Privacy Policy. We will retain and use your
@@ -138,7 +153,7 @@ const PrivacyPolicy = () => (
       </p>
 
       <h2 className="text-2xl font-semibold mb-4">
-        9. Children&apos;s Privacy
+        10. Children&apos;s Privacy
       </h2>
       <p className="mb-6 text-justify">
         Our Application does not address anyone under the age of 13. We do not
@@ -151,7 +166,7 @@ const PrivacyPolicy = () => (
       </p>
 
       <h2 className="text-2xl font-semibold mb-4">
-        10. Changes to This Privacy Policy
+        11. Changes to This Privacy Policy
       </h2>
       <p className="mb-6 text-justify">
         We may update our Privacy Policy from time to time. We will notify you
