@@ -101,7 +101,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const caption = `🎸 Albums published a day like today in the 90s 🎶\n\n${sortedAlbums
+    const caption = `🎸 Albums published a day like today in the 90s (${
+      day + "/" + month + "/" + ninetiesYear
+    }) 🎶\n\n${sortedAlbums
       .map((album) => `• ${album.title} by ${album.artist}`)
       .join(
         "\n",
