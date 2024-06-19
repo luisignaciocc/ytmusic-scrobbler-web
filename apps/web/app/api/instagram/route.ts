@@ -1,13 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export const maxDuration = 60;
 
-export async function GET() {
-  // const apiKey = request.headers.get("x-api-key");
-
-  // if (apiKey !== process.env.API_KEY) {
-  //   return NextResponse.json({ error: "Invalid API key" }, { status: 401 });
-  // }
+export async function GET(request: NextRequest) {
+  const authHeader = request.headers.get("authorization");
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return new Response("Unauthorized", {
+      status: 401,
+    });
+  }
 
   try {
     const access_token = process.env.FACEBOOK_LONG_LIVE_TOKEN;
@@ -85,7 +86,6 @@ export async function GET() {
           },
           body: new URLSearchParams({
             image_url: album.coverImage,
-            caption: "#firtsPost",
             access_token,
             is_carousel_item: "true",
           }),
@@ -101,6 +101,12 @@ export async function GET() {
       }
     }
 
+    const caption = `🎸 Albums published a day like today in the 90s 🎶\n\n${sortedAlbums
+      .map((album) => `• ${album.title} by ${album.artist}`)
+      .join(
+        "\n",
+      )}\n\nFollow us for more! 🎉🎉🎉\n\n#90s #90smusic #90salbums #90salbum #90srock #90spop #90srap #90sgrunge #90sindie #90salternative #90sband #90sartist #90splaylist #90sclassic #90slove #90sforever #90schild #90sbaby #90skid #90sstyle #90sfashion #90slook #90soutfit #90sinspired #90sinspiration #90sdesign #90sdecor #90sdecorative`;
+
     const carouselResponse = await fetch(
       `https://graph.facebook.com/${apiVersion}/${igUserId}/media`,
       {
@@ -109,7 +115,7 @@ export async function GET() {
           "Content-Type": "application/x-www-form-urlencoded",
         },
         body: new URLSearchParams({
-          caption: "#firtsPost",
+          caption,
           access_token,
           media_type: "CAROUSEL",
           children: creationIds.join(","),
@@ -147,15 +153,12 @@ export async function GET() {
     );
 
     const {
-      id: media_id,
+      id: _media_id,
     }: {
       id: string;
     } = await res2.json();
 
-    return NextResponse.json(
-      { success: true, url: `https://www.instagram.com/p/${media_id}` },
-      { status: 200 },
-    );
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     if (error instanceof Error) {
       return NextResponse.json(
