@@ -108,28 +108,43 @@ export class AppConsumer implements OnModuleInit {
           visitorId,
           accessToken,
         }),
-        this.prisma.song.count({
+        this.prisma.song.findMany({
           where: {
             userId: user.id,
-          },
-        }),
-        // delete song older tah 24h
-        this.prisma.song.deleteMany({
-          where: {
-            userId: user.id,
-            addedAt: {
-              lt: new Date(new Date().getTime() - 24 * 60 * 60 * 1000),
-            },
           },
         }),
       ]);
 
+      const todaySongs = songs.filter((song) => song.playedAt === "Today");
+
+      if (songsOnDB.length > 0) {
+        const songsToDelete = songsOnDB.filter(
+          (song) =>
+            !todaySongs.some(
+              (todaySong) =>
+                todaySong.title === song.title &&
+                todaySong.artist === song.artist &&
+                todaySong.album === song.album,
+            ),
+        );
+
+        if (songsToDelete.length > 0) {
+          await this.prisma.song.deleteMany({
+            where: {
+              id: {
+                in: songsToDelete.map((song) => song.id),
+              },
+            },
+          });
+        }
+      }
+
       let songsReproducedToday = 0;
       let songsScrobbled = 0;
-      for (const song of songs.filter((song) => song.playedAt === "Today")) {
+      for (const song of todaySongs) {
         songsReproducedToday++;
         try {
-          if (songsOnDB === 0) {
+          if (songsOnDB.length === 0) {
             // First time scrobbling, don't send all the previous songs to Last.fm
             await this.prisma.song.create({
               data: {
@@ -138,6 +153,7 @@ export class AppConsumer implements OnModuleInit {
                 album: song.album,
                 addedAt: new Date(),
                 userId: user.id,
+                arrayPosition: songsReproducedToday,
               },
             });
             continue;
@@ -169,6 +185,7 @@ export class AppConsumer implements OnModuleInit {
                   album: song.album,
                   addedAt: new Date(),
                   userId: user.id,
+                  arrayPosition: songsReproducedToday,
                 },
               }),
             ]);
@@ -177,6 +194,27 @@ export class AppConsumer implements OnModuleInit {
             job.log(
               `Scrobbled song ${song.title} by ${song.artist} - user ${userId}`,
             );
+          } else if (savedSong.arrayPosition > songsReproducedToday) {
+            await Promise.all([
+              scrobbleSong({
+                song,
+                lastFmApiKey: LAST_FM_API_KEY,
+                lastFmApiSecret: LAST_FM_API_SECRET,
+                lastFmSessionKey: user.lastFmSessionKey!,
+                timestamp: (
+                  Math.floor(new Date().getTime() / 1000) -
+                  30 * (songsScrobbled + 1)
+                ).toString(),
+              }),
+              this.prisma.song.update({
+                where: {
+                  id: savedSong.id,
+                },
+                data: {
+                  arrayPosition: songsReproducedToday,
+                },
+              }),
+            ]);
           }
         } catch (error) {
           job.log(`Error scrobbling song for user ${userId}`);

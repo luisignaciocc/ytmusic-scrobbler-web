@@ -184,7 +184,7 @@ export async function getYTMusicHistory({
             ?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]
             ?.text || title;
 
-        if (title && artist) {
+        if (title && artist && !title.endsWith(" - Topic")) {
           songs.push({
             title,
             artist,

@@ -46,7 +46,7 @@ export class AppProducer implements OnModuleInit {
           userId: user.id,
         },
         opts: {
-          delay: index * 1000,
+          delay: index * 3000,
         },
       })),
     );
