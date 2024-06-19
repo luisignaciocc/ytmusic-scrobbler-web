@@ -39,6 +39,15 @@ export class AppProducer implements OnModuleInit {
       },
     });
 
+    const cronInterval = 60 * 5 * 1000; // in milliseconds
+    const count = activeUsers.length;
+
+    if (count === 0) {
+      return;
+    }
+
+    const equidistantInterval = cronInterval / count;
+
     this.queue.addBulk(
       activeUsers.map((user, index) => ({
         name: "scrobble",
@@ -46,7 +55,7 @@ export class AppProducer implements OnModuleInit {
           userId: user.id,
         },
         opts: {
-          delay: index * 3000,
+          delay: index * equidistantInterval,
         },
       })),
     );
