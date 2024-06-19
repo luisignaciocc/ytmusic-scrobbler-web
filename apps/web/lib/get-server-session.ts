@@ -70,6 +70,12 @@ export const authConfig = {
       return session;
     },
   },
+  theme: {
+    colorScheme: "auto",
+    brandColor: "#FE344D",
+    logo: "https://scrobbler.bocono-labs.com/logo.png",
+    buttonText: "Sign in with Google",
+  },
 } satisfies NextAuthOptions;
 
 export default function auth(
