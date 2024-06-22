@@ -22,6 +22,7 @@ export default function RootLayout({
 }
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://scrobbler.bocono-labs.com"),
   title: "Last.fm Scrobbler for YouTube Music",
   description:
     "Automatically track your listening activity on YouTube Music with Last.fm",
