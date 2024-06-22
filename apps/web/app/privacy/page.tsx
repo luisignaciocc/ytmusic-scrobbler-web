@@ -76,8 +76,8 @@ const PrivacyPolicy = () => (
 
       <h2 className="text-2xl font-semibold mb-4">6. Limited Use</h2>
       <p className="mb-6 text-justify">
-        Youtube Music Scrobbler&apos;s use and transfer to any other app of
-        information received from Google APIs will adhere to{" "}
+        Last.fm Scrobbler for YouTube Music&apos;s use and transfer to any other
+        app of information received from Google APIs will adhere to{" "}
         <a
           href="https://developers.google.com/terms/api-services-user-data-policy"
           target="_blank"

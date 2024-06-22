@@ -15,7 +15,7 @@ export default function Home() {
         <Link className="flex items-center justify-center space-x-3" href="/">
           <Music2Icon className="h-6 w-6" />
           <p className="font-semibold hidden sm:block">
-            YouTube Music Scrobbler
+            Last.fm Scrobbler for YouTube Music
           </p>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6">

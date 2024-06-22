@@ -22,21 +22,21 @@ export default function RootLayout({
 }
 
 export const metadata: Metadata = {
-  title: "YouTube Music Scrobbler",
+  title: "Last.fm Scrobbler for YouTube Music",
   description:
     "Automatically track your listening activity on YouTube Music with Last.fm",
   openGraph: {
     type: "website",
-    title: "YouTube Music Scrobbler",
+    title: "Last.fm Scrobbler for YouTube Music",
     url: "https://scrobbler.bocono-labs.com",
     description:
       "Automatically track your listening activity on YouTube Music with Last.fm",
-    siteName: "YouTube Music Scrobbler",
+    siteName: "Last.fm Scrobbler for YouTube Music",
     images: [{ url: "/icon.png" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "YouTube Music Scrobbler",
+    title: "Last.fm Scrobbler for YouTube Music",
     description:
       "Automatically track your listening activity on YouTube Music with Last.fm",
     creator: "@luisignaciocc",

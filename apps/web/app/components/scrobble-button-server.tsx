@@ -58,8 +58,8 @@ export default async function ScrobbleBtnServer() {
         >
           myaccount.google.com/connections
         </a>{" "}
-        and remove the Youtube Music Scrobbler from the list of connected apps.
-        Then, try to login again.
+        and remove the Last.fm Scrobbler for YouTube Music from the list of
+        connected apps. Then, try to login again.
       </div>
     );
   }
