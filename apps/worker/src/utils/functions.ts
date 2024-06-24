@@ -38,13 +38,23 @@ export async function getNewGoogleToken({
 
   if (!response.ok) {
     const error = await response.json();
+    console.error(error);
     throw new Error(error);
   }
 
-  const data: {
-    access_token: string;
-    expires_in: number;
-  } = await response.json();
+  const data:
+    | {
+        access_token: string;
+        expires_in: number;
+      }
+    | {
+        error: string;
+        error_description: string;
+      } = await response.json();
+
+  if ("error" in data) {
+    throw new Error(data.error_description);
+  }
 
   const expiresAt = new Date().getTime() + data.expires_in * 1000;
   const accessToken = data.access_token;
