@@ -36,6 +36,6 @@ model Song {
   album         String?
   arrayPosition Int      @default(0)
   addedAt       DateTime
-  user          User     @relation(fields: [userId], references: [id])
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId        String
 }
