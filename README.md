@@ -16,7 +16,7 @@ This repository is a monorepo managed by pnpm and Turborepo that consists of two
 ## Technology Stack
 
 - **Frontend**: Next.js
-- **Backend**: Next.js, BullMQ
+- **Backend**: Nest.js, BullMQ
 - **Database**: PostgreSQL
 - **ORM**: Prisma
 - **Package Manager**: pnpm
