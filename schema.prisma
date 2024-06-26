@@ -14,11 +14,11 @@ datasource db {
 }
 
 model User {
-  id                     String   @id @default(cuid())
-  googleId               String   @unique
+  id                     String    @id @default(cuid())
+  googleId               String    @unique
   name                   String
-  email                  String   @unique
-  isActive               Boolean  @default(false)
+  email                  String    @unique
+  isActive               Boolean   @default(false)
   picture                String
   googleAccessToken      String
   googleRefreshToken     String?
@@ -27,7 +27,10 @@ model User {
   lastFmSessionKey       String?
   lastFmUsername         String?
   Songs                  Song[]
-  lastSuccessfulScrobble DateTime @default(now())
+  lastSuccessfulScrobble DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @default(now()) @updatedAt
+  deletedAt              DateTime?
 }
 
 model Song {

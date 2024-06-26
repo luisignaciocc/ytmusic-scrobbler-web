@@ -20,6 +20,7 @@ export const toggleScrobble = async (scrobble: boolean) => {
       },
       data: {
         isActive: scrobble,
+        updatedAt: new Date(),
       },
     });
   } catch (error) {
