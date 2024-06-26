@@ -24,6 +24,9 @@ export class AppProducer implements OnModuleInit {
     name: "scrobble",
   })
   async scrobble() {
+    const LAST_SCROBBLE_INTERVAL = new Date(
+      Date.now() - 1000 * 60 * 60 * 24 * 5,
+    ); // 5 days
     const activeUsers = await this.prisma.user.findMany({
       where: {
         isActive: true,
@@ -32,6 +35,9 @@ export class AppProducer implements OnModuleInit {
         },
         googleRefreshToken: {
           not: null,
+        },
+        lastSuccessfulScrobble: {
+          gte: LAST_SCROBBLE_INTERVAL,
         },
       },
       select: {
@@ -59,5 +65,26 @@ export class AppProducer implements OnModuleInit {
         },
       })),
     );
+
+    await this.prisma.user.updateMany({
+      data: {
+        isActive: false,
+      },
+      where: {
+        OR: [
+          {
+            googleRefreshToken: null,
+          },
+          {
+            lastFmSessionKey: null,
+          },
+          {
+            lastSuccessfulScrobble: {
+              lt: LAST_SCROBBLE_INTERVAL,
+            },
+          },
+        ],
+      },
+    });
   }
 }

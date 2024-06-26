@@ -224,7 +224,17 @@ export class AppConsumer implements OnModuleInit {
       }
 
       this.logger.debug(`Scrobbling for user ${userId} done at ${new Date()}`);
-      await job.progress(100);
+      await Promise.all([
+        job.progress(100),
+        this.prisma.user.update({
+          where: {
+            id: userId,
+          },
+          data: {
+            lastSuccessfulScrobble: new Date(),
+          },
+        }),
+      ]);
 
       return {
         songsReproducedToday,
