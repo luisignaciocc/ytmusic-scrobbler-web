@@ -3,7 +3,7 @@
 This repository is a monorepo managed by pnpm and Turborepo that consists of two applications:
 
 - **Web App**: A Next.js application that handles authentication flows for obtaining Google and Last.fm API keys.
-- **Background App**: A Next.js application running on a server that runs a process every 5 minutes to fetch YouTube history and send it to Last.fm.
+- **Background App**: A Nest.js application running on a server that runs a process every 5 minutes to fetch YouTube history and send it to Last.fm.
 
 ## Features
 
