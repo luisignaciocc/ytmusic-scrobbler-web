@@ -3,7 +3,7 @@
 This repository is a monorepo managed by pnpm and Turborepo that consists of two applications:
 
 - **Web App**: A Next.js application that handles authentication flows for obtaining Google and Last.fm API keys.
-- **Background App**: A Nest.js application running on a server that runs a process every 5 minutes to fetch YouTube history and send it to Last.fm.
+- **Background App**: A Nest.js application running on a server that runs a process every 5 minutes to fetch YouTube history and send it to Last.fm using Redis for message passing between the scheduler and the consumer.
 
 ## Features
 
@@ -12,6 +12,7 @@ This repository is a monorepo managed by pnpm and Turborepo that consists of two
 - Web app for authentication and user management
 - Background process for efficient scrobbling
 - Dashboard to monitor background process status
+- Uses Redis for inter-process communication
 
 ## Technology Stack
 
@@ -21,6 +22,7 @@ This repository is a monorepo managed by pnpm and Turborepo that consists of two
 - **ORM**: Prisma
 - **Package Manager**: pnpm
 - **Build System**: Turborepo
+- **Message Broker**: Redis
 
 ## Local Setup
 
@@ -42,7 +44,7 @@ This repository is a monorepo managed by pnpm and Turborepo that consists of two
 
 1. Clone the repository
 2. Set the required environment variables
-3. Run `docker-compose up -d` to start the PostgreSQL database
+3. Run `docker-compose up -d` to start the PostgreSQL and Redis services
 4. Run `pnpm migrate` to migrate the database
 5. Run `pnpm dev --filter web` to start the frontend development server (port 3000)
 6. Run `pnpm dev --filter worker` to start the background workers (port 4000)
@@ -53,7 +55,7 @@ This repository is a monorepo managed by pnpm and Turborepo that consists of two
 
 - Navigate to `http://localhost:3000` in your browser
 - Authorize Google and Last.fm access
-- View your scrobbling history and manage settings
+- Enable and disable your scrobbling processes
 
 ### Dashboard
 
@@ -69,8 +71,8 @@ This repository is a monorepo managed by pnpm and Turborepo that consists of two
 
 ## Additional Notes
 
-- The worker logic uses a producer-consumer pattern to efficiently handle scrobbling tasks.
-- The frontend provides buttons for authorizing Google and Last.fm access, as well as system information.
+- The worker logic uses a producer-consumer pattern to efficiently handle scrobbling tasks with Redis as the message broker.
+- The frontend provides buttons for authorizing Google and Last.fm access, as well as a button to start/stop scrobbling.
 
 ## Contributing
 
