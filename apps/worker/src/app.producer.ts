@@ -37,6 +37,9 @@ export class AppProducer implements OnModuleInit {
           not: null,
         },
       },
+      orderBy: {
+        createdAt: "asc",
+      },
       select: {
         id: true,
       },
