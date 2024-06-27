@@ -36,9 +36,6 @@ export class AppProducer implements OnModuleInit {
         googleRefreshToken: {
           not: null,
         },
-        lastSuccessfulScrobble: {
-          gte: LAST_SCROBBLE_INTERVAL,
-        },
       },
       select: {
         id: true,
