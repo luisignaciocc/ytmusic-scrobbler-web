@@ -1,5 +1,8 @@
+"use client";
 import React from "react";
 import Image from "next/image";
+import { updateUserStatus } from "@/lib/prisma";
+import { useRouter } from "next/navigation";
 
 interface User {
   id: string;
@@ -19,6 +22,17 @@ interface UserTableProps {
 }
 
 function UserTable({ users }: UserTableProps) {
+  const router = useRouter();
+
+  const handleUserStatusChange = async (userId: string, isActive: boolean) => {
+    try {
+      await updateUserStatus(userId, isActive);
+      router.refresh();
+    } catch (error) {
+      console.error("Error updating user status:", error);
+    }
+  };
+
   return (
     <table className="w-full table-auto">
       <thead>
@@ -47,7 +61,13 @@ function UserTable({ users }: UserTableProps) {
             </td>
             <td className="px-2 py-2">{user.email}</td>
             <td className="px-2 py-2">{user.lastFmUsername}</td>
-            <td className="px-2 py-2">{user.isActive ? "Yes" : "No"}</td>
+            <td className="px-2 py-2">
+              <input
+                type="checkbox"
+                checked={user.isActive}
+                onChange={() => handleUserStatusChange(user.id, user.isActive)}
+              />
+            </td>
             <td className="px-2 py-2">
               {user.lastSuccessfulScrobble?.toLocaleString() || "-"}
             </td>
