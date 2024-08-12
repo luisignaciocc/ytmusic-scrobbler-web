@@ -3,16 +3,10 @@ import Image from "next/image";
 
 interface User {
   id: string;
-  googleId: string;
   name: string;
   email: string;
   isActive: boolean;
   picture: string;
-  googleAccessToken: string;
-  googleRefreshToken: string | null;
-  googleTokenExpires: bigint | null;
-  googleIdToken: string | null;
-  lastFmSessionKey: string | null;
   lastFmUsername: string | null;
   lastSuccessfulScrobble: Date | null;
   createdAt: Date;
