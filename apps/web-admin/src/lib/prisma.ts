@@ -3,27 +3,38 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function getUsers() {
+export async function getUsers(page?: number, perPage?: number) {
   try {
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        picture: true,
-        email: true,
-        lastFmUsername: true,
-        isActive: true,
-        lastSuccessfulScrobble: true,
-        createdAt: true,
-        deletedAt: true,
-        updatedAt: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    const limit = perPage || 10;
+    const offset = ((page || 1) - 1) * limit;
 
-    return users;
+    const [users, count] = await Promise.all([
+      prisma.user.findMany({
+        select: {
+          id: true,
+          name: true,
+          picture: true,
+          email: true,
+          lastFmUsername: true,
+          isActive: true,
+          lastSuccessfulScrobble: true,
+          createdAt: true,
+          deletedAt: true,
+          updatedAt: true,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        skip: offset,
+        take: limit,
+      }),
+      prisma.user.count(),
+    ]);
+
+    return {
+      users,
+      count,
+    };
   } catch (error) {
     console.error("Error querying users:", error);
     throw error;
