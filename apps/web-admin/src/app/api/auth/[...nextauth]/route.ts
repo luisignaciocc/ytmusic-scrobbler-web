@@ -1,17 +1,22 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
-const authPassword = "12345678";
-
 const handler = NextAuth({
   providers: [
     CredentialsProvider({
       name: "Admin",
       credentials: {
-        // No login form needed
+        password: {
+          label: "Password",
+          type: "password",
+          placeholder: "********",
+        },
       },
-      async authorize(credentials, req) {
-        if (process.env.NEXT_ADMIN_PASSWORD === authPassword) {
+      async authorize(credentials) {
+        if (!credentials || !credentials.password) {
+          return null;
+        }
+        if (process.env.NEXT_ADMIN_PASSWORD === credentials.password) {
           return {
             id: "1",
             name: "Admin",
