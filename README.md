@@ -48,6 +48,7 @@ This repository is a monorepo managed by pnpm and Turborepo that consists of two
 4. Run `pnpm migrate` to migrate the database
 5. Run `pnpm dev --filter web` to start the frontend development server (port 3000)
 6. Run `pnpm dev --filter worker` to start the background workers (port 4000)
+7. Run `pnpm dev --filter web-admin` to start the admin frontend development server (port 3000)
 
 ## Usage
 
