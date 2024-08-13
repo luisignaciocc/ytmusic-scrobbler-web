@@ -25,6 +25,7 @@ function UserTable({ users }: UserTableProps) {
   const [filterByActive, setFilterByActive] = useState<
     "all" | "active" | "inactive"
   >("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleUserStatusChange = async (userId: string, isActive: boolean) => {
     try {
@@ -48,17 +49,49 @@ function UserTable({ users }: UserTableProps) {
     }
   };
 
+  const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const query = event.target.value;
+    setSearchQuery(query);
+
+    let filteredRecords = users;
+
+    if (filterByActive === "active") {
+      filteredRecords = users.filter((user) => user.isActive);
+    } else if (filterByActive === "inactive") {
+      filteredRecords = users.filter((user) => !user.isActive);
+    }
+
+    filteredRecords = filteredRecords.filter((user) => {
+      return (
+        user.email.toLowerCase().includes(query.toLowerCase()) ||
+        (user.lastFmUsername &&
+          user.lastFmUsername.toLowerCase().includes(query.toLowerCase()))
+      );
+    });
+
+    setRecords(filteredRecords);
+  };
+
   return (
     <Fragment>
-      <select
-        value={filterByActive}
-        onChange={handleFilterChange}
-        className="px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-      >
-        <option value="all">All</option>
-        <option value="active">Active</option>
-        <option value="inactive">Inactive</option>
-      </select>
+      <div className="flex space-x-4 mb-4">
+        <select
+          value={filterByActive}
+          onChange={handleFilterChange}
+          className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="all">All</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={handleSearchChange}
+          placeholder="Search by email or Last.fm username"
+          className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+      </div>
       <table className="w-full table-auto">
         <thead>
           <tr className="text-left">
