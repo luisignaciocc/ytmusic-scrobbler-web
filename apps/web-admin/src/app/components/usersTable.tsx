@@ -21,11 +21,22 @@ interface UserTableProps {
 
 function UserTable({ users }: UserTableProps) {
   const router = useRouter();
+
   const [records, setRecords] = useState(users);
   const [filterByActive, setFilterByActive] = useState<
     "all" | "active" | "inactive"
   >("all");
+
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [sortColumn, setSortColumn] = useState<
+    | "email"
+    | "lastFmUsername"
+    | "isActive"
+    | "lastSuccessfulScrobble"
+    | "createdAt"
+  >("email");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const handleUserStatusChange = async (userId: string, isActive: boolean) => {
     try {
@@ -72,6 +83,89 @@ function UserTable({ users }: UserTableProps) {
     setRecords(filteredRecords);
   };
 
+  const sortRecords = (records: User[]) => {
+    const sortedRecords = [...records].sort((a, b) => {
+      switch (sortColumn) {
+        case "email":
+          if (a.email.toLowerCase() < b.email.toLowerCase())
+            return sortDirection === "asc" ? -1 : 1;
+          if (a.email.toLowerCase() > b.email.toLowerCase())
+            return sortDirection === "asc" ? 1 : -1;
+          break;
+
+        case "lastFmUsername":
+          if (
+            (a.lastFmUsername ?? "").toLowerCase() <
+            (b.lastFmUsername ?? "").toLowerCase()
+          )
+            return sortDirection === "asc" ? -1 : 1;
+          if (
+            (a.lastFmUsername ?? "").toLowerCase() >
+            (b.lastFmUsername ?? "").toLowerCase()
+          )
+            return sortDirection === "asc" ? 1 : -1;
+          break;
+
+        case "isActive":
+          if (a.isActive === b.isActive) return 0;
+          return a.isActive
+            ? sortDirection === "asc"
+              ? -1
+              : 1
+            : sortDirection === "asc"
+              ? 1
+              : -1;
+
+        case "lastSuccessfulScrobble":
+          if (a.lastSuccessfulScrobble && b.lastSuccessfulScrobble) {
+            if (
+              a.lastSuccessfulScrobble.getTime() <
+              b.lastSuccessfulScrobble.getTime()
+            )
+              return sortDirection === "asc" ? -1 : 1;
+            if (
+              a.lastSuccessfulScrobble.getTime() >
+              b.lastSuccessfulScrobble.getTime()
+            )
+              return sortDirection === "asc" ? 1 : -1;
+          } else if (a.lastSuccessfulScrobble) {
+            return sortDirection === "asc" ? -1 : 1;
+          } else if (b.lastSuccessfulScrobble) {
+            return sortDirection === "asc" ? 1 : -1;
+          }
+          break;
+
+        case "createdAt":
+          if (a.createdAt.getTime() < b.createdAt.getTime())
+            return sortDirection === "asc" ? -1 : 1;
+          if (a.createdAt.getTime() > b.createdAt.getTime())
+            return sortDirection === "asc" ? 1 : -1;
+          break;
+      }
+
+      return 0;
+    });
+    setRecords(sortedRecords);
+    setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+  };
+
+  const handleColumnClick = (
+    column:
+      | "email"
+      | "lastFmUsername"
+      | "isActive"
+      | "lastSuccessfulScrobble"
+      | "createdAt",
+  ) => {
+    if (column === sortColumn) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+    sortRecords(records);
+  };
+
   return (
     <Fragment>
       <div className="flex space-x-4 mb-4">
@@ -96,11 +190,51 @@ function UserTable({ users }: UserTableProps) {
         <thead>
           <tr className="text-left">
             <th className="px-4 py-2">Picture</th>
-            <th className="px-4 py-2">Email</th>
-            <th className="px-4 py-2">Last.fm Username</th>
-            <th className="px-4 py-2">Is Active</th>
-            <th className="px-4 py-2">Last Successful Scrobble</th>
-            <th className="px-4 py-2">Created At</th>
+            <th
+              className="px-4 py-2 cursor-pointer"
+              onClick={() => handleColumnClick("email")}
+            >
+              Email{" "}
+              {sortColumn === "email" && (
+                <span>{sortDirection === "asc" ? "▲" : "▼"}</span>
+              )}
+            </th>
+            <th
+              className="px-4 py-2 cursor-pointer"
+              onClick={() => handleColumnClick("lastFmUsername")}
+            >
+              Last.fm Username{" "}
+              {sortColumn === "lastFmUsername" && (
+                <span>{sortDirection === "asc" ? "▲" : "▼"}</span>
+              )}
+            </th>
+            <th
+              className="px-4 py-2 cursor-pointer"
+              onClick={() => handleColumnClick("isActive")}
+            >
+              Is Active{" "}
+              {sortColumn === "isActive" && (
+                <span>{sortDirection === "asc" ? "▲" : "▼"}</span>
+              )}
+            </th>
+            <th
+              className="px-4 py-2 cursor-pointer"
+              onClick={() => handleColumnClick("lastSuccessfulScrobble")}
+            >
+              Last Successful Scrobble{" "}
+              {sortColumn === "lastSuccessfulScrobble" && (
+                <span>{sortDirection === "asc" ? "▲" : "▼"}</span>
+              )}
+            </th>
+            <th
+              className="px-4 py-2 cursor-pointer"
+              onClick={() => handleColumnClick("createdAt")}
+            >
+              Created At{" "}
+              {sortColumn === "createdAt" && (
+                <span>{sortDirection === "asc" ? "▲" : "▼"}</span>
+              )}
+            </th>
           </tr>
         </thead>
         <tbody>
