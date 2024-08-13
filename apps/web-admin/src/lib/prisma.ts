@@ -3,10 +3,30 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function getUsers(page?: number, perPage?: number) {
+export async function getUsers(
+  page?: number,
+  perPage?: number,
+  searchText?: string,
+  isActive?: boolean,
+) {
   try {
     const limit = perPage || 10;
     const offset = ((page || 1) - 1) * limit;
+
+    const where: any = {};
+
+    const whereConditions: any = {};
+
+    if (typeof isActive === "boolean") {
+      whereConditions.isActive = isActive;
+    }
+
+    if (searchText) {
+      whereConditions.OR = [
+        { email: { contains: searchText } },
+        { lastFmUsername: { contains: searchText } },
+      ];
+    }
 
     const [users, count] = await Promise.all([
       prisma.user.findMany({
@@ -20,13 +40,14 @@ export async function getUsers(page?: number, perPage?: number) {
           lastSuccessfulScrobble: true,
           createdAt: true,
         },
+        where: whereConditions,
         orderBy: {
           createdAt: "desc",
         },
         skip: offset,
         take: limit,
       }),
-      prisma.user.count(),
+      prisma.user.count({ where: whereConditions }),
     ]);
 
     return {
