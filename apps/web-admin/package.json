@@ -10,6 +10,7 @@
     "vercel-build": "pnpm --workspace-root run generate && next build"
   },
   "dependencies": {
+    "@prisma/client": "*",
     "next": "14.2.5",
     "next-auth": "^4.24.7",
     "react": "^18",
