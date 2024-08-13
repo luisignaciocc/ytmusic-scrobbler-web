@@ -13,8 +13,6 @@ interface User {
   lastFmUsername: string | null;
   lastSuccessfulScrobble: Date | null;
   createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date | null;
 }
 
 interface UserTableProps {
@@ -37,20 +35,18 @@ function UserTable({ users }: UserTableProps) {
     <table className="w-full table-auto">
       <thead>
         <tr className="text-left">
-          <th className="px-2 py-2">Picture</th>
-          <th className="px-2 py-2">Email</th>
-          <th className="px-2 py-2">Last.fm Username</th>
-          <th className="px-2 py-2">Is Active</th>
-          <th className="px-2 py-2">Last Successful Scrobble</th>
-          <th className="px-2 py-2">Created At</th>
-          <th className="px-2 py-2">Deleted At</th>
-          <th className="px-2 py-2">Updated At</th>
+          <th className="px-4 py-2">Picture</th>
+          <th className="px-4 py-2">Email</th>
+          <th className="px-4 py-2">Last.fm Username</th>
+          <th className="px-4 py-2">Is Active</th>
+          <th className="px-4 py-2">Last Successful Scrobble</th>
+          <th className="px-4 py-2">Created At</th>
         </tr>
       </thead>
       <tbody>
         {users.map((user) => (
           <tr key={user.id} className="border-b">
-            <td className="px-2 py-2">
+            <td className="px-4 py-2">
               <Image
                 src={user.picture}
                 alt={user.name}
@@ -59,23 +55,19 @@ function UserTable({ users }: UserTableProps) {
                 height={20}
               ></Image>
             </td>
-            <td className="px-2 py-2">{user.email}</td>
-            <td className="px-2 py-2">{user.lastFmUsername}</td>
-            <td className="px-2 py-2">
+            <td className="px-4 py-2">{user.email}</td>
+            <td className="px-4 py-2">{user.lastFmUsername}</td>
+            <td className="px-4 py-2">
               <input
                 type="checkbox"
                 checked={user.isActive}
                 onChange={() => handleUserStatusChange(user.id, user.isActive)}
               />
             </td>
-            <td className="px-2 py-2">
+            <td className="px-4 py-2">
               {user.lastSuccessfulScrobble?.toLocaleString() || "-"}
             </td>
-            <td className="px-2 py-2">{user.createdAt.toLocaleString()}</td>
-            <td className="px-2 py-2">
-              {user.deletedAt?.toLocaleString() || "-"}
-            </td>
-            <td className="px-2 py-2">{user.updatedAt.toLocaleString()}</td>
+            <td className="px-4 py-2">{user.createdAt.toLocaleString()}</td>
           </tr>
         ))}
       </tbody>
