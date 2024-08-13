@@ -19,8 +19,6 @@ export async function getUsers(page?: number, perPage?: number) {
           isActive: true,
           lastSuccessfulScrobble: true,
           createdAt: true,
-          deletedAt: true,
-          updatedAt: true,
         },
         orderBy: {
           createdAt: "desc",
