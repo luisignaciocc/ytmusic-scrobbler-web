@@ -9,7 +9,20 @@ export default async function HomePage({
 }) {
   const page = searchParams?.page || 1;
   const perPage = 10;
-  const data = await getUsers(Number(page), perPage);
+  const searchText = searchParams?.searchText;
+
+  const statusParam = searchParams?.status;
+
+  let status: boolean | undefined;
+  if (statusParam === "true") {
+    status = true;
+  } else if (statusParam === "false") {
+    status = false;
+  } else {
+    status = undefined;
+  }
+
+  const data = await getUsers(Number(page), perPage, searchText, status);
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">

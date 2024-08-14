@@ -1,5 +1,5 @@
 "use client";
-import React, { Fragment, ChangeEvent, useState } from "react";
+import React, { Fragment, useState, useMemo, useCallback } from "react";
 import Image from "next/image";
 import { updateUserStatus } from "@/lib/prisma";
 import { useRouter } from "next/navigation";
@@ -22,11 +22,7 @@ interface UserTableProps {
 function UserTable({ users }: UserTableProps) {
   const router = useRouter();
 
-  const [records, setRecords] = useState(users);
-  const [filterByActive, setFilterByActive] = useState<
-    "all" | "active" | "inactive"
-  >("all");
-
+  const [filterByActive, setFilterByActive] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   const [sortColumn, setSortColumn] = useState<
@@ -47,107 +43,72 @@ function UserTable({ users }: UserTableProps) {
     }
   };
 
-  const handleFilterChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    const selectedFilter = event.target.value as "all" | "active" | "inactive";
-    setFilterByActive(selectedFilter);
+  const sortRecords = useCallback(
+    (users: User[]): User[] => {
+      return users.sort((a, b) => {
+        switch (sortColumn) {
+          case "email":
+            if (a.email.toLowerCase() < b.email.toLowerCase())
+              return sortDirection === "asc" ? -1 : 1;
+            if (a.email.toLowerCase() > b.email.toLowerCase())
+              return sortDirection === "asc" ? 1 : -1;
+            break;
 
-    if (selectedFilter === "all") {
-      setRecords(users);
-    } else if (selectedFilter === "active") {
-      setRecords(users.filter((user) => user.isActive));
-    } else {
-      setRecords(users.filter((user) => !user.isActive));
-    }
-  };
-
-  const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const query = event.target.value;
-    setSearchQuery(query);
-
-    let filteredRecords = users;
-
-    if (filterByActive === "active") {
-      filteredRecords = users.filter((user) => user.isActive);
-    } else if (filterByActive === "inactive") {
-      filteredRecords = users.filter((user) => !user.isActive);
-    }
-
-    filteredRecords = filteredRecords.filter((user) => {
-      return (
-        user.email.toLowerCase().includes(query.toLowerCase()) ||
-        (user.lastFmUsername &&
-          user.lastFmUsername.toLowerCase().includes(query.toLowerCase()))
-      );
-    });
-
-    setRecords(filteredRecords);
-  };
-
-  const sortRecords = (records: User[]) => {
-    const sortedRecords = [...records].sort((a, b) => {
-      switch (sortColumn) {
-        case "email":
-          if (a.email.toLowerCase() < b.email.toLowerCase())
-            return sortDirection === "asc" ? -1 : 1;
-          if (a.email.toLowerCase() > b.email.toLowerCase())
-            return sortDirection === "asc" ? 1 : -1;
-          break;
-
-        case "lastFmUsername":
-          if (
-            (a.lastFmUsername ?? "").toLowerCase() <
-            (b.lastFmUsername ?? "").toLowerCase()
-          )
-            return sortDirection === "asc" ? -1 : 1;
-          if (
-            (a.lastFmUsername ?? "").toLowerCase() >
-            (b.lastFmUsername ?? "").toLowerCase()
-          )
-            return sortDirection === "asc" ? 1 : -1;
-          break;
-
-        case "isActive":
-          if (a.isActive === b.isActive) return 0;
-          return a.isActive
-            ? sortDirection === "asc"
-              ? -1
-              : 1
-            : sortDirection === "asc"
-              ? 1
-              : -1;
-
-        case "lastSuccessfulScrobble":
-          if (a.lastSuccessfulScrobble && b.lastSuccessfulScrobble) {
+          case "lastFmUsername":
             if (
-              a.lastSuccessfulScrobble.getTime() <
-              b.lastSuccessfulScrobble.getTime()
+              (a.lastFmUsername ?? "").toLowerCase() <
+              (b.lastFmUsername ?? "").toLowerCase()
             )
               return sortDirection === "asc" ? -1 : 1;
             if (
-              a.lastSuccessfulScrobble.getTime() >
-              b.lastSuccessfulScrobble.getTime()
+              (a.lastFmUsername ?? "").toLowerCase() >
+              (b.lastFmUsername ?? "").toLowerCase()
             )
               return sortDirection === "asc" ? 1 : -1;
-          } else if (a.lastSuccessfulScrobble) {
-            return sortDirection === "asc" ? -1 : 1;
-          } else if (b.lastSuccessfulScrobble) {
-            return sortDirection === "asc" ? 1 : -1;
-          }
-          break;
+            break;
 
-        case "createdAt":
-          if (a.createdAt.getTime() < b.createdAt.getTime())
-            return sortDirection === "asc" ? -1 : 1;
-          if (a.createdAt.getTime() > b.createdAt.getTime())
-            return sortDirection === "asc" ? 1 : -1;
-          break;
-      }
+          case "isActive":
+            if (a.isActive === b.isActive) return 0;
+            return a.isActive
+              ? sortDirection === "asc"
+                ? -1
+                : 1
+              : sortDirection === "asc"
+                ? 1
+                : -1;
 
-      return 0;
-    });
-    setRecords(sortedRecords);
-    setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-  };
+          case "lastSuccessfulScrobble":
+            if (a.lastSuccessfulScrobble && b.lastSuccessfulScrobble) {
+              if (
+                a.lastSuccessfulScrobble.getTime() <
+                b.lastSuccessfulScrobble.getTime()
+              )
+                return sortDirection === "asc" ? -1 : 1;
+              if (
+                a.lastSuccessfulScrobble.getTime() >
+                b.lastSuccessfulScrobble.getTime()
+              )
+                return sortDirection === "asc" ? 1 : -1;
+            } else if (a.lastSuccessfulScrobble) {
+              return sortDirection === "asc" ? -1 : 1;
+            } else if (b.lastSuccessfulScrobble) {
+              return sortDirection === "asc" ? 1 : -1;
+            }
+            break;
+
+          case "createdAt":
+            if (a.createdAt.getTime() < b.createdAt.getTime())
+              return sortDirection === "asc" ? -1 : 1;
+            if (a.createdAt.getTime() > b.createdAt.getTime())
+              return sortDirection === "asc" ? 1 : -1;
+            break;
+        }
+
+        return 0;
+      });
+    },
+    [sortColumn, sortDirection],
+  );
 
   const handleColumnClick = (
     column:
@@ -163,7 +124,49 @@ function UserTable({ users }: UserTableProps) {
       setSortColumn(column);
       setSortDirection("asc");
     }
-    sortRecords(records);
+  };
+
+  const sortedUsers = useMemo(
+    () => sortRecords([...users]),
+    [users, sortRecords],
+  );
+
+  const handleFilterAndSearch = (
+    newSearchQuery = "",
+    newFilterByActive = filterByActive,
+  ) => {
+    let queryParams = "";
+
+    queryParams += `?searchText=${newSearchQuery}`;
+
+    let statusParam;
+    if (newFilterByActive === "active") {
+      statusParam = "true";
+    } else if (newFilterByActive === "inactive") {
+      statusParam = "false";
+    } else {
+      statusParam = "";
+    }
+
+    queryParams += queryParams
+      ? `&status=${statusParam}`
+      : `?status=${statusParam}`;
+
+    router.push(queryParams);
+  };
+
+  const handleSearch = () => {
+    handleFilterAndSearch(searchQuery);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    handleFilterAndSearch("");
+  };
+
+  const handleFilterChange = (newFilterValue: string) => {
+    setFilterByActive(newFilterValue);
+    handleFilterAndSearch(searchQuery, newFilterValue);
   };
 
   return (
@@ -171,20 +174,49 @@ function UserTable({ users }: UserTableProps) {
       <div className="flex space-x-4 mb-4">
         <select
           value={filterByActive}
-          onChange={handleFilterChange}
+          onChange={(e) => handleFilterChange(e.target.value)}
           className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
           <option value="all">All</option>
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </select>
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={handleSearchChange}
-          placeholder="Search by email or Last.fm username"
-          className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
+        <div className="relative w-1/3">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+            }}
+            placeholder="Search by email or Last.fm username"
+            className="w-full px-4 py-2 pr-12 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <button
+            onClick={handleClearSearch}
+            className="absolute top-0 z-50 right-24 h-full text-gray-500 hover:text-gray-700 focus:outline-none"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+          <button
+            onClick={handleSearch}
+            className="absolute top-0 right-0 h-full px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            Buscar
+          </button>
+        </div>
       </div>
       <table className="w-full table-auto">
         <thead>
@@ -238,7 +270,7 @@ function UserTable({ users }: UserTableProps) {
           </tr>
         </thead>
         <tbody>
-          {records.map((user) => (
+          {sortedUsers.map((user) => (
             <tr key={user.id} className="border-b">
               <td className="px-4 py-2">
                 <Image
