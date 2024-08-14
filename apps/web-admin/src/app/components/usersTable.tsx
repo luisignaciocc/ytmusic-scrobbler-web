@@ -17,19 +17,12 @@ interface User {
 
 interface UserTableProps {
   users: User[];
+  searchText: string | undefined;
+  status: boolean | string;
 }
 
-function UserTable({ users }: UserTableProps) {
+function UserTable({ users, searchText, status }: UserTableProps) {
   const router = useRouter();
-
-  const [sortColumn, setSortColumn] = useState<
-    | "email"
-    | "lastFmUsername"
-    | "isActive"
-    | "lastSuccessfulScrobble"
-    | "createdAt"
-  >("email");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const handleUserStatusChange = async (userId: string, isActive: boolean) => {
     try {
@@ -40,72 +33,14 @@ function UserTable({ users }: UserTableProps) {
     }
   };
 
-  const sortRecords = useCallback(
-    (users: User[]): User[] => {
-      return users.sort((a, b) => {
-        switch (sortColumn) {
-          case "email":
-            if (a.email.toLowerCase() < b.email.toLowerCase())
-              return sortDirection === "asc" ? -1 : 1;
-            if (a.email.toLowerCase() > b.email.toLowerCase())
-              return sortDirection === "asc" ? 1 : -1;
-            break;
-
-          case "lastFmUsername":
-            if (
-              (a.lastFmUsername ?? "").toLowerCase() <
-              (b.lastFmUsername ?? "").toLowerCase()
-            )
-              return sortDirection === "asc" ? -1 : 1;
-            if (
-              (a.lastFmUsername ?? "").toLowerCase() >
-              (b.lastFmUsername ?? "").toLowerCase()
-            )
-              return sortDirection === "asc" ? 1 : -1;
-            break;
-
-          case "isActive":
-            if (a.isActive === b.isActive) return 0;
-            return a.isActive
-              ? sortDirection === "asc"
-                ? -1
-                : 1
-              : sortDirection === "asc"
-                ? 1
-                : -1;
-
-          case "lastSuccessfulScrobble":
-            if (a.lastSuccessfulScrobble && b.lastSuccessfulScrobble) {
-              if (
-                a.lastSuccessfulScrobble.getTime() <
-                b.lastSuccessfulScrobble.getTime()
-              )
-                return sortDirection === "asc" ? -1 : 1;
-              if (
-                a.lastSuccessfulScrobble.getTime() >
-                b.lastSuccessfulScrobble.getTime()
-              )
-                return sortDirection === "asc" ? 1 : -1;
-            } else if (a.lastSuccessfulScrobble) {
-              return sortDirection === "asc" ? -1 : 1;
-            } else if (b.lastSuccessfulScrobble) {
-              return sortDirection === "asc" ? 1 : -1;
-            }
-            break;
-
-          case "createdAt":
-            if (a.createdAt.getTime() < b.createdAt.getTime())
-              return sortDirection === "asc" ? -1 : 1;
-            if (a.createdAt.getTime() > b.createdAt.getTime())
-              return sortDirection === "asc" ? 1 : -1;
-            break;
-        }
-
-        return 0;
-      });
-    },
-    [sortColumn, sortDirection],
-  );
+  const [sortColumn, setSortColumn] = useState<
+    | "email"
+    | "lastFmUsername"
+    | "isActive"
+    | "lastSuccessfulScrobble"
+    | "createdAt"
+  >("email");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const handleColumnClick = (
     column:
@@ -115,18 +50,19 @@ function UserTable({ users }: UserTableProps) {
       | "lastSuccessfulScrobble"
       | "createdAt",
   ) => {
+    let newSortDirection: "asc" | "desc" = "asc";
     if (column === sortColumn) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+      newSortDirection = sortDirection === "asc" ? "desc" : "asc";
     } else {
-      setSortColumn(column);
-      setSortDirection("asc");
+      newSortDirection = "asc";
     }
-  };
 
-  const sortedUsers = useMemo(
-    () => sortRecords([...users]),
-    [users, sortRecords],
-  );
+    const queryParams = `?searchText=${searchText}&status=${status}&sortColumn=${column}&sortDirection=${newSortDirection}`;
+    router.push(queryParams);
+
+    setSortColumn(column);
+    setSortDirection(newSortDirection);
+  };
 
   return (
     <table className="w-full table-auto">
@@ -181,7 +117,7 @@ function UserTable({ users }: UserTableProps) {
         </tr>
       </thead>
       <tbody>
-        {sortedUsers.map((user) => (
+        {users.map((user) => (
           <tr key={user.id} className="border-b">
             <td className="px-4 py-2">
               <Image

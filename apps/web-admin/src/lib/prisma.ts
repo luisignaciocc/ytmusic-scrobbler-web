@@ -7,7 +7,9 @@ export async function getUsers(
   page?: number,
   perPage?: number,
   searchText?: string,
-  isActive?: boolean,
+  isActive?: boolean | string,
+  sortColumn?: string,
+  sortDirection?: string | undefined,
 ) {
   try {
     const limit = perPage || 10;
@@ -28,6 +30,14 @@ export async function getUsers(
       ];
     }
 
+    const orderBy: any = {};
+
+    if (sortColumn && sortDirection) {
+      orderBy[sortColumn] = sortDirection;
+    } else {
+      orderBy.createdAt = "desc";
+    }
+
     const [users, count] = await Promise.all([
       prisma.user.findMany({
         select: {
@@ -41,9 +51,7 @@ export async function getUsers(
           createdAt: true,
         },
         where: whereConditions,
-        orderBy: {
-          createdAt: "desc",
-        },
+        orderBy: orderBy,
         skip: offset,
         take: limit,
       }),

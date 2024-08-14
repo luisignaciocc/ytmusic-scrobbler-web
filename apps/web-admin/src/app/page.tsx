@@ -10,20 +10,36 @@ export default async function HomePage({
 }) {
   const page = searchParams?.page || 1;
   const perPage = 10;
-  const searchText = searchParams?.searchText;
 
-  const statusParam = searchParams?.status;
+  const searchText =
+    typeof searchParams?.searchText !== "undefined"
+      ? searchParams?.searchText
+      : "";
 
-  let status: boolean | undefined;
-  if (statusParam === "true") {
-    status = true;
-  } else if (statusParam === "false") {
-    status = false;
+  let status: boolean | string = "";
+  if (typeof searchParams?.status !== "undefined") {
+    if (searchParams?.status === "true") {
+      status = true;
+    } else if (searchParams?.status === "false") {
+      status = false;
+    } else {
+      status = "";
+    }
   } else {
-    status = undefined;
+    status = "";
   }
 
-  const data = await getUsers(Number(page), perPage, searchText, status);
+  const sortColumn = searchParams?.sortColumn;
+  const sortDirection = searchParams?.sortDirection;
+
+  const data = await getUsers(
+    Number(page),
+    perPage,
+    searchText,
+    status,
+    sortColumn,
+    sortDirection,
+  );
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
@@ -31,7 +47,7 @@ export default async function HomePage({
         <h2 className="text-3xl font-bold tracking-tight">Users</h2>
       </div>
       <Filters />
-      <UserTable users={data.users} />
+      <UserTable users={data.users} searchText={searchText} status={status} />
       <PaginationButtons count={data.count} currentPage={Number(page)} />
     </div>
   );
