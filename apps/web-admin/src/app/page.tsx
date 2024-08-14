@@ -1,6 +1,7 @@
 import { getUsers } from "@/lib/prisma";
 import UserTable from "./components/usersTable";
 import PaginationButtons from "./components/paginationButtons";
+import Filters from "./components/filters";
 
 export default async function HomePage({
   searchParams,
@@ -29,6 +30,7 @@ export default async function HomePage({
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Users</h2>
       </div>
+      <Filters />
       <UserTable users={data.users} />
       <PaginationButtons count={data.count} currentPage={Number(page)} />
     </div>
