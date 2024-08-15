@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useDebounce } from "use-debounce";
 
 interface FiltersProps {
@@ -10,13 +10,18 @@ interface FiltersProps {
 
 function Filters({ sortColumn, sortDirection }: FiltersProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const [filterByActive, setFilterByActive] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(
+    searchParams.get("searchText") || "",
+  );
   const [debouncedSearchQuery] = useDebounce(searchQuery, 500);
+  const [filterByActive, setFilterByActive] = useState(
+    searchParams.get("status") || "all",
+  );
 
   const handleFilterAndSearch = useCallback(
-    (newSearchQuery = "", newFilterByActive = filterByActive) => {
+    (newSearchQuery = "", newFilterByActive = "all") => {
       let queryParams = "";
 
       queryParams += `?searchText=${newSearchQuery}`;
@@ -38,17 +43,21 @@ function Filters({ sortColumn, sortDirection }: FiltersProps) {
         `${queryParams}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`,
       );
     },
-    [router, sortColumn, sortDirection, filterByActive],
+    [router, sortColumn, sortDirection],
   );
 
   const handleClearSearch = () => {
     setSearchQuery("");
-    handleFilterAndSearch("");
+    handleFilterAndSearch("", filterByActive);
   };
 
   const handleFilterChange = (newFilterValue: string) => {
     setFilterByActive(newFilterValue);
     handleFilterAndSearch(debouncedSearchQuery, newFilterValue);
+  };
+
+  const handleSearchQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
   };
 
   useEffect(() => {
@@ -73,9 +82,7 @@ function Filters({ sortColumn, sortDirection }: FiltersProps) {
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-            }}
+            onChange={handleSearchQueryChange}
             placeholder="Search by email or Last.fm username"
             className="w-full px-4 py-2 pr-12 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
