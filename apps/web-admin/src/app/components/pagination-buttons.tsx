@@ -1,24 +1,20 @@
 "use client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface PaginationButtonsProps {
   count: number;
-  currentPage: number;
-  searchText: string | undefined;
-  status: boolean | string;
-  sortColumn: string | undefined;
-  sortDirection: string | undefined;
 }
 
-const PaginationButtons: React.FC<PaginationButtonsProps> = ({
-  count,
-  currentPage,
-  searchText,
-  status,
-  sortColumn,
-  sortDirection,
-}) => {
+const PaginationButtons: React.FC<PaginationButtonsProps> = ({ count }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const currentPage = Number(searchParams.get("page")) || 1;
+  const sortColumn = searchParams.get("sortColumn") || "";
+  const sortDirection = searchParams.get("sortDirection") || "";
+
+  const searchText = searchParams.get("searchText") || "";
+  const status = searchParams.get("status") || "all";
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {

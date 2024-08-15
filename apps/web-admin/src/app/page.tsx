@@ -66,14 +66,7 @@ export default async function HomePage({
           sortDirection={sortDirection}
         />
       </Suspense>
-      <PaginationButtons
-        count={data.count}
-        currentPage={Number(page)}
-        searchText={searchText}
-        status={status}
-        sortColumn={sortColumn}
-        sortDirection={sortDirection}
-      />
+      <PaginationButtons count={data.count} />
     </div>
   );
 }
