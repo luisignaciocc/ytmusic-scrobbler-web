@@ -29,8 +29,15 @@ export default async function HomePage({
     status = "";
   }
 
-  const sortColumn = searchParams?.sortColumn;
-  const sortDirection = searchParams?.sortDirection;
+  const sortColumn =
+    typeof searchParams?.sortColumn !== "undefined"
+      ? searchParams?.sortColumn
+      : "";
+
+  const sortDirection =
+    typeof searchParams?.sortDirection !== "undefined"
+      ? searchParams?.sortDirection
+      : "";
 
   const data = await getUsers(
     Number(page),
@@ -46,7 +53,7 @@ export default async function HomePage({
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Users</h2>
       </div>
-      <Filters />
+      <Filters sortColumn={sortColumn} sortDirection={sortDirection} />
       <UserTable users={data.users} searchText={searchText} status={status} />
       <PaginationButtons count={data.count} currentPage={Number(page)} />
     </div>

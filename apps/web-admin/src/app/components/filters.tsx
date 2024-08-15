@@ -2,7 +2,12 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
-function Filters() {
+interface FiltersProps {
+  sortColumn: string | undefined;
+  sortDirection: string | undefined;
+}
+
+function Filters({ sortColumn, sortDirection }: FiltersProps) {
   const router = useRouter();
 
   const [filterByActive, setFilterByActive] = useState("all");
@@ -29,7 +34,9 @@ function Filters() {
       ? `&status=${statusParam}`
       : `?status=${statusParam}`;
 
-    router.push(queryParams);
+    router.push(
+      `${queryParams}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`,
+    );
   };
 
   const handleSearch = () => {
