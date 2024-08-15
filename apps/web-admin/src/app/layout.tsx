@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import SessionAuthProvider from "./components/sessionAuthProvider";
+import SessionAuthProvider from "./components/session-auth-provider";
 
 export const metadata: Metadata = {
   title: "Admin",
