@@ -1,6 +1,7 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useDebounce } from "use-debounce";
 
 interface FiltersProps {
   sortColumn: string | undefined;
@@ -12,36 +13,33 @@ function Filters({ sortColumn, sortDirection }: FiltersProps) {
 
   const [filterByActive, setFilterByActive] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery] = useDebounce(searchQuery, 500);
 
-  const handleFilterAndSearch = (
-    newSearchQuery = "",
-    newFilterByActive = filterByActive,
-  ) => {
-    let queryParams = "";
+  const handleFilterAndSearch = useCallback(
+    (newSearchQuery = "", newFilterByActive = filterByActive) => {
+      let queryParams = "";
 
-    queryParams += `?searchText=${newSearchQuery}`;
+      queryParams += `?searchText=${newSearchQuery}`;
 
-    let statusParam;
-    if (newFilterByActive === "active") {
-      statusParam = "true";
-    } else if (newFilterByActive === "inactive") {
-      statusParam = "false";
-    } else {
-      statusParam = "";
-    }
+      let statusParam;
+      if (newFilterByActive === "active") {
+        statusParam = "true";
+      } else if (newFilterByActive === "inactive") {
+        statusParam = "false";
+      } else {
+        statusParam = "";
+      }
 
-    queryParams += queryParams
-      ? `&status=${statusParam}`
-      : `?status=${statusParam}`;
+      queryParams += queryParams
+        ? `&status=${statusParam}`
+        : `?status=${statusParam}`;
 
-    router.push(
-      `${queryParams}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`,
-    );
-  };
-
-  const handleSearch = () => {
-    handleFilterAndSearch(searchQuery);
-  };
+      router.push(
+        `${queryParams}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`,
+      );
+    },
+    [router, sortColumn, sortDirection, filterByActive],
+  );
 
   const handleClearSearch = () => {
     setSearchQuery("");
@@ -50,8 +48,14 @@ function Filters({ sortColumn, sortDirection }: FiltersProps) {
 
   const handleFilterChange = (newFilterValue: string) => {
     setFilterByActive(newFilterValue);
-    handleFilterAndSearch(searchQuery, newFilterValue);
+    handleFilterAndSearch(debouncedSearchQuery, newFilterValue);
   };
+
+  useEffect(() => {
+    if (debouncedSearchQuery) {
+      handleFilterAndSearch(debouncedSearchQuery, filterByActive);
+    }
+  }, [debouncedSearchQuery, filterByActive, handleFilterAndSearch]);
 
   return (
     <div>
@@ -77,7 +81,7 @@ function Filters({ sortColumn, sortDirection }: FiltersProps) {
           />
           <button
             onClick={handleClearSearch}
-            className="absolute top-0 z-50 right-24 h-full text-gray-500 hover:text-gray-700 focus:outline-none"
+            className="absolute top-0 right-4 h-full text-gray-500 hover:text-gray-700 focus:outline-none"
           >
             <svg
               className="w-5 h-5"
@@ -93,12 +97,6 @@ function Filters({ sortColumn, sortDirection }: FiltersProps) {
                 d="M6 18L18 6M6 6l12 12"
               />
             </svg>
-          </button>
-          <button
-            onClick={handleSearch}
-            className="absolute top-0 right-0 h-full px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Buscar
           </button>
         </div>
       </div>
