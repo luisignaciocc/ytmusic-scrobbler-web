@@ -4,23 +4,35 @@ import { useRouter } from "next/navigation";
 interface PaginationButtonsProps {
   count: number;
   currentPage: number;
+  searchText: string | undefined;
+  status: boolean | string;
+  sortColumn: string | undefined;
+  sortDirection: string | undefined;
 }
 
 const PaginationButtons: React.FC<PaginationButtonsProps> = ({
   count,
   currentPage,
+  searchText,
+  status,
+  sortColumn,
+  sortDirection,
 }) => {
   const router = useRouter();
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
-      router.push(`/?page=${currentPage - 1}`);
+      router.push(
+        `/?page=${currentPage - 1}&searchText=${searchText}&status=${status}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`,
+      );
     }
   };
 
   const handleNextPage = () => {
     if (currentPage * 10 < count) {
-      router.push(`/?page=${currentPage + 1}`);
+      router.push(
+        `/?page=${currentPage + 1}&searchText=${searchText}&status=${status}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`,
+      );
     }
   };
 

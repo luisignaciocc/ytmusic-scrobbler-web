@@ -4,11 +4,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useDebounce } from "use-debounce";
 
 interface FiltersProps {
+  currentPage: number;
   sortColumn: string | undefined;
   sortDirection: string | undefined;
 }
 
-function Filters({ sortColumn, sortDirection }: FiltersProps) {
+function Filters({ currentPage, sortColumn, sortDirection }: FiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -24,7 +25,7 @@ function Filters({ sortColumn, sortDirection }: FiltersProps) {
     (newSearchQuery = "", newFilterByActive = "all") => {
       let queryParams = "";
 
-      queryParams += `?searchText=${newSearchQuery}`;
+      queryParams += `?page=${currentPage}&searchText=${newSearchQuery}`;
 
       let statusParam;
       if (newFilterByActive === "active") {
@@ -37,7 +38,7 @@ function Filters({ sortColumn, sortDirection }: FiltersProps) {
 
       queryParams += queryParams
         ? `&status=${statusParam}`
-        : `?status=${statusParam}`;
+        : `?page=${currentPage}&status=${statusParam}`;
 
       router.push(
         `${queryParams}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`,

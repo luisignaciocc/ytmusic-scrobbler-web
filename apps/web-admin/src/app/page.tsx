@@ -55,7 +55,11 @@ export default async function HomePage({
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Users</h2>
       </div>
-      <Filters sortColumn={sortColumn} sortDirection={sortDirection} />
+      <Filters
+        currentPage={Number(page)}
+        sortColumn={sortColumn}
+        sortDirection={sortDirection}
+      />
       <Suspense fallback={<UsersTableLoading />}>
         <UsersTableServer
           page={Number(page)}
@@ -66,7 +70,14 @@ export default async function HomePage({
           sortDirection={sortDirection}
         />
       </Suspense>
-      <PaginationButtons count={data.count} currentPage={Number(page)} />
+      <PaginationButtons
+        count={data.count}
+        currentPage={Number(page)}
+        searchText={searchText}
+        status={status}
+        sortColumn={sortColumn}
+        sortDirection={sortDirection}
+      />
     </div>
   );
 }
