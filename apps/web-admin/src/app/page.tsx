@@ -1,72 +1,27 @@
-import { getUsers } from "@/lib/prisma";
-import PaginationButtons from "./components/pagination-buttons";
 import Filters from "./components/filters";
-import UsersTableServer from "./components/users-table.server";
+import UsersTable from "./components/users-table";
+import PaginationButtonsServer from "./components/pagination-buttons.server";
 import { Suspense } from "react";
-import UsersTableLoading from "./components/users-table.loading";
+import FiltersLoading from "./components/filters.loading";
+import PaginationButtonsLoading from "./components/pagination-buttons.loading";
 
 export default async function HomePage({
   searchParams,
 }: {
   searchParams?: { [key: string]: string | undefined };
 }) {
-  const page = searchParams?.page || 1;
-  const perPage = 10;
-
-  const searchText =
-    typeof searchParams?.searchText !== "undefined"
-      ? searchParams?.searchText
-      : "";
-
-  let status: boolean | string = "";
-  if (typeof searchParams?.status !== "undefined") {
-    if (searchParams?.status === "true") {
-      status = true;
-    } else if (searchParams?.status === "false") {
-      status = false;
-    } else {
-      status = "";
-    }
-  } else {
-    status = "";
-  }
-
-  const sortColumn =
-    typeof searchParams?.sortColumn !== "undefined"
-      ? searchParams?.sortColumn
-      : "";
-
-  const sortDirection =
-    typeof searchParams?.sortDirection !== "undefined"
-      ? searchParams?.sortDirection
-      : "";
-
-  const data = await getUsers(
-    Number(page),
-    perPage,
-    searchText,
-    status,
-    sortColumn,
-    sortDirection,
-  );
-
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Users</h2>
       </div>
-      <Filters sortColumn={sortColumn} sortDirection={sortDirection} />
-      <Suspense fallback={<UsersTableLoading />}>
-        <UsersTableServer
-          page={Number(page)}
-          perPage={perPage}
-          searchText={searchText}
-          status={status}
-          sortColumn={sortColumn}
-          sortDirection={sortDirection}
-        />
+      <Suspense fallback={<FiltersLoading />}>
+        <Filters />
       </Suspense>
-      <PaginationButtons count={data.count} currentPage={Number(page)} />
+      <UsersTable urlParams={searchParams} />
+      <Suspense fallback={<PaginationButtonsLoading />}>
+        <PaginationButtonsServer urlParams={searchParams} />
+      </Suspense>
     </div>
   );
 }

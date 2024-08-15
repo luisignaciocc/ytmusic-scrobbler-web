@@ -148,6 +148,9 @@ importers:
       react-loading-skeleton:
         specifier: ^3.4.0
         version: 3.4.0(react@18.3.1)
+      use-debounce:
+        specifier: ^10.0.2
+        version: 10.0.2(react@18.3.1)
     devDependencies:
       '@types/node':
         specifier: ^20
@@ -3396,6 +3399,12 @@ packages:
 
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
+
+  use-debounce@10.0.2:
+    resolution: {integrity: sha512-MwBiJK2dk+2qhMDVDCPRPeLuIekKfH2t1UYMnrW9pwcJJGFDbTLliSMBz2UKGmE1PJs8l3XoMqbIU1MemMAJ8g==}
+    engines: {node: '>= 16.0.0'}
+    peerDependencies:
+      react: '>=16.8.0'
 
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
@@ -6979,6 +6988,10 @@ snapshots:
   uri-js@4.4.1:
     dependencies:
       punycode: 2.3.1
+
+  use-debounce@10.0.2(react@18.3.1):
+    dependencies:
+      react: 18.3.1
 
   util-deprecate@1.0.2: {}
 

@@ -1,5 +1,5 @@
 import React from "react";
-import UserTable from "./users-table";
+import UserTableClient from "./users-table.client";
 import { getUsers } from "@/lib/prisma";
 
 interface UsersTableServerProps {
@@ -29,7 +29,11 @@ async function UsersTableServer({
   );
 
   return (
-    <UserTable users={data.users} searchText={searchText} status={status} />
+    <UserTableClient
+      users={data.users}
+      searchText={searchText}
+      status={status}
+    />
   );
 }
 
