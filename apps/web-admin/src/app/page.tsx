@@ -55,11 +55,7 @@ export default async function HomePage({
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Users</h2>
       </div>
-      <Filters
-        currentPage={Number(page)}
-        sortColumn={sortColumn}
-        sortDirection={sortDirection}
-      />
+      <Filters />
       <Suspense fallback={<UsersTableLoading />}>
         <UsersTableServer
           page={Number(page)}

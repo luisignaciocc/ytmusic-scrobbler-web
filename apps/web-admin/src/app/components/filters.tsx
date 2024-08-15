@@ -3,15 +3,13 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDebounce } from "use-debounce";
 
-interface FiltersProps {
-  currentPage: number;
-  sortColumn: string | undefined;
-  sortDirection: string | undefined;
-}
-
-function Filters({ currentPage, sortColumn, sortDirection }: FiltersProps) {
+function Filters() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const currentPage = Number(searchParams.get("page")) || 1;
+  const sortColumn = searchParams.get("sortColumn") || "";
+  const sortDirection = searchParams.get("sortDirection") || "";
 
   const [searchQuery, setSearchQuery] = useState(
     searchParams.get("searchText") || "",
