@@ -1,7 +1,9 @@
 import { getUsers } from "@/lib/prisma";
-import UserTable from "./components/usersTable";
-import PaginationButtons from "./components/paginationButtons";
+import PaginationButtons from "./components/pagination-buttons";
 import Filters from "./components/filters";
+import UsersTableServer from "./components/users-table.server";
+import { Suspense } from "react";
+import UsersTableLoading from "./components/users-table.loading";
 
 export default async function HomePage({
   searchParams,
@@ -54,7 +56,16 @@ export default async function HomePage({
         <h2 className="text-3xl font-bold tracking-tight">Users</h2>
       </div>
       <Filters sortColumn={sortColumn} sortDirection={sortDirection} />
-      <UserTable users={data.users} searchText={searchText} status={status} />
+      <Suspense fallback={<UsersTableLoading />}>
+        <UsersTableServer
+          page={Number(page)}
+          perPage={perPage}
+          searchText={searchText}
+          status={status}
+          sortColumn={sortColumn}
+          sortDirection={sortDirection}
+        />
+      </Suspense>
       <PaginationButtons count={data.count} currentPage={Number(page)} />
     </div>
   );

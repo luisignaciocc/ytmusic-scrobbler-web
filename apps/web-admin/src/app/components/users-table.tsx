@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { updateUserStatus } from "@/lib/prisma";
 import { useRouter } from "next/navigation";
