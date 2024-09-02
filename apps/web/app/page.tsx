@@ -153,6 +153,12 @@ export default function Home() {
                     after it was played.
                   </p>
                   <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
+                    It&apos;s important that you check the YouTube permissions
+                    to make sure that the app has access to your YouTube Music
+                    history. If you have any concerns about privacy or security,
+                    please reach out to us.
+                  </p>
+                  <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
                     With the button below you can start and stop the process of
                     scrobbling your plays from YouTube Music. If you have any
                     questions or feedback, feel free to reach out to us at{" "}
