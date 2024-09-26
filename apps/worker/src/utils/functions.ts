@@ -128,7 +128,9 @@ export async function getYTMusicHistory({
       ?.content?.sectionListRenderer?.contents;
 
   if (!results) {
-    throw new Error("Failed to fetch music history");
+    throw new Error(
+      "Failed to fetch music history, data:\n " + JSON.stringify(data, null, 2),
+    );
   }
 
   const songs: {
