@@ -11,7 +11,7 @@ import ScrobbleBtnServer from "./components/scrobble-button-server";
 export default function Home() {
   return (
     <div className="flex flex-col min-h-[100dvh]">
-      <header className="px-4 lg:px-6 h-14 flex items-center">
+      <header className="px-4 lg:px-6 h-14 flex items-center top-0 sticky bg-[hsl(var(--background))]">
         <Link className="flex items-center justify-center space-x-3" href="/">
           <Music2Icon className="h-6 w-6" />
           <p className="font-semibold hidden sm:block">
