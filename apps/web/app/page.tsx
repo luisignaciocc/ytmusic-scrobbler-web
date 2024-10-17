@@ -1,5 +1,8 @@
+import { AlertTriangleIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 import LastfmBtn from "./components/lastfm-btn";
 import LastfmLogout from "./components/lastfm-logout";
@@ -11,6 +14,16 @@ import ScrobbleBtnServer from "./components/scrobble-button-server";
 export default function Home() {
   return (
     <div className="flex flex-col min-h-[100dvh]">
+      <Alert variant="destructive">
+        <AlertTriangleIcon className="h-4 w-4" />
+        <AlertTitle>Service Unavailable</AlertTitle>
+        <AlertDescription>
+          Due to recent changes in YouTube&apos;s integration API, our service
+          is currently unavailable. We are working on resolving this issue and
+          will restore functionality as soon as possible. We apologize for any
+          inconvenience this may cause.
+        </AlertDescription>
+      </Alert>
       <header className="px-4 lg:px-6 h-14 flex items-center top-0 sticky bg-[hsl(var(--background))]">
         <Link className="flex items-center justify-center space-x-3" href="/">
           <Music2Icon className="h-6 w-6" />
