@@ -18,10 +18,22 @@ export default function Home() {
         <AlertTriangleIcon className="h-4 w-4" />
         <AlertTitle>Service Unavailable</AlertTitle>
         <AlertDescription>
-          Due to recent changes in YouTube&apos;s integration API, our service
-          is currently unavailable. We are working on resolving this issue and
-          will restore functionality as soon as possible. We apologize for any
-          inconvenience this may cause.
+          Unfortunately, due to recent changes in YouTube&apos;s integration
+          API, our service is currently unavailable. Since the problem is on
+          YouTube&apos;s side, we are unable to provide an estimated time for
+          when the service will be back up. Nevertheless, the original project
+          is still available on{" "}
+          <a
+            href="https://github.com/luisignaciocc/youtube-music-scrobbler"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline text-blue-500"
+          >
+            GitHub
+          </a>{" "}
+          and you can run it on your own server, you&apos;ll need a little
+          coding knowledge to set it up. We apologize for the inconvenience and
+          thank you for using our service.
         </AlertDescription>
       </Alert>
       <header className="px-4 lg:px-6 h-14 flex items-center top-0 sticky bg-[hsl(var(--background))]">
