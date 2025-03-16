@@ -12,9 +12,10 @@ export async function POST(request: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { cookie, authUser, origin } = await request.json();
+    const { cookie, authUser, origin, visitorData, authorization } =
+      await request.json();
 
-    if (!cookie || !authUser) {
+    if (!cookie || !authUser || !visitorData || !authorization) {
       return new NextResponse("Missing required fields", { status: 400 });
     }
 
@@ -26,6 +27,8 @@ export async function POST(request: Request) {
         ytmusicCookie: cookie,
         ytmusicAuthUser: authUser,
         ytmusicOrigin: origin || undefined,
+        ytmusicVisitorData: visitorData,
+        ytmusicAuthorization: authorization,
       },
     });
 

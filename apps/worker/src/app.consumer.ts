@@ -33,19 +33,9 @@ export class AppConsumer implements OnModuleInit {
       return job.discard();
     }
 
-    const {
-      GOOGLE_CLIENT_ID,
-      GOOGLE_CLIENT_SECRET,
-      LAST_FM_API_KEY,
-      LAST_FM_API_SECRET,
-    } = process.env;
+    const { LAST_FM_API_KEY, LAST_FM_API_SECRET } = process.env;
 
-    if (
-      !GOOGLE_CLIENT_ID ||
-      !GOOGLE_CLIENT_SECRET ||
-      !LAST_FM_API_KEY ||
-      !LAST_FM_API_SECRET
-    ) {
+    if (!LAST_FM_API_KEY || !LAST_FM_API_SECRET) {
       job.log(`Missing environment variables`);
       return job.discard();
     }
@@ -66,6 +56,8 @@ export class AppConsumer implements OnModuleInit {
           cookie: user.ytmusicCookie,
           authUser: user.ytmusicAuthUser,
           origin: user.ytmusicOrigin || undefined,
+          visitorData: user.ytmusicVisitorData,
+          authorization: user.ytmusicAuthorization,
         }),
         this.prisma.song.findMany({
           where: {

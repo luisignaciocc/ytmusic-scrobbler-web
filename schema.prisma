@@ -22,6 +22,8 @@ model User {
   ytmusicCookie          String?
   ytmusicAuthUser        String?
   ytmusicOrigin          String?   @default("https://music.youtube.com")
+  ytmusicVisitorData     String?
+  ytmusicAuthorization   String?
   lastFmSessionKey       String?
   lastFmUsername         String?
   Songs                  Song[]

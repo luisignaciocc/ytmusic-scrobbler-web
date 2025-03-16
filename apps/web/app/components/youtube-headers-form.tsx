@@ -6,6 +6,8 @@ export default function YouTubeHeadersForm() {
   const [cookie, setCookie] = useState("");
   const [authUser, setAuthUser] = useState("");
   const [origin, setOrigin] = useState("https://music.youtube.com");
+  const [visitorData, setVisitorData] = useState("");
+  const [authorization, setAuthorization] = useState("");
   const [loading, setLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -23,6 +25,8 @@ export default function YouTubeHeadersForm() {
           cookie,
           authUser,
           origin,
+          visitorData,
+          authorization,
         }),
       });
 
@@ -67,6 +71,8 @@ export default function YouTubeHeadersForm() {
                 <ul className="list-disc list-inside ml-4 mt-2">
                   <li>Cookie (under Request Headers)</li>
                   <li>X-Goog-AuthUser (under Request Headers)</li>
+                  <li>X-Goog-Visitor-Id (under Request Headers)</li>
+                  <li>Authorization (under Request Headers)</li>
                 </ul>
               </ol>
             </div>
@@ -104,6 +110,42 @@ export default function YouTubeHeadersForm() {
                 onChange={(e) => setAuthUser(e.target.value)}
                 className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
                 placeholder="e.g., 0"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="visitorData"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                X-Goog-Visitor-Id
+              </label>
+              <input
+                type="text"
+                id="visitorData"
+                value={visitorData}
+                onChange={(e) => setVisitorData(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
+                placeholder="Paste your X-Goog-Visitor-Id header here..."
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="authorization"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Authorization
+              </label>
+              <input
+                type="text"
+                id="authorization"
+                value={authorization}
+                onChange={(e) => setAuthorization(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
+                placeholder="Paste your Authorization header here..."
                 required
               />
             </div>
