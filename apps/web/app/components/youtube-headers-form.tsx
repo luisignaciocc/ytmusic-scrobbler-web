@@ -7,6 +7,7 @@ export default function YouTubeHeadersForm() {
   const [authUser, setAuthUser] = useState("");
   const [origin, setOrigin] = useState("https://music.youtube.com");
   const [loading, setLoading] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,84 +40,101 @@ export default function YouTubeHeadersForm() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg space-y-6">
-        <h3 className="text-xl font-bold">YouTube Music Headers</h3>
-        <div className="space-y-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            To get your YouTube Music headers:
-          </p>
-          <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600 dark:text-gray-400">
-            <li>Open YouTube Music in your browser</li>
-            <li>Open Developer Tools (F12 or Ctrl+Shift+I)</li>
-            <li>Go to the Network tab</li>
-            <li>Filter requests by typing &quot;browse&quot;</li>
-            <li>Play any song or scroll the page</li>
-            <li>Click on any &quot;browse&quot; request</li>
-            <li>In the Headers tab, find these values:</li>
-            <ul className="list-disc list-inside ml-4 mt-2">
-              <li>Cookie (under Request Headers)</li>
-              <li>X-Goog-AuthUser (under Request Headers)</li>
-            </ul>
-          </ol>
+    <div className="w-full">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full inline-flex h-10 items-center justify-center rounded-md bg-gray-900 px-8 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
+      >
+        {isExpanded ? "Hide YouTube Music Setup" : "Setup YouTube Music"}
+      </button>
+
+      {isExpanded && (
+        <div className="mt-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 space-y-6 border border-gray-200 dark:border-gray-700">
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              YouTube Music Headers
+            </h3>
+            <div className="space-y-4 text-sm text-gray-600 dark:text-gray-400">
+              <p>To get your YouTube Music headers:</p>
+              <ol className="list-decimal list-inside space-y-2">
+                <li>Open YouTube Music in your browser</li>
+                <li>Open Developer Tools (F12 or Ctrl+Shift+I)</li>
+                <li>Go to the Network tab</li>
+                <li>Filter requests by typing &quot;browse&quot;</li>
+                <li>Play any song or scroll the page</li>
+                <li>Click on any &quot;browse&quot; request</li>
+                <li>In the Headers tab, find these values:</li>
+                <ul className="list-disc list-inside ml-4 mt-2">
+                  <li>Cookie (under Request Headers)</li>
+                  <li>X-Goog-AuthUser (under Request Headers)</li>
+                </ul>
+              </ol>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label
+                htmlFor="cookie"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Cookie
+              </label>
+              <textarea
+                id="cookie"
+                value={cookie}
+                onChange={(e) => setCookie(e.target.value)}
+                className="flex min-h-[80px] w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
+                placeholder="Paste your Cookie header here..."
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="authUser"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                X-Goog-AuthUser
+              </label>
+              <input
+                type="text"
+                id="authUser"
+                value={authUser}
+                onChange={(e) => setAuthUser(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
+                placeholder="e.g., 0"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="origin"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Origin (optional)
+              </label>
+              <input
+                type="url"
+                id="origin"
+                value={origin}
+                onChange={(e) => setOrigin(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
+                placeholder="https://music.youtube.com"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex h-10 items-center justify-center rounded-md bg-gray-900 px-8 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
+            >
+              {loading ? "Saving..." : "Save Headers"}
+            </button>
+          </form>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label
-              htmlFor="cookie"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              Cookie
-            </label>
-            <textarea
-              id="cookie"
-              value={cookie}
-              onChange={(e) => setCookie(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
-              rows={3}
-              required
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="authUser"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              X-Goog-AuthUser
-            </label>
-            <input
-              type="text"
-              id="authUser"
-              value={authUser}
-              onChange={(e) => setAuthUser(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
-              required
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="origin"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              Origin
-            </label>
-            <input
-              type="url"
-              id="origin"
-              value={origin}
-              onChange={(e) => setOrigin(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-          >
-            {loading ? "Saving..." : "Save Headers"}
-          </button>
-        </form>
-      </div>
+      )}
     </div>
   );
 }
