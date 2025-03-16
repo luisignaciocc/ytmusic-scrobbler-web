@@ -69,16 +69,33 @@ export default function YouTubeHeadersForm() {
                 <li>Click on any &quot;browse&quot; request</li>
                 <li>In the Headers tab, find these values:</li>
                 <ul className="list-disc list-inside ml-4 mt-2">
+                  <li>Authorization (under Request Headers)</li>
                   <li>Cookie (under Request Headers)</li>
                   <li>X-Goog-AuthUser (under Request Headers)</li>
                   <li>X-Goog-Visitor-Id (under Request Headers)</li>
-                  <li>Authorization (under Request Headers)</li>
                 </ul>
               </ol>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label
+                htmlFor="authorization"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Authorization
+              </label>
+              <textarea
+                id="authorization"
+                value={authorization}
+                onChange={(e) => setAuthorization(e.target.value)}
+                className="flex min-h-[80px] w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
+                placeholder="Paste your Authorization header here..."
+                required
+              />
+            </div>
+
             <div className="space-y-2">
               <label
                 htmlFor="cookie"
@@ -128,24 +145,6 @@ export default function YouTubeHeadersForm() {
                 onChange={(e) => setVisitorData(e.target.value)}
                 className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
                 placeholder="Paste your X-Goog-Visitor-Id header here..."
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label
-                htmlFor="authorization"
-                className="text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                Authorization
-              </label>
-              <input
-                type="text"
-                id="authorization"
-                value={authorization}
-                onChange={(e) => setAuthorization(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
-                placeholder="Paste your Authorization header here..."
                 required
               />
             </div>
