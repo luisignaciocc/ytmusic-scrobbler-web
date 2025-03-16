@@ -1,17 +1,49 @@
+import { PrismaClient } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
+import { getServerSession } from "next-auth";
 
 import LastfmBtn from "./components/lastfm-btn";
 import LastfmLogout from "./components/lastfm-logout";
+import LoginBtn from "./components/login-btn";
 import LogoutBtn from "./components/logout-btn";
 import Music2Icon from "./components/music-icon";
 import ScrobbleBtnServer from "./components/scrobble-button-server";
 import YouTubeHeadersForm from "./components/youtube-headers-form";
 
-export default function Home() {
+const prisma = new PrismaClient();
+
+async function getUserStatus() {
+  const session = await getServerSession();
+  if (!session?.user?.email) {
+    return { step: 1 };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  });
+
+  if (!user) {
+    return { step: 1 };
+  }
+
+  if (!user.ytmusicCookie || !user.ytmusicAuthUser) {
+    return { step: 2 };
+  }
+
+  if (!user.lastFmSessionKey) {
+    return { step: 3 };
+  }
+
+  return { step: 4, isActive: user.isActive };
+}
+
+export default async function Home() {
+  const { step, isActive } = await getUserStatus();
+
   return (
     <div className="flex flex-col min-h-[100dvh]">
-      <header className="px-4 lg:px-6 h-14 flex items-center top-0 sticky bg-[hsl(var(--background))]">
+      <header className="px-4 lg:px-6 h-14 flex items-center top-0 sticky bg-[hsl(var(--background))] border-b">
         <Link className="flex items-center justify-center space-x-3" href="/">
           <Music2Icon className="h-6 w-6" />
           <p className="font-semibold hidden sm:block">
@@ -24,9 +56,9 @@ export default function Home() {
         </nav>
       </header>
       <main className="flex-1">
-        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 flex justify-center">
-          <div className="container px-4 md:px-6">
-            <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
+        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
+          <div className="container px-4 md:px-6 mx-auto">
+            <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px] items-center">
               <div className="flex flex-col justify-center space-y-4">
                 <div className="space-y-2">
                   <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
@@ -38,104 +70,136 @@ export default function Home() {
                     with Youtube Music to scrobble your plays to Last.fm.
                   </p>
                 </div>
-                <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  <YouTubeHeadersForm />
-                  <LastfmBtn />
+
+                <div className="space-y-6 mt-8">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                        step === 1
+                          ? "bg-blue-600 text-white"
+                          : step > 1
+                            ? "bg-green-600 text-white"
+                            : "bg-gray-200 text-gray-600"
+                      }`}
+                    >
+                      {step > 1 ? "✓" : "1"}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold mb-1">
+                        Sign in with Google
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        Create your account to get started
+                      </p>
+                      {step === 1 && (
+                        <div className="mt-2">
+                          <LoginBtn />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                        step === 2
+                          ? "bg-blue-600 text-white"
+                          : step > 2
+                            ? "bg-green-600 text-white"
+                            : "bg-gray-200 text-gray-600"
+                      }`}
+                    >
+                      {step > 2 ? "✓" : "2"}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold mb-1">
+                        Connect YouTube Music
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        Add your browser headers to access your history
+                      </p>
+                      {step === 2 && (
+                        <div className="mt-2">
+                          <YouTubeHeadersForm />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                        step === 3
+                          ? "bg-blue-600 text-white"
+                          : step > 3
+                            ? "bg-green-600 text-white"
+                            : "bg-gray-200 text-gray-600"
+                      }`}
+                    >
+                      {step > 3 ? "✓" : "3"}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold mb-1">Connect Last.fm</h3>
+                      <p className="text-sm text-gray-500">
+                        Authorize scrobbling to your Last.fm account
+                      </p>
+                      {step === 3 && (
+                        <div className="mt-2">
+                          <LastfmBtn />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                        step === 4
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-200 text-gray-600"
+                      }`}
+                    >
+                      4
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold mb-1">Start Scrobbling</h3>
+                      <p className="text-sm text-gray-500">
+                        Begin tracking your music history
+                      </p>
+                      {step === 4 && (
+                        <div className="mt-2">
+                          <ScrobbleBtnServer />
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-              <Image
-                alt="Hero"
-                className="mx-auto aspect-square overflow-hidden rounded-xl object-cover sm:w-full lg:order-last"
-                height="550"
-                src="/logo.png"
-                width="550"
-              />
-            </div>
-          </div>
-        </section>
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-800 flex justify-center">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-gray-100 px-3 py-1 text-sm dark:bg-gray-800">
-                  How It Works
-                </div>
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-                  Effortless Music Tracking
-                </h2>
-                <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                  Our service seamlessly integrates with Youtube Music to
-                  automatically scrobble your listening history to Last.fm on
-                  our server. No more manual tracking or complicated setup, and
-                  no need to install any apps on your device or browser.
-                </p>
-              </div>
-            </div>
-            <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 lg:grid-cols-2 lg:gap-12">
-              <a
-                target="_blank"
-                href="https://www.last.fm/user/luisignaciocc"
-                rel="noopener noreferrer"
-                className="mx-auto lg:order-last"
-              >
+
+              <div className="relative">
                 <Image
-                  alt="How It Works"
-                  className="mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center"
-                  height="310"
-                  src="/screenshot.png"
+                  alt="Hero"
+                  className="mx-auto aspect-square overflow-hidden rounded-xl object-cover sm:w-full lg:order-last"
+                  height="550"
+                  src="/logo.png"
                   width="550"
                 />
-              </a>
-              <div className="flex flex-col justify-center space-y-4">
-                <ul className="grid gap-6">
-                  <li>
-                    <div className="grid gap-1">
-                      <h3 className="text-xl font-bold">
-                        Add Your YouTube Music Headers
-                      </h3>
-                      <p className="text-gray-500 dark:text-gray-400">
-                        Follow the instructions to copy your YouTube Music
-                        headers from your browser and paste them into the form.
-                      </p>
-                    </div>
-                  </li>
-                  <li>
-                    <div className="grid gap-1">
-                      <h3 className="text-xl font-bold">
-                        Authorize Last.fm Scrobbling
-                      </h3>
-                      <p className="text-gray-500 dark:text-gray-400">
-                        Click on the Authorize on Last.fm button and sign in to
-                        your Last.fm account.
-                      </p>
-                    </div>
-                  </li>
-                  <li>
-                    <div className="grid gap-1">
-                      <h3 className="text-xl font-bold">
-                        Start Scrobbling Your Plays
-                      </h3>
-                      <p className="text-gray-500 dark:text-gray-400">
-                        Click on the Start Scrobbling button to tell our server
-                        to start tracking your listening history. You can pause
-                        or resume our background scrobbling at any time.
-                      </p>
-                    </div>
-                  </li>
-                </ul>
+                {step === 4 && isActive && (
+                  <div className="absolute -top-4 -right-4 bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
+                    Active & Scrobbling
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </section>
-        <section className="w-full py-12 md:py-24 lg:py-32 flex justify-center">
-          <div className="container px-4 md:px-6">
+
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-800">
+          <div className="container px-4 md:px-6 mx-auto">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-gray-100 px-3 py-1 text-sm dark:bg-gray-800">
-                  Limitations
-                </div>
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-                  Important
+                  Important Information
                 </h2>
                 <div className="space-y-4">
                   <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
@@ -145,123 +209,67 @@ export default function Home() {
                     your headers periodically when they expire.
                   </p>
                   <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                    To mitigate this, we use the time when the song was
-                    scrobbled, which is the time when our server received the
-                    data. Currently our process is set to run every 5 minutes,
-                    so the time when a song is scrobbled can be up to 5 minutes
-                    after it was played.
+                    Our process runs every 5 minutes to check for new songs, so
+                    there might be a small delay between playing a song and
+                    seeing it on your Last.fm profile.
                   </p>
                   <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                    It&apos;s important that you keep your YouTube Music session
-                    active in your browser. If you log out or clear your
-                    cookies, you&apos;ll need to update your headers. If you
-                    have any concerns about privacy or security, please reach
-                    out to us.
-                  </p>
-                  <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                    With the button below you can start and stop the process of
-                    scrobbling your plays from YouTube Music. If you have any
-                    questions or feedback, feel free to reach out to us at{" "}
+                    If you have any questions or need help, feel free to reach
+                    out at{" "}
                     <a
                       href="mailto:me@luisignacio.cc"
                       className="underline text-blue-500"
                     >
                       me@luisignacio.cc
                     </a>
-                    .
                   </p>
                 </div>
               </div>
-            </div>
-            <div className="flex justify-center mt-8">
-              <ScrobbleBtnServer />
             </div>
           </div>
         </section>
-        <section className="w-full py-12 md:py-24 lg:py-32 flex justify-center bg-gray-100">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-gray-100 px-3 py-1 text-sm dark:bg-gray-800">
-                  Testimonials
-                </div>
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-                  What Our Users Say
-                </h2>
-                <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                  Hear from real people who have used our service to enhance
-                  their music listening experience.
+
+        <section className="w-full py-12 md:py-24 lg:py-32">
+          <div className="container px-4 md:px-6 mx-auto">
+            <div className="grid gap-6 lg:grid-cols-2 lg:gap-12">
+              <div className="space-y-4">
+                <h2 className="text-3xl font-bold">Privacy & Security</h2>
+                <p className="text-gray-500">
+                  We take your privacy seriously. Your YouTube Music headers are
+                  encrypted and only used to access your listening history. You
+                  can delete your account and all associated data at any time.
                 </p>
+                <div className="flex gap-4">
+                  <Link
+                    href="/privacy"
+                    className="inline-flex h-10 items-center justify-center rounded-md border border-gray-200 bg-white px-8 text-sm font-medium shadow-sm transition-colors hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:hover:bg-gray-800 dark:hover:text-gray-50 dark:focus-visible:ring-gray-300"
+                  >
+                    Privacy Policy
+                  </Link>
+                  <Link
+                    href="/terms"
+                    className="inline-flex h-10 items-center justify-center rounded-md border border-gray-200 bg-white px-8 text-sm font-medium shadow-sm transition-colors hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:hover:bg-gray-800 dark:hover:text-gray-50 dark:focus-visible:ring-gray-300"
+                  >
+                    Terms of Service
+                  </Link>
+                </div>
               </div>
-            </div>
-            <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 lg:grid-cols-2 lg:gap-12">
-              <a
-                href="https://www.last.fm/user/end_me_plz"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 space-y-4">
-                  <div className="flex items-center gap-4">
-                    <div className="rounded-full bg-gray-300 dark:bg-gray-700 w-12 h-12 flex items-center justify-center text-2xl">
-                      🎵
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold dark:text-gray-300">
-                        Emilio Cabezas
-                      </h3>
-                      <p className="text-gray-500 dark:text-gray-400 text-sm">
-                        Music Enthusiast
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-gray-500 dark:text-gray-400">
-                    &quot;Scrobbler has been a game-changer for me. It&apos;s so
-                    easy to use and has helped me discover so much new music
-                    based on my listening habits. Highly recommend!&quot;
-                  </p>
-                </div>
-              </a>
-              <a
-                href="https://www.last.fm/user/luisignaciocc"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 space-y-4">
-                  <div className="flex items-center gap-4">
-                    <div className="rounded-full bg-gray-300 dark:bg-gray-700 w-12 h-12 flex items-center justify-center text-2xl">
-                      🎧
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold dark:text-gray-300">
-                        Ignacio Collantes
-                      </h3>
-                      <p className="text-gray-500 dark:text-gray-400 text-sm">
-                        Music Lover
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-gray-500 dark:text-gray-400">
-                    &quot;I&apos;ve been using Scrobbler for years and it&apos;s
-                    the best way to keep track of my music listening habits. The
-                    integration with Last.fm is seamless and I love being able
-                    to see my stats and discover new artists.&quot;
-                  </p>
-                </div>
-              </a>
-            </div>
-            <div className="mt-8 text-center">
-              <p>
-                If you enjoy using our service and would like to support us,
-                consider{" "}
+              <div className="space-y-4">
+                <h2 className="text-3xl font-bold">Support Us</h2>
+                <p className="text-gray-500">
+                  If you enjoy using our service and would like to support its
+                  development, consider buying us a coffee. Your support helps
+                  keep the service running and free for everyone.
+                </p>
                 <a
                   href="https://www.buymeacoffee.com/luisignaciocc"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline text-blue-500"
+                  className="inline-flex h-10 items-center justify-center rounded-md bg-gray-900 px-8 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
                 >
-                  buying us a coffee
+                  Buy us a coffee
                 </a>
-              </p>
+              </div>
             </div>
           </div>
         </section>
