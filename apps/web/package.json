@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "type-check": "tsc --pretty --noEmit",
-    "lint": "next lint --fix",
-    "vercel-build": "pnpm --workspace-root run generate && pnpm --workspace-root run migrate deploy && next build"
+    "lint": "next lint --fix"
   },
   "dependencies": {
     "@prisma/client": "*",
