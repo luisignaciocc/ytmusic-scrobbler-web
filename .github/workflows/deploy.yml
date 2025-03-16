@@ -13,38 +13,38 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # - name: Setup Node.js
-      #   uses: actions/setup-node@v2
-      #   with:
-      #     node-version: "20"
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20"
 
-      # - name: Install pnpm
-      #   run: npm install -g pnpm
+      - name: Install pnpm
+        run: npm install -g pnpm
 
-      # - name: Copy SSH key
-      #   run: |
-      #     mkdir -p ~/.ssh
-      #     echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-      #     chmod 600 ~/.ssh/id_rsa
+      - name: Copy SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
 
-      # - name: Add SSH known hosts
-      #   run: |
-      #     ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
+      - name: Add SSH known hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
 
-      # - name: Deploy application
-      #   env:
-      #     REMOTE_USER: ${{ secrets.REMOTE_USER }}
-      #     REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
-      #     REMOTE_DIR: ~/ytmusic-scrobbler-web
-      #   run: |
-      #     ssh $REMOTE_USER@$REMOTE_HOST << EOF
-      #       export PATH=$PATH:/home/$REMOTE_USER/.nvm/versions/node/v22.3.0/bin:/home/$REMOTE_USER/.local/share/pnpm
-      #       cd $REMOTE_DIR
-      #       git pull
-      #       pm2 stop yt-music-scrobbler-worker
-      #       pkill turbo
-      #       pnpm install
-      #       pnpm build --filter worker
-      #       pkill turbo
-      #       pm2 start yt-music-scrobbler-worker
-      #     EOF
+      - name: Deploy application
+        env:
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_DIR: ~/ytmusic-scrobbler-web
+        run: |
+          ssh $REMOTE_USER@$REMOTE_HOST << EOF
+            export PATH=$PATH:/home/$REMOTE_USER/.nvm/versions/node/v22.3.0/bin:/home/$REMOTE_USER/.local/share/pnpm
+            cd $REMOTE_DIR
+            git pull
+            pm2 stop yt-music-scrobbler-worker
+            pkill turbo
+            pnpm install
+            pnpm build --filter worker
+            pkill turbo
+            pm2 start yt-music-scrobbler-worker
+          EOF
