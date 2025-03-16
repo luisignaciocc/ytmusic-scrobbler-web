@@ -39,6 +39,12 @@ export class AppProducer implements OnModuleInit {
         ytmusicAuthUser: {
           not: null,
         },
+        ytmusicAuthorization: {
+          not: null,
+        },
+        ytmusicVisitorData: {
+          not: null,
+        },
       },
       orderBy: {
         createdAt: "asc",
