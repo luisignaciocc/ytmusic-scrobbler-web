@@ -63,6 +63,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@paddle/paddle-js':
+        specifier: ^1.4.0
+        version: 1.4.0
       '@prisma/client':
         specifier: '*'
         version: 5.15.0(prisma@5.15.0)
@@ -668,6 +671,9 @@ packages:
     resolution: {integrity: sha512-um0xL3fO7Mf4fDxcqx9KryrB7zgRM5JSlvGN5AGkP6JLM5XEKyjeAiPbNxdXVXQ16isuAhYpvP88NgL2BGd6aA==}
     engines: {node: '>=8.0.0', npm: '>=5.0.0'}
     hasBin: true
+
+  '@paddle/paddle-js@1.4.0':
+    resolution: {integrity: sha512-pX6Yx+RswB1rHMuYl8RKcAAVZhVJ6nd5f8w8l4kVM63pM3HNeQ5/Xuk4sK/X9P5fUE2dmN0mTti7+gZ8cZtqvg==}
 
   '@panva/hkdf@1.1.1':
     resolution: {integrity: sha512-dhPeilub1NuIG0X5Kvhh9lH4iW3ZsHlnzwgwbOlgwQ2wG1IqFzsgHqmKPk3WzsdWAeaxKJxgM0+W433RmN45GA==}
@@ -3924,6 +3930,8 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
+  '@paddle/paddle-js@1.4.0': {}
+
   '@panva/hkdf@1.1.1': {}
 
   '@pkgjs/parseargs@0.11.0':
@@ -5132,7 +5140,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.0
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.8.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0)
+      eslint-module-utils: 2.8.1(@typescript-eslint/parser@7.13.1(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint@8.57.0)
       hasown: 2.0.2
       is-core-module: 2.13.1
       is-glob: 4.0.3
