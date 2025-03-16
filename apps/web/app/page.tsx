@@ -62,12 +62,12 @@ export default async function Home() {
               <div className="flex flex-col justify-center space-y-4">
                 <div className="space-y-2">
                   <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
-                    Scrobble Your Plays from YouTube Music
+                    Connect YouTube Music with Last.fm
                   </h1>
                   <p className="max-w-[600px] text-gray-500 md:text-xl dark:text-gray-400">
-                    Automatically track your music listening habits and share
-                    your taste with the world. Our service seamlessly integrates
-                    with Youtube Music to scrobble your plays to Last.fm.
+                    Automatically track all the music you listen to on YouTube
+                    Music in your Last.fm profile. It&apos;s easy, secure, and
+                    fully automatic once set up.
                   </p>
                 </div>
 
@@ -89,7 +89,8 @@ export default async function Home() {
                         Sign in with Google
                       </h3>
                       <p className="text-sm text-gray-500">
-                        Create your account to get started
+                        Create your account to get started - it&apos;s free and
+                        secure
                       </p>
                       {step === 1 && (
                         <div className="mt-2">
@@ -116,11 +117,19 @@ export default async function Home() {
                         Connect YouTube Music
                       </h3>
                       <p className="text-sm text-gray-500">
-                        Add your browser headers to access your history
+                        Follow our step-by-step guide with images to connect
+                        your YouTube Music account
                       </p>
                       {step === 2 && (
                         <div className="mt-2">
                           <YouTubeHeadersForm />
+                          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                            <p className="text-sm text-blue-800">
+                              💡 Need help? Watch our video tutorial that shows
+                              you exactly what to do. Don&apos;t worry,
+                              we&apos;ll guide you through each step.
+                            </p>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -141,7 +150,8 @@ export default async function Home() {
                     <div className="flex-1">
                       <h3 className="font-semibold mb-1">Connect Last.fm</h3>
                       <p className="text-sm text-gray-500">
-                        Authorize scrobbling to your Last.fm account
+                        Authorize the connection with your Last.fm account with
+                        a single click
                       </p>
                       {step === 3 && (
                         <div className="mt-2">
@@ -162,9 +172,10 @@ export default async function Home() {
                       4
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold mb-1">Start Scrobbling</h3>
+                      <h3 className="font-semibold mb-1">Ready!</h3>
                       <p className="text-sm text-gray-500">
-                        Begin tracking your music history
+                        Activate the service and start tracking your music
+                        automatically
                       </p>
                       {step === 4 && (
                         <div className="mt-2">
@@ -203,25 +214,25 @@ export default async function Home() {
                 </h2>
                 <div className="space-y-4">
                   <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                    Since YouTube Music does not provide an official API, our
-                    service relies on your browser session to access your
-                    listening history. This means you&apos;ll need to update
-                    your headers periodically when they expire.
+                    To keep your connection active, you&apos;ll need to update
+                    your YouTube Music account information approximately once a
+                    month. We&apos;ll send you an email reminder when it&apos;s
+                    needed.
                   </p>
                   <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                    Our process runs every 5 minutes to check for new songs, so
-                    there might be a small delay between playing a song and
-                    seeing it on your Last.fm profile.
+                    The service checks your play history every 5 minutes, so
+                    there might be a small delay between when you listen to a
+                    song and when it appears on your Last.fm profile.
                   </p>
                   <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                    If you have any questions or need help, feel free to reach
-                    out at{" "}
+                    Have questions or need help? Email us at{" "}
                     <a
                       href="mailto:me@luisignacio.cc"
                       className="underline text-blue-500"
                     >
                       me@luisignacio.cc
-                    </a>
+                    </a>{" "}
+                    and we&apos;ll be happy to help.
                   </p>
                 </div>
               </div>
@@ -235,9 +246,10 @@ export default async function Home() {
               <div className="space-y-4">
                 <h2 className="text-3xl font-bold">Privacy & Security</h2>
                 <p className="text-gray-500">
-                  We take your privacy seriously. Your YouTube Music headers are
-                  encrypted and only used to access your listening history. You
-                  can delete your account and all associated data at any time.
+                  Your privacy is our priority. All your account information is
+                  protected and encrypted. We only use the necessary data to
+                  connect with YouTube Music and Last.fm. You can delete your
+                  account and all your information at any time.
                 </p>
                 <div className="flex gap-4">
                   <Link
