@@ -62,15 +62,37 @@ export default function YouTubeHeadersForm() {
       image: "/tutorial/step3.png",
     },
     {
-      title: "Filter Requests",
-      description: "Type 'browse' in the search field",
+      title: "Enable Filter Bar",
+      description: "Click on the 'Filter' icon (funnel) to show the search bar",
       image: "/tutorial/step4.png",
     },
     {
-      title: "Find Information",
-      description:
-        "Click any 'browse' request and look for the data in the Headers tab",
+      title: "Filter Requests",
+      description: "Type 'browse' in the search field",
       image: "/tutorial/step5.png",
+    },
+    {
+      title: "Navigate Website",
+      description:
+        "Browse through YouTube Music until a 'browse' request appears in the network list",
+      image: "/tutorial/step6.png",
+    },
+    {
+      title: "Select Request",
+      description: "Click on any 'browse' request that appears in the list",
+      image: "/tutorial/step7.png",
+    },
+    {
+      title: "View Headers",
+      description:
+        "In the new panel, click on the 'Headers' tab to see request details",
+      image: "/tutorial/step8.png",
+    },
+    {
+      title: "Copy Headers",
+      description:
+        "Scroll down to 'Request Headers' section and copy the required values (Authorization, Cookie, X-Goog-AuthUser, X-Goog-Visitor-Id)",
+      image: "/tutorial/step9.png",
     },
   ];
 
