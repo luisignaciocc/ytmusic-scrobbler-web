@@ -15,15 +15,13 @@ datasource db {
 
 model User {
   id                     String    @id @default(cuid())
-  googleId               String    @unique
   name                   String
   email                  String    @unique
   isActive               Boolean   @default(false)
   picture                String
-  googleAccessToken      String
-  googleRefreshToken     String?
-  googleTokenExpires     BigInt?
-  googleIdToken          String?
+  ytmusicCookie          String?
+  ytmusicAuthUser        String?
+  ytmusicOrigin          String?   @default("https://music.youtube.com")
   lastFmSessionKey       String?
   lastFmUsername         String?
   Songs                  Song[]

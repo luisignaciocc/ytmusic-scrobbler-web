@@ -4,7 +4,7 @@
 
 This repository is a monorepo managed by pnpm and Turborepo that consists of two applications:
 
-- **Web App**: A Next.js application that handles authentication flows for obtaining Google and Last.fm API keys.
+- **Web App**: A Next.js application that handles authentication flows for obtaining YouTube Music headers and Last.fm API keys.
 - **Background App**: A Nest.js application running on a server that runs a process every 5 minutes to fetch YouTube history and send it to Last.fm using Redis for message passing between the scheduler and the consumer.
 
 ## Features
@@ -35,11 +35,9 @@ This repository is a monorepo managed by pnpm and Turborepo that consists of two
 
 ### Environment Variables
 
-- `GOOGLE_CLIENT_ID`: Obtain from creating a Google OAuth 2.0 client ID in Google Cloud Platform
-- `GOOGLE_CLIENT_SECRET`: Obtain from creating a Google OAuth 2.0 client ID in Google Cloud Platform
-- `NEXTAUTH_SECRET`: A token to encrypt the session JSON
 - `LAST_FM_API_KEY`: Obtain from creating a Last.fm app
 - `LAST_FM_API_SECRET`: Obtain from creating a Last.fm app
+- `NEXTAUTH_SECRET`: A token to encrypt the session JSON
 - `DASHBOARD_PASSWORD`: Password for the admin user to protect the background process dashboard
 
 ### Setup Steps
@@ -57,7 +55,8 @@ This repository is a monorepo managed by pnpm and Turborepo that consists of two
 ### Web App
 
 - Navigate to `http://localhost:3000` in your browser
-- Authorize Google and Last.fm access
+- Follow the instructions to add your YouTube Music headers
+- Authorize Last.fm access
 - Enable and disable your scrobbling processes
 
 ### Dashboard
@@ -75,7 +74,7 @@ This repository is a monorepo managed by pnpm and Turborepo that consists of two
 ## Additional Notes
 
 - The worker logic uses a producer-consumer pattern to efficiently handle scrobbling tasks with Redis as the message broker.
-- The frontend provides buttons for authorizing Google and Last.fm access, as well as a button to start/stop scrobbling.
+- The frontend provides buttons for authorizing Last.fm access and adding YouTube Music headers, as well as a button to start/stop scrobbling.
 
 ## Contributing
 

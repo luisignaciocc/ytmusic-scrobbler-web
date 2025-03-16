@@ -29,6 +29,7 @@
     "bull": "^4.13.0",
     "crypto": "^1.0.1",
     "express-basic-auth": "^1.2.1",
+    "python-shell": "^5.0.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "xml2js": "^0.6.2"

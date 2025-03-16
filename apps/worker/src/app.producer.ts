@@ -33,7 +33,10 @@ export class AppProducer implements OnModuleInit {
         lastFmSessionKey: {
           not: null,
         },
-        googleRefreshToken: {
+        ytmusicCookie: {
+          not: null,
+        },
+        ytmusicAuthUser: {
           not: null,
         },
       },
@@ -73,7 +76,10 @@ export class AppProducer implements OnModuleInit {
       where: {
         OR: [
           {
-            googleRefreshToken: null,
+            ytmusicCookie: null,
+          },
+          {
+            ytmusicAuthUser: null,
           },
           {
             lastFmSessionKey: null,

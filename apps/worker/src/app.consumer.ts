@@ -3,12 +3,7 @@ import { Logger, OnModuleInit } from "@nestjs/common";
 import { Job } from "bull";
 
 import { PrismaService } from "./prisma.service";
-import {
-  getGoogleVisitorId,
-  getNewGoogleToken,
-  getYTMusicHistory,
-  scrobbleSong,
-} from "./utils/functions";
+import { getYTMusicHistory, scrobbleSong } from "./utils/functions";
 @Processor("scrobbler")
 export class AppConsumer implements OnModuleInit {
   constructor(private readonly prisma: PrismaService) {}
@@ -23,12 +18,12 @@ export class AppConsumer implements OnModuleInit {
   @Process("scrobble")
   async scrobble(
     job: Job<{
-      userId: "string";
+      userId: string;
     }>,
   ) {
     const { userId } = job.data;
     this.logger.debug(`Scrobbling for user ${userId} at ${new Date()}`);
-    const user = await this.prisma.user.findFirst({
+    const user = await this.prisma.user.findUnique({
       where: {
         id: userId,
       },
@@ -56,57 +51,21 @@ export class AppConsumer implements OnModuleInit {
     }
 
     try {
-      const visitorId = await getGoogleVisitorId();
-
       if (!user.lastFmSessionKey) {
-        job.log(`User ${userId} is not authenticated with Last.fm`);
+        job.log(`User ${userId} has no Last.fm session key`);
         return job.discard();
       }
 
-      if (!user.googleRefreshToken) {
-        job.log(`User ${userId} is not authenticated with Google`);
+      if (!user.ytmusicCookie || !user.ytmusicAuthUser) {
+        job.log(`User ${userId} has no YouTube Music headers`);
         return job.discard();
-      }
-
-      let accessToken = user.googleAccessToken;
-      if (
-        !user.googleTokenExpires ||
-        user.googleTokenExpires < new Date().getTime()
-      ) {
-        try {
-          const { accessToken: newAccessToken, expiresAt } =
-            await getNewGoogleToken({
-              clientId: GOOGLE_CLIENT_ID,
-              clientSecret: GOOGLE_CLIENT_SECRET,
-              refreshToken: user.googleRefreshToken,
-            });
-
-          await this.prisma.user.update({
-            where: {
-              googleId: user.googleId,
-            },
-            data: {
-              googleAccessToken: newAccessToken,
-              googleTokenExpires: expiresAt,
-            },
-          });
-          accessToken = newAccessToken;
-        } catch (error) {
-          if (error instanceof Error) {
-            job.log(`Error refreshing user token for ${userId}`);
-            job.log(error.message);
-            return job.discard();
-          } else {
-            job.log(`Error refreshing user token for ${userId}`);
-            return job.discard();
-          }
-        }
       }
 
       const [songs, songsOnDB] = await Promise.all([
         getYTMusicHistory({
-          visitorId,
-          accessToken,
+          cookie: user.ytmusicCookie,
+          authUser: user.ytmusicAuthUser,
+          origin: user.ytmusicOrigin || undefined,
         }),
         this.prisma.song.findMany({
           where: {

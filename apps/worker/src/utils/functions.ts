@@ -84,11 +84,13 @@ export async function getGoogleVisitorId() {
 }
 
 export async function getYTMusicHistory({
-  visitorId,
-  accessToken,
+  cookie,
+  authUser,
+  origin = "https://music.youtube.com",
 }: {
-  visitorId: string;
-  accessToken: string;
+  cookie: string;
+  authUser: string;
+  origin?: string;
 }) {
   const musicResponse = await fetch(
     "https://music.youtube.com/youtubei/v1/browse",
@@ -97,10 +99,9 @@ export async function getYTMusicHistory({
       cache: "no-store",
       headers: {
         "Content-Type": "application/json",
-        "X-Goog-Visitor-Id": visitorId,
-        Authorization: `Bearer ${accessToken}`,
-        Cookie: "SOCS=CAI",
-        Origin: "https://music.youtube.com",
+        Cookie: cookie,
+        "X-Goog-AuthUser": authUser,
+        Origin: origin,
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
         Referer: "https://music.youtube.com/",

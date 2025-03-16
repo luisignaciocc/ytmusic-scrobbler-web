@@ -1,41 +1,16 @@
-import { AlertTriangleIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-
 import LastfmBtn from "./components/lastfm-btn";
 import LastfmLogout from "./components/lastfm-logout";
-import LoginBtn from "./components/login-btn";
 import LogoutBtn from "./components/logout-btn";
 import Music2Icon from "./components/music-icon";
 import ScrobbleBtnServer from "./components/scrobble-button-server";
+import YouTubeHeadersForm from "./components/youtube-headers-form";
 
 export default function Home() {
   return (
     <div className="flex flex-col min-h-[100dvh]">
-      <Alert variant="destructive">
-        <AlertTriangleIcon className="h-4 w-4" />
-        <AlertTitle>Service Unavailable</AlertTitle>
-        <AlertDescription>
-          Unfortunately, due to recent changes in YouTube&apos;s integration
-          API, our service is currently unavailable. Since the problem is on
-          YouTube&apos;s side, we are unable to provide an estimated time for
-          when the service will be back up. Nevertheless, the original project
-          is still available on{" "}
-          <a
-            href="https://github.com/luisignaciocc/youtube-music-scrobbler"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline text-blue-500"
-          >
-            GitHub
-          </a>{" "}
-          and you can run it on your own server, you&apos;ll need a little
-          coding knowledge to set it up. We apologize for the inconvenience and
-          thank you for using our service.
-        </AlertDescription>
-      </Alert>
       <header className="px-4 lg:px-6 h-14 flex items-center top-0 sticky bg-[hsl(var(--background))]">
         <Link className="flex items-center justify-center space-x-3" href="/">
           <Music2Icon className="h-6 w-6" />
@@ -64,7 +39,7 @@ export default function Home() {
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  <LoginBtn />
+                  <YouTubeHeadersForm />
                   <LastfmBtn />
                 </div>
               </div>
@@ -91,7 +66,7 @@ export default function Home() {
                 <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
                   Our service seamlessly integrates with Youtube Music to
                   automatically scrobble your listening history to Last.fm on
-                  our server . No more manual tracking or complicated setup, and
+                  our server. No more manual tracking or complicated setup, and
                   no need to install any apps on your device or browser.
                 </p>
               </div>
@@ -116,11 +91,11 @@ export default function Home() {
                   <li>
                     <div className="grid gap-1">
                       <h3 className="text-xl font-bold">
-                        Connect your YouTube Account
+                        Add Your YouTube Music Headers
                       </h3>
                       <p className="text-gray-500 dark:text-gray-400">
-                        Link YourTube with your Google account, click on the
-                        Sign in button and authorize the app.
+                        Follow the instructions to copy your YouTube Music
+                        headers from your browser and paste them into the form.
                       </p>
                     </div>
                   </li>
@@ -165,10 +140,9 @@ export default function Home() {
                 <div className="space-y-4">
                   <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
                     Since YouTube Music does not provide an official API, our
-                    service relies on scraping techniques to get the necessary
-                    data. This has been working well for our use case, but it
-                    has some limitations like not being able to get the exact
-                    time of when a song was played.
+                    service relies on your browser session to access your
+                    listening history. This means you&apos;ll need to update
+                    your headers periodically when they expire.
                   </p>
                   <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
                     To mitigate this, we use the time when the song was
@@ -178,10 +152,11 @@ export default function Home() {
                     after it was played.
                   </p>
                   <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                    It&apos;s important that you check the YouTube permissions
-                    to make sure that the app has access to your YouTube Music
-                    history. If you have any concerns about privacy or security,
-                    please reach out to us.
+                    It&apos;s important that you keep your YouTube Music session
+                    active in your browser. If you log out or clear your
+                    cookies, you&apos;ll need to update your headers. If you
+                    have any concerns about privacy or security, please reach
+                    out to us.
                   </p>
                   <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
                     With the button below you can start and stop the process of
