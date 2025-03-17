@@ -199,18 +199,35 @@ export default async function Home() {
                 </h2>
                 <div className="space-y-4">
                   <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
+                    Our service works by securely connecting your YouTube Music
+                    and Last.fm accounts. Once connected, we automatically track
+                    your listening history and sync it with Last.fm. Here&apos;s
+                    what happens behind the scenes:
+                  </p>
+                  <ul className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400 space-y-2">
+                    <li>
+                      • Every 5 minutes, we check your YouTube Music listening
+                      history for new songs
+                    </li>
+                    <li>
+                      • We maintain a secure database of your recently played
+                      tracks to avoid duplicate scrobbles
+                    </li>
+                    <li>
+                      • New songs are automatically scrobbled to Last.fm with
+                      accurate timestamps
+                    </li>
+                    <li>
+                      • We handle connection issues gracefully and ensure no
+                      songs are lost
+                    </li>
+                  </ul>
+                  <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
                     Just like your phone needs to stay logged in to your apps,
                     our service needs to maintain a secure connection to your
                     YouTube Music account. Sometimes this connection might
                     expire, and when that happens, you&apos;ll need to reconnect
                     using the same simple steps as before.
-                  </p>
-                  <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                    When you&apos;re connected, we check your play history every
-                    5 minutes, so there might be a small delay between when you
-                    listen to a song and when it appears on your Last.fm
-                    profile. This helps us ensure accurate tracking while being
-                    gentle on both services.
                   </p>
                   <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
                     Need help? We&apos;re here for you! Contact us at{" "}

@@ -1,5 +1,3 @@
-> **⚠️ Alert: Unfortunately, the web authentication method used here is no longer allowed for accessing your YouTube Music listening history, so this service has stopped working. However, you can still use the [original project](https://github.com/luisignaciocc/youtube-music-scrobbler) if you want to scrobble your music history to Last.fm.**
-
 # Last.fm Scrobbler for YouTube Music History
 
 This repository is a monorepo managed by pnpm and Turborepo that consists of two applications:
