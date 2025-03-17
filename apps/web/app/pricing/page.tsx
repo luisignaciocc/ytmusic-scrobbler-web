@@ -164,7 +164,6 @@ const PricingPage = () => (
           </p>
           <ul className="list-disc list-inside space-y-2 text-gray-600">
             <li>Server infrastructure costs to process scrobbles</li>
-            <li>API usage fees for both YouTube Music and Last.fm</li>
             <li>Maintenance and development of the service</li>
             <li>Customer support and service reliability</li>
           </ul>
