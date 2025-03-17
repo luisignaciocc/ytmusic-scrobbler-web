@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
 
 import ScrobbleBtnClient from "./scrobble-button-client";
+import YouTubeHeadersForm from "./youtube-headers-form";
 
 const prisma = new PrismaClient();
 
@@ -51,5 +52,48 @@ export default async function ScrobbleBtnServer() {
     );
   }
 
-  return <ScrobbleBtnClient scrobbling={user.isActive} />;
+  const lastSuccessfulScrobble = user.lastSuccessfulScrobble
+    ? new Date(user.lastSuccessfulScrobble)
+    : null;
+
+  const formatTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
+    if (diffInSeconds < 3600)
+      return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    if (diffInSeconds < 86400)
+      return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col gap-2">
+        <ScrobbleBtnClient scrobbling={user.isActive} />
+        <div className="flex items-center gap-2">
+          <YouTubeHeadersForm
+            buttonText="Update Connection"
+            buttonClassName="text-sm px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md"
+          />
+        </div>
+      </div>
+
+      {user.isActive && (
+        <div className="text-sm space-y-2 mt-4">
+          {lastSuccessfulScrobble && (
+            <div>
+              <span className="font-medium">Last Successful Scrobble:</span>{" "}
+              {formatTimeAgo(lastSuccessfulScrobble)}
+            </div>
+          )}
+          <div className="text-gray-500 text-xs">
+            If scrobbling stops working, try updating your connection using the
+            button above.
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
