@@ -1,13 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 import Image from "next/image";
-import Link from "next/link";
 import { getServerSession } from "next-auth";
 
+import Header from "./components/header";
 import LastfmBtn from "./components/lastfm-btn";
-import LastfmLogout from "./components/lastfm-logout";
 import LoginBtn from "./components/login-btn";
-import LogoutBtn from "./components/logout-btn";
-import Music2Icon from "./components/music-icon";
 import ScrobbleBtnServer from "./components/scrobble-button-server";
 import YouTubeHeadersForm from "./components/youtube-headers-form";
 
@@ -43,18 +40,7 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col min-h-[100dvh]">
-      <header className="px-4 lg:px-6 h-14 flex items-center top-0 sticky bg-[hsl(var(--background))] border-b">
-        <Link className="flex items-center justify-center space-x-3" href="/">
-          <Music2Icon className="h-6 w-6" />
-          <p className="font-semibold hidden sm:block">
-            Last.fm Scrobbler for YouTube Music
-          </p>
-        </Link>
-        <nav className="ml-auto flex gap-4 sm:gap-6">
-          <LastfmLogout />
-          <LogoutBtn />
-        </nav>
-      </header>
+      <Header />
       <main className="flex-1">
         <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
           <div className="container px-4 md:px-6 mx-auto">
@@ -248,64 +234,22 @@ export default async function Home() {
                 <h2 className="text-3xl font-bold">Privacy & Security</h2>
                 <p className="text-gray-500">
                   Your privacy is our priority. All your account information is
-                  protected and encrypted. We only use the necessary data to
-                  connect with YouTube Music and Last.fm. You can delete your
-                  account and all your information at any time.
+                  encrypted and stored securely. We never share your data with
+                  third parties.
                 </p>
-                <div className="flex gap-4">
-                  <Link
-                    href="/privacy"
-                    className="inline-flex h-10 items-center justify-center rounded-md border border-gray-200 bg-white px-8 text-sm font-medium shadow-sm transition-colors hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:hover:bg-gray-800 dark:hover:text-gray-50 dark:focus-visible:ring-gray-300"
-                  >
-                    Privacy Policy
-                  </Link>
-                  <Link
-                    href="/terms"
-                    className="inline-flex h-10 items-center justify-center rounded-md border border-gray-200 bg-white px-8 text-sm font-medium shadow-sm transition-colors hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:hover:bg-gray-800 dark:hover:text-gray-50 dark:focus-visible:ring-gray-300"
-                  >
-                    Terms of Service
-                  </Link>
-                </div>
               </div>
               <div className="space-y-4">
-                <h2 className="text-3xl font-bold">Support Us</h2>
+                <h2 className="text-3xl font-bold">Simple & Reliable</h2>
                 <p className="text-gray-500">
-                  If you enjoy using our service and would like to support its
-                  development, consider buying us a coffee. Your support helps
-                  keep the service running and free for everyone.
+                  Our service is designed to be simple and reliable. Once set
+                  up, it works automatically in the background, keeping your
+                  Last.fm profile up to date.
                 </p>
-                <a
-                  href="https://www.buymeacoffee.com/luisignaciocc"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex h-10 items-center justify-center rounded-md bg-gray-900 px-8 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
-                >
-                  Buy us a coffee
-                </a>
               </div>
             </div>
           </div>
         </section>
       </main>
-      <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          © {new Date().getFullYear()} Boconó Labs. All rights reserved.
-        </p>
-        <nav className="sm:ml-auto flex gap-4 sm:gap-6">
-          <Link
-            className="text-xs hover:underline underline-offset-4"
-            href="/terms"
-          >
-            Terms of Service
-          </Link>
-          <Link
-            className="text-xs hover:underline underline-offset-4"
-            href="/privacy"
-          >
-            Privacy
-          </Link>
-        </nav>
-      </footer>
     </div>
   );
 }

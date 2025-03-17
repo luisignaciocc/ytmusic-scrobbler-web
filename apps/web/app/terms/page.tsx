@@ -19,10 +19,10 @@ const TermsOfService = () => (
         2. Description of the Service
       </h2>
       <p className="mb-6 text-justify">
-        The Application offers a service that collects your YouTube viewing
-        history and sends it to your Last.fm account. This service is designed
-        to enhance your musical experience and allow better tracking of your
-        listening habits.
+        The Application, operated by Bocono Labs, offers a service that collects
+        your YouTube viewing history and sends it to your Last.fm account. This
+        service is designed to enhance your musical experience and allow better
+        tracking of your listening habits.
       </p>
 
       <h2 className="text-2xl font-semibold mb-4">3. Data Usage</h2>
@@ -89,14 +89,28 @@ const TermsOfService = () => (
         Terms.
       </p>
 
-      <h2 className="text-2xl font-semibold mb-4">9. Governing Law</h2>
+      <h2 className="text-2xl font-semibold mb-4">9. Refund Policy</h2>
       <p className="mb-6 text-justify">
-        These Terms will be governed and construed in accordance with the laws
-        of the country in which the Application owner resides, without regard to
-        its conflict of law principles.
+        Bocono Labs offers a 30-day money-back guarantee for all paid
+        subscriptions. If you are not satisfied with our service, you may
+        request a refund within 30 days of your purchase. To request a refund,
+        please contact us at{" "}
+        <a href="mailto:me@luisignacio.cc" className="underline text-blue-500">
+          me@luisignacio.cc
+        </a>
+        . Refunds will be processed within 5-10 business days of approval. Once
+        approved, the refund will be credited back to your original payment
+        method.
       </p>
 
-      <h2 className="text-2xl font-semibold mb-4">10. Contact</h2>
+      <h2 className="text-2xl font-semibold mb-4">10. Governing Law</h2>
+      <p className="mb-6 text-justify">
+        These Terms will be governed and construed in accordance with the laws
+        of the country in which Bocono Labs operates, without regard to its
+        conflict of law principles.
+      </p>
+
+      <h2 className="text-2xl font-semibold mb-4">11. Contact</h2>
       <p className="mb-6 text-justify">
         If you have any questions about these Terms, please contact us at{" "}
         <a href="mailto:me@luisignacio.cc" className="underline text-blue-500">
