@@ -71,12 +71,12 @@ export default function YouTubeHeadersForm() {
       image: "/tutorial/step3.png",
     },
     {
-      title: "Enable Filter Bar",
+      title: "Show Search Bar",
       description: "Click on the 'Filter' icon (funnel) to show the search bar",
       image: "/tutorial/step4.png",
     },
     {
-      title: "Filter Requests",
+      title: "Search for 'browse'",
       description: "Type 'browse' in the search field",
       image: "/tutorial/step5.png",
     },
@@ -87,25 +87,25 @@ export default function YouTubeHeadersForm() {
       image: "/tutorial/step6.png",
     },
     {
-      title: "Select Request",
-      description: "Click on any 'browse' request that appears in the list",
+      title: "Select an Item",
+      description: "Click on any item named 'browse' that appears in the list",
       image: "/tutorial/step7.png",
     },
     {
-      title: "View Headers",
+      title: "View Connection Details",
       description:
-        "In the new panel, click on the 'Headers' tab to see request details",
+        "In the new panel, click on the 'Headers' tab to see connection details",
       image: "/tutorial/step8.png",
     },
     {
-      title: "Copy Headers",
+      title: "Copy Connection Details",
       description:
-        "Scroll down to 'Request Headers' section and copy the required values (Authorization, Cookie, X-Goog-AuthUser, X-Goog-Visitor-Id)",
+        "Scroll down to 'Request Headers' section and copy these values: Authorization, Cookie, X-Goog-AuthUser, and X-Goog-Visitor-Id",
       image: "/tutorial/step9.png",
     },
     {
-      title: "Enter Headers",
-      description: "Enter the headers you copied in the form below",
+      title: "Enter Connection Details",
+      description: "Enter the connection details you copied in the form below",
       isForm: true,
     },
   ];
@@ -161,7 +161,8 @@ export default function YouTubeHeadersForm() {
                 >
                   Authorization
                   <span className="text-xs text-gray-500 ml-2">
-                    (Find &quot;Authorization&quot; in Request Headers)
+                    (Find in the Connection Details under
+                    &quot;Authorization&quot;)
                   </span>
                 </label>
                 <textarea
@@ -181,7 +182,7 @@ export default function YouTubeHeadersForm() {
                 >
                   Cookie
                   <span className="text-xs text-gray-500 ml-2">
-                    (Find &quot;Cookie&quot; in Request Headers)
+                    (Find in the Connection Details under &quot;Cookie&quot;)
                   </span>
                 </label>
                 <textarea
@@ -201,7 +202,8 @@ export default function YouTubeHeadersForm() {
                 >
                   X-Goog-AuthUser
                   <span className="text-xs text-gray-500 ml-2">
-                    (Find &quot;X-Goog-AuthUser&quot; in Request Headers)
+                    (Find in the Connection Details under
+                    &quot;X-Goog-AuthUser&quot;)
                   </span>
                 </label>
                 <input
@@ -222,7 +224,8 @@ export default function YouTubeHeadersForm() {
                 >
                   X-Goog-Visitor-Id
                   <span className="text-xs text-gray-500 ml-2">
-                    (Find &quot;X-Goog-Visitor-Id&quot; in Request Headers)
+                    (Find in the Connection Details under
+                    &quot;X-Goog-Visitor-Id&quot;)
                   </span>
                 </label>
                 <input
