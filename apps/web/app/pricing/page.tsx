@@ -4,6 +4,19 @@ import React from "react";
 const PricingPage = () => (
   <div className="flex flex-col min-h-screen bg-gray-100">
     <div className="container mx-auto px-4 py-16">
+      {/* Alert */}
+      <div
+        className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-8"
+        role="alert"
+      >
+        <p className="font-medium">Implementation Notice</p>
+        <p>
+          We are currently implementing our pricing structure. During this
+          period, all users have access to 5-minute update intervals. We&apos;ll
+          notify you when the pricing tiers are fully implemented.
+        </p>
+      </div>
+
       <div className="text-center mb-16">
         <h1 className="text-4xl font-bold mb-4">Simple, Transparent Pricing</h1>
         <p className="text-xl text-gray-600">
@@ -66,19 +79,16 @@ const PricingPage = () => (
               Basic support
             </li>
           </ul>
-          <Link
-            href="/"
-            className="block w-full text-center bg-gray-100 text-gray-800 py-3 rounded-lg hover:bg-gray-200 transition-colors"
+          <button
+            disabled
+            className="block w-full text-center bg-gray-100 text-gray-800 py-3 rounded-lg cursor-not-allowed opacity-75"
           >
-            Get Started
-          </Link>
+            Current Subscription
+          </button>
         </div>
 
         {/* Pro Tier */}
         <div className="bg-white rounded-lg shadow-lg p-8 border-2 border-blue-500">
-          <div className="absolute top-0 right-0 bg-blue-500 text-white px-4 py-1 rounded-bl-lg rounded-tr-lg">
-            Popular
-          </div>
           <h2 className="text-2xl font-bold mb-4">Pro</h2>
           <div className="text-4xl font-bold mb-6">
             $3<span className="text-lg text-gray-500">/month</span>
@@ -133,12 +143,12 @@ const PricingPage = () => (
               Priority support
             </li>
           </ul>
-          <Link
-            href="/"
-            className="block w-full text-center bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors"
+          <button
+            disabled
+            className="block w-full text-center bg-blue-500 text-white py-3 rounded-lg cursor-not-allowed opacity-75"
           >
-            Upgrade to Pro
-          </Link>
+            Current Subscription
+          </button>
         </div>
       </div>
 
