@@ -209,29 +209,31 @@ export default async function Home() {
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-                  Important Information
+                  How It Works
                 </h2>
                 <div className="space-y-4">
                   <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                    To keep your connection active, you&apos;ll need to update
-                    your YouTube Music account information approximately once a
-                    month. We&apos;ll send you an email reminder when it&apos;s
-                    needed.
+                    Just like your phone needs to stay logged in to your apps,
+                    our service needs to maintain a secure connection to your
+                    YouTube Music account. Sometimes this connection might
+                    expire, and when that happens, you&apos;ll need to reconnect
+                    using the same simple steps as before.
                   </p>
                   <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                    The service checks your play history every 5 minutes, so
-                    there might be a small delay between when you listen to a
-                    song and when it appears on your Last.fm profile.
+                    When you&apos;re connected, we check your play history every
+                    5 minutes, so there might be a small delay between when you
+                    listen to a song and when it appears on your Last.fm
+                    profile. This helps us ensure accurate tracking while being
+                    gentle on both services.
                   </p>
                   <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                    Have questions or need help? Email us at{" "}
+                    Need help? We&apos;re here for you! Contact us at{" "}
                     <a
                       href="mailto:me@luisignacio.cc"
                       className="underline text-blue-500"
                     >
                       me@luisignacio.cc
-                    </a>{" "}
-                    and we&apos;ll be happy to help.
+                    </a>
                   </p>
                 </div>
               </div>
