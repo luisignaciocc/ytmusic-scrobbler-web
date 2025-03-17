@@ -125,9 +125,8 @@ export default async function Home() {
                           <YouTubeHeadersForm />
                           <div className="mt-4 p-4 bg-blue-50 rounded-lg">
                             <p className="text-sm text-blue-800">
-                              💡 Need help? Watch our video tutorial that shows
-                              you exactly what to do. Don&apos;t worry,
-                              we&apos;ll guide you through each step.
+                              💡 Follow the step-by-step guide above to connect
+                              your YouTube Music account.
                             </p>
                           </div>
                         </div>

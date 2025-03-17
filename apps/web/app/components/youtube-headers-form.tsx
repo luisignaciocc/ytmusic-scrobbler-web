@@ -267,16 +267,12 @@ export default function YouTubeHeadersForm() {
                 </button>
 
                 <p className="text-sm text-gray-500 mt-4">
-                  Need help? Watch our{" "}
-                  <a href="/tutorial" className="text-blue-500 hover:underline">
-                    detailed video tutorial
-                  </a>{" "}
-                  or{" "}
+                  Need help?{" "}
                   <a
                     href="mailto:me@luisignacio.cc"
                     className="text-blue-500 hover:underline"
                   >
-                    contact us
+                    Contact us
                   </a>
                   .
                 </p>
