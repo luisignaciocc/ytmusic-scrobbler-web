@@ -1,4 +1,4 @@
-import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
+import { BullAdapter } from "@bull-board/api/bullAdapter";
 import { ExpressAdapter } from "@bull-board/express";
 import { BullBoardModule } from "@bull-board/nestjs";
 import { BullModule } from "@nestjs/bull";
@@ -10,6 +10,7 @@ import { AppConsumer } from "./app.consumer";
 import { AppController } from "./app.controller";
 import { AppProducer } from "./app.producer";
 import { PrismaService } from "./prisma.service";
+
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -38,7 +39,7 @@ import { PrismaService } from "./prisma.service";
     }),
     BullBoardModule.forFeature({
       name: "scrobbler",
-      adapter: BullMQAdapter,
+      adapter: BullAdapter,
     }),
   ],
   controllers: [AppController],
