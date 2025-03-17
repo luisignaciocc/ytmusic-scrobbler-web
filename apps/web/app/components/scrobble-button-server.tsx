@@ -69,31 +69,30 @@ export default async function ScrobbleBtnServer() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-2">
+    <div className="space-y-8">
+      <div>
         <ScrobbleBtnClient scrobbling={user.isActive} />
-        <div className="flex items-center gap-2">
-          <YouTubeHeadersForm
-            buttonText="Update Connection"
-            buttonClassName="text-sm px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md"
-          />
-        </div>
+        {user.isActive && lastSuccessfulScrobble && (
+          <div className="text-sm text-gray-600 mt-2">
+            Last scrobble: {formatTimeAgo(lastSuccessfulScrobble)}
+          </div>
+        )}
       </div>
 
-      {user.isActive && (
-        <div className="text-sm space-y-2 mt-4">
-          {lastSuccessfulScrobble && (
-            <div>
-              <span className="font-medium">Last Successful Scrobble:</span>{" "}
-              {formatTimeAgo(lastSuccessfulScrobble)}
-            </div>
-          )}
-          <div className="text-gray-500 text-xs">
-            If scrobbling stops working, try updating your connection using the
-            button above.
-          </div>
+      <div className="border-t pt-6">
+        <div className="text-sm text-gray-600 mb-3">
+          <strong>Having issues with scrobbling?</strong>
+          <p className="mt-1">
+            If scrobbling has stopped working, you may need to update your
+            connection details. This is normal and happens occasionally as
+            YouTube Music sessions expire.
+          </p>
         </div>
-      )}
+        <YouTubeHeadersForm
+          buttonText="Update Connection Details"
+          buttonClassName="text-sm px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-gray-700"
+        />
+      </div>
     </div>
   );
 }
