@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { useState } from "react";
 
+import Modal from "./modal";
+
 export default function YouTubeHeadersForm() {
   const [cookie, setCookie] = useState("");
   const [authUser, setAuthUser] = useState("");
@@ -10,7 +12,7 @@ export default function YouTubeHeadersForm() {
   const [visitorData, setVisitorData] = useState("");
   const [authorization, setAuthorization] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,188 +101,182 @@ export default function YouTubeHeadersForm() {
   return (
     <div className="w-full">
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={() => setIsModalOpen(true)}
         className="w-full inline-flex h-10 items-center justify-center rounded-md bg-gray-900 px-8 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
       >
-        {isExpanded ? "Hide Setup" : "Setup YouTube Music"}
+        Setup YouTube Music
       </button>
 
-      {isExpanded && (
-        <div className="mt-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 space-y-6 border border-gray-200 dark:border-gray-700">
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Connect Your YouTube Music Account
-            </h3>
-
-            <div className="space-y-6">
-              {/* Tutorial Steps */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-md font-medium">Step-by-Step Guide</h4>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() =>
-                        setCurrentStep(Math.max(1, currentStep - 1))
-                      }
-                      disabled={currentStep === 1}
-                      className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
-                    >
-                      Previous
-                    </button>
-                    <button
-                      onClick={() =>
-                        setCurrentStep(Math.min(steps.length, currentStep + 1))
-                      }
-                      disabled={currentStep === steps.length}
-                      className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-
-                <div className="relative rounded-lg overflow-hidden bg-gray-50 p-4">
-                  <div className="text-center mb-4">
-                    <h5 className="font-medium text-lg mb-2">
-                      {steps[currentStep - 1].title}
-                    </h5>
-                    <p className="text-gray-600">
-                      {steps[currentStep - 1].description}
-                    </p>
-                  </div>
-                  <div className="relative h-64 w-full">
-                    <Image
-                      src={steps[currentStep - 1].image}
-                      alt={`Step ${currentStep}`}
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
-                  <div className="flex justify-center mt-4">
-                    {steps.map((_, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setCurrentStep(idx + 1)}
-                        className={`w-2 h-2 rounded-full mx-1 ${
-                          currentStep === idx + 1
-                            ? "bg-blue-600"
-                            : "bg-gray-300"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Form */}
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <label
-                    htmlFor="authorization"
-                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Authorization
-                    <span className="text-xs text-gray-500 ml-2">
-                      (Find &quot;Authorization&quot; in Request Headers)
-                    </span>
-                  </label>
-                  <textarea
-                    id="authorization"
-                    value={authorization}
-                    onChange={(e) => setAuthorization(e.target.value)}
-                    className="flex min-h-[80px] w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
-                    placeholder="Copy and paste the Authorization value here..."
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label
-                    htmlFor="cookie"
-                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Cookie
-                    <span className="text-xs text-gray-500 ml-2">
-                      (Find &quot;Cookie&quot; in Request Headers)
-                    </span>
-                  </label>
-                  <textarea
-                    id="cookie"
-                    value={cookie}
-                    onChange={(e) => setCookie(e.target.value)}
-                    className="flex min-h-[80px] w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
-                    placeholder="Copy and paste the Cookie value here..."
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label
-                    htmlFor="authUser"
-                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    X-Goog-AuthUser
-                    <span className="text-xs text-gray-500 ml-2">
-                      (Find &quot;X-Goog-AuthUser&quot; in Request Headers)
-                    </span>
-                  </label>
-                  <input
-                    type="text"
-                    id="authUser"
-                    value={authUser}
-                    onChange={(e) => setAuthUser(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
-                    placeholder="Usually '0'"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label
-                    htmlFor="visitorData"
-                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    X-Goog-Visitor-Id
-                    <span className="text-xs text-gray-500 ml-2">
-                      (Find &quot;X-Goog-Visitor-Id&quot; in Request Headers)
-                    </span>
-                  </label>
-                  <input
-                    type="text"
-                    id="visitorData"
-                    value={visitorData}
-                    onChange={(e) => setVisitorData(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
-                    placeholder="Copy and paste the X-Goog-Visitor-Id value here..."
-                    required
-                  />
-                </div>
-
-                <input type="hidden" id="origin" value={origin} />
-
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Connect Your YouTube Music Account"
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Tutorial Steps - Left Side */}
+          <div className="space-y-6">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-md font-medium">Step-by-Step Guide</h4>
+              <div className="flex space-x-2">
                 <button
-                  type="submit"
-                  disabled={loading}
-                  className="inline-flex h-10 items-center justify-center rounded-md bg-gray-900 px-8 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
+                  onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
+                  disabled={currentStep === 1}
+                  className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-700 dark:hover:bg-gray-600"
                 >
-                  {loading ? "Saving..." : "Save and Continue"}
+                  Previous
                 </button>
+                <button
+                  onClick={() =>
+                    setCurrentStep(Math.min(steps.length, currentStep + 1))
+                  }
+                  disabled={currentStep === steps.length}
+                  className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-700 dark:hover:bg-gray-600"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
 
-                <p className="text-sm text-gray-500 mt-4">
-                  Need help?{" "}
-                  <a
-                    href="mailto:me@luisignacio.cc"
-                    className="text-blue-500 hover:underline"
-                  >
-                    Contact us
-                  </a>
-                  .
+            <div className="rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900 p-4">
+              <div className="text-center mb-4">
+                <h5 className="font-medium text-lg mb-2">
+                  {steps[currentStep - 1].title}
+                </h5>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {steps[currentStep - 1].description}
                 </p>
-              </form>
+              </div>
+              <div className="relative h-[500px] w-full">
+                <Image
+                  src={steps[currentStep - 1].image}
+                  alt={`Step ${currentStep}`}
+                  fill
+                  className="object-contain"
+                />
+              </div>
+              <div className="flex justify-center mt-4">
+                {steps.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentStep(idx + 1)}
+                    className={`w-2 h-2 rounded-full mx-1 ${
+                      currentStep === idx + 1
+                        ? "bg-blue-600"
+                        : "bg-gray-300 dark:bg-gray-600"
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
           </div>
+
+          {/* Form - Right Side */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label
+                htmlFor="authorization"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Authorization
+                <span className="text-xs text-gray-500 ml-2">
+                  (Find &quot;Authorization&quot; in Request Headers)
+                </span>
+              </label>
+              <textarea
+                id="authorization"
+                value={authorization}
+                onChange={(e) => setAuthorization(e.target.value)}
+                className="flex min-h-[80px] w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
+                placeholder="Copy and paste the Authorization value here..."
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="cookie"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Cookie
+                <span className="text-xs text-gray-500 ml-2">
+                  (Find &quot;Cookie&quot; in Request Headers)
+                </span>
+              </label>
+              <textarea
+                id="cookie"
+                value={cookie}
+                onChange={(e) => setCookie(e.target.value)}
+                className="flex min-h-[80px] w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
+                placeholder="Copy and paste the Cookie value here..."
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="authUser"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                X-Goog-AuthUser
+                <span className="text-xs text-gray-500 ml-2">
+                  (Find &quot;X-Goog-AuthUser&quot; in Request Headers)
+                </span>
+              </label>
+              <input
+                type="text"
+                id="authUser"
+                value={authUser}
+                onChange={(e) => setAuthUser(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
+                placeholder="Usually '0'"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="visitorData"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                X-Goog-Visitor-Id
+                <span className="text-xs text-gray-500 ml-2">
+                  (Find &quot;X-Goog-Visitor-Id&quot; in Request Headers)
+                </span>
+              </label>
+              <input
+                type="text"
+                id="visitorData"
+                value={visitorData}
+                onChange={(e) => setVisitorData(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
+                placeholder="Copy and paste the X-Goog-Visitor-Id value here..."
+                required
+              />
+            </div>
+
+            <input type="hidden" id="origin" value={origin} />
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex h-10 items-center justify-center rounded-md bg-gray-900 px-8 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
+            >
+              {loading ? "Saving..." : "Save and Continue"}
+            </button>
+
+            <p className="text-sm text-gray-500 mt-4">
+              Need help?{" "}
+              <a
+                href="mailto:me@luisignacio.cc"
+                className="text-blue-500 hover:underline"
+              >
+                Contact us
+              </a>
+              .
+            </p>
+          </form>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }
