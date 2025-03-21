@@ -84,6 +84,9 @@ export default function PricingClient() {
   const openCheckout = () => {
     if (!paddleInitialized || !paddleInstance) return;
 
+    // Get user email from session
+    const userEmail = session?.user?.email;
+
     try {
       paddleInstance.Checkout.open({
         items: [
@@ -92,11 +95,14 @@ export default function PricingClient() {
             quantity: 1,
           },
         ],
-        customer: session?.user?.email
+        customer: userEmail
           ? {
-              email: session.user.email,
+              email: userEmail,
             }
           : undefined,
+        customData: {
+          userEmail: userEmail,
+        },
         settings: {
           displayMode: "overlay",
           theme: "light",

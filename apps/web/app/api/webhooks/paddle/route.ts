@@ -96,8 +96,28 @@ class ProcessWebhook {
         eventData.data.id,
       );
 
+      // Attempt to find user email in custom data
+      let userEmailFromCustomData: string | undefined;
+      if (
+        eventData.data.customData &&
+        typeof eventData.data.customData === "object"
+      ) {
+        // Use safer property access with indexed type
+        const customData = eventData.data.customData as {
+          [key: string]: unknown;
+        };
+        if (typeof customData.userEmail === "string") {
+          userEmailFromCustomData = customData.userEmail;
+          // eslint-disable-next-line no-console
+          console.log(
+            "Found userEmail in customData:",
+            userEmailFromCustomData,
+          );
+        }
+      }
+
       // Find user with matching subscription ID
-      const user = await prisma.user.findFirst({
+      let user = await prisma.user.findFirst({
         where: {
           subscriptionId: eventData.data.id,
         },
@@ -106,9 +126,22 @@ class ProcessWebhook {
       // eslint-disable-next-line no-console
       console.log("User found with subscription ID:", user ? user.id : "None");
 
-      // If no user found with this subscription ID, try to find by customer email
-      let userEmail;
-      if (eventData.data.customerId) {
+      // If no user found with subscription ID, try to find by email from customData
+      if (!user && userEmailFromCustomData) {
+        user = await prisma.user.findUnique({
+          where: {
+            email: userEmailFromCustomData,
+          },
+        });
+        // eslint-disable-next-line no-console
+        console.log(
+          "User found with email from customData:",
+          user ? user.id : "None",
+        );
+      }
+
+      // If still no user found, try to find by customer email from Paddle API
+      if (!user && eventData.data.customerId && !userEmailFromCustomData) {
         try {
           // eslint-disable-next-line no-console
           console.log(
@@ -120,17 +153,30 @@ class ProcessWebhook {
           const customer = await paddle.customers.get(
             eventData.data.customerId,
           );
-          userEmail = customer.email;
+          const customerEmail = customer.email;
 
           // eslint-disable-next-line no-console
-          console.log("Found customer email:", userEmail);
+          console.log("Found customer email from Paddle API:", customerEmail);
+
+          if (customerEmail) {
+            user = await prisma.user.findUnique({
+              where: {
+                email: customerEmail,
+              },
+            });
+            // eslint-disable-next-line no-console
+            console.log(
+              "User found with email from Paddle API:",
+              user ? user.id : "None",
+            );
+          }
         } catch (customerError) {
           // eslint-disable-next-line no-console
           console.error("Error fetching customer details:", customerError);
         }
       }
 
-      if (!user && !userEmail) {
+      if (!user) {
         // eslint-disable-next-line no-console
         console.error("No user found for subscription ID:", eventData.data.id);
         return;
@@ -245,8 +291,7 @@ class ProcessWebhook {
 
       const updateResult = await prisma.user.update({
         where: {
-          id: user?.id || undefined,
-          email: !user ? userEmail : undefined,
+          id: user.id,
         },
         data: {
           subscriptionId: eventData.data.id,
