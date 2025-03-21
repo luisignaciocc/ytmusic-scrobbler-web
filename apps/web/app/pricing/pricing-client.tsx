@@ -2,13 +2,8 @@
 
 import type { Paddle } from "@paddle/paddle-js";
 import { getPaddleInstance, initializePaddle } from "@paddle/paddle-js";
+import { Environment } from "@paddle/paddle-node-sdk";
 import React, { useCallback, useEffect, useState } from "react";
-
-// Configuration
-const CONFIG = {
-  clientToken: "test_4d9a92fd05bda28313270e7acba",
-  priceId: "pri_01jpgjgb4qnht9y35t3ca7xx2g",
-};
 
 // Checkbox component for billing cycle toggle
 const CheckIcon = () => (
@@ -39,8 +34,8 @@ export default function PricingClient() {
     const setupPaddle = async () => {
       try {
         await initializePaddle({
-          environment: "sandbox",
-          token: CONFIG.clientToken,
+          environment: process.env.NEXT_PUBLIC_PADDLE_ENV as Environment,
+          token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN!,
         });
 
         const paddle = getPaddleInstance();
@@ -62,7 +57,7 @@ export default function PricingClient() {
       const result = await paddleInstance.PricePreview({
         items: [
           {
-            priceId: CONFIG.priceId,
+            priceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID!,
             quantity: 1,
           },
         ],
@@ -91,7 +86,7 @@ export default function PricingClient() {
       paddleInstance.Checkout.open({
         items: [
           {
-            priceId: CONFIG.priceId,
+            priceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID!,
             quantity: 1,
           },
         ],
