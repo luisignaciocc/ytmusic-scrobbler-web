@@ -3,6 +3,7 @@
 import type { Paddle } from "@paddle/paddle-js";
 import { getPaddleInstance, initializePaddle } from "@paddle/paddle-js";
 import { Environment } from "@paddle/paddle-node-sdk";
+import { useSession } from "next-auth/react";
 import React, { useCallback, useEffect, useState } from "react";
 
 // Checkbox component for billing cycle toggle
@@ -23,6 +24,7 @@ const CheckIcon = () => (
 );
 
 export default function PricingClient() {
+  const { data: session } = useSession();
   const [paddleInstance, setPaddleInstance] = useState<Paddle | undefined>(
     undefined,
   );
@@ -90,6 +92,11 @@ export default function PricingClient() {
             quantity: 1,
           },
         ],
+        customer: session?.user?.email
+          ? {
+              email: session.user.email,
+            }
+          : undefined,
         settings: {
           displayMode: "overlay",
           theme: "light",
