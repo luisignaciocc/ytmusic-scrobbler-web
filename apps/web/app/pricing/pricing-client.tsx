@@ -49,31 +49,33 @@ export default function PricingClient() {
   });
   const [loading, setLoading] = useState(true);
 
+  // Function to fetch subscription info
+  const fetchSubscriptionInfo = useCallback(async () => {
+    if (!session?.user?.email) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch("/api/subscription/info");
+      if (response.ok) {
+        const data = await response.json();
+        setSubscriptionInfo(data);
+      } else {
+        console.error("Failed to fetch subscription info");
+      }
+    } catch (error) {
+      console.error("Error fetching subscription info:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [session?.user?.email]);
+
   // Fetch subscription info when session changes
   useEffect(() => {
-    const fetchSubscriptionInfo = async () => {
-      if (!session?.user?.email) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const response = await fetch("/api/subscription/info");
-        if (response.ok) {
-          const data = await response.json();
-          setSubscriptionInfo(data);
-        } else {
-          console.error("Failed to fetch subscription info");
-        }
-      } catch (error) {
-        console.error("Error fetching subscription info:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchSubscriptionInfo();
-  }, [session, cancelStatus.success]);
+  }, [fetchSubscriptionInfo, cancelStatus.success]);
 
   // Get user subscription data from subscription info
   const userSubscriptionPlan = subscriptionInfo.subscriptionPlan || "free";
@@ -155,6 +157,22 @@ export default function PricingClient() {
     const userEmail = session?.user?.email;
 
     try {
+      // We'll use a global event listener for checkout completion
+      // since Paddle.js doesn't expose direct event methods
+      const checkoutCompletedListener = () => {
+        // When the checkout completes, Paddle will redirect to the success URL
+        // or emit a global paddle:complete event which we can listen for
+        // We'll use a simple timeout to refresh data after checkout
+        setTimeout(() => {
+          fetchSubscriptionInfo();
+        }, 3000);
+      };
+
+      // Try to attach to the window object for Paddle events
+      if (typeof window !== "undefined") {
+        window.addEventListener("paddle:complete", checkoutCompletedListener);
+      }
+
       paddleInstance.Checkout.open({
         items: [
           {
@@ -173,6 +191,7 @@ export default function PricingClient() {
         settings: {
           displayMode: "overlay",
           theme: "light",
+          successUrl: window.location.href, // Redirect to the same page
         },
       });
     } catch (error) {
@@ -197,6 +216,8 @@ export default function PricingClient() {
 
       if (response.ok) {
         setCancelStatus({ success: true, message: data.message });
+        // Refresh subscription data after successful cancellation
+        await fetchSubscriptionInfo();
       } else {
         setCancelStatus({
           success: false,
