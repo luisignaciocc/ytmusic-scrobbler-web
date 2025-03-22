@@ -23,6 +23,14 @@ const CheckIcon = () => (
   </svg>
 );
 
+// Type for extended user session
+interface SubscriptionInfo {
+  subscriptionId?: string | null;
+  subscriptionPlan: string;
+  subscriptionStatus?: string | null;
+  subscriptionEndDate?: string | null;
+}
+
 export default function PricingClient() {
   const { data: session } = useSession();
   const [paddleInstance, setPaddleInstance] = useState<Paddle | undefined>(
@@ -30,6 +38,64 @@ export default function PricingClient() {
   );
   const [paddleInitialized, setPaddleInitialized] = useState(false);
   const [proPrice, setProPrice] = useState("$3.00");
+  const [isLoading, setIsLoading] = useState(false);
+  const [cancelStatus, setCancelStatus] = useState<{
+    success?: boolean;
+    message?: string;
+  }>({});
+  const [subscriptionInfo, setSubscriptionInfo] = useState<SubscriptionInfo>({
+    subscriptionPlan: "free",
+  });
+  const [loading, setLoading] = useState(true);
+
+  // Fetch subscription info when session changes
+  useEffect(() => {
+    const fetchSubscriptionInfo = async () => {
+      if (!session?.user?.email) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/subscription/info");
+        if (response.ok) {
+          const data = await response.json();
+          setSubscriptionInfo(data);
+        } else {
+          console.error("Failed to fetch subscription info");
+        }
+      } catch (error) {
+        console.error("Error fetching subscription info:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSubscriptionInfo();
+  }, [session, cancelStatus.success]);
+
+  // Get user subscription data from subscription info
+  const userSubscriptionPlan = subscriptionInfo.subscriptionPlan || "free";
+  const userSubscriptionStatus = subscriptionInfo.subscriptionStatus || null;
+  const userSubscriptionEndDate = subscriptionInfo.subscriptionEndDate
+    ? new Date(subscriptionInfo.subscriptionEndDate)
+    : null;
+
+  const isActivePro =
+    userSubscriptionPlan === "pro" &&
+    (userSubscriptionStatus === "active" ||
+      userSubscriptionStatus === "trialing");
+  const isCancelledPro =
+    userSubscriptionPlan === "pro" && userSubscriptionStatus === "cancelled";
+
+  // Format date to readable string
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
 
   // Initialize Paddle when component mounts
   useEffect(() => {
@@ -113,6 +179,48 @@ export default function PricingClient() {
     }
   };
 
+  // Cancel subscription
+  const cancelSubscription = async () => {
+    setIsLoading(true);
+    setCancelStatus({});
+
+    try {
+      const response = await fetch("/api/subscription/cancel", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setCancelStatus({ success: true, message: data.message });
+      } else {
+        setCancelStatus({
+          success: false,
+          message: data.error || "Failed to cancel subscription",
+        });
+      }
+    } catch (error) {
+      console.error("Error cancelling subscription:", error);
+      setCancelStatus({
+        success: false,
+        message: "An error occurred while cancelling your subscription",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
       {/* Free Tier */}
@@ -133,12 +241,49 @@ export default function PricingClient() {
             Basic support
           </li>
         </ul>
-        <button
-          disabled
-          className="block w-full text-center bg-gray-100 text-gray-800 py-3 rounded-lg cursor-not-allowed opacity-75"
-        >
-          Current Subscription
-        </button>
+
+        {isActivePro || isCancelledPro ? (
+          <div>
+            {isCancelledPro && userSubscriptionEndDate ? (
+              <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
+                Your Pro subscription will be active until{" "}
+                {formatDate(userSubscriptionEndDate)}
+              </div>
+            ) : null}
+
+            {isActivePro ? (
+              <button
+                onClick={cancelSubscription}
+                disabled={isLoading}
+                className="block w-full text-center bg-red-100 text-red-800 py-3 rounded-lg hover:bg-red-200 transition-colors"
+              >
+                {isLoading ? "Processing..." : "Cancel Pro Subscription"}
+              </button>
+            ) : (
+              <button
+                disabled
+                className="block w-full text-center bg-gray-100 text-gray-800 py-3 rounded-lg cursor-not-allowed opacity-75"
+              >
+                Subscription Cancelled
+              </button>
+            )}
+
+            {cancelStatus.message && (
+              <div
+                className={`mt-2 p-2 text-sm rounded ${cancelStatus.success ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"}`}
+              >
+                {cancelStatus.message}
+              </div>
+            )}
+          </div>
+        ) : (
+          <button
+            disabled
+            className="block w-full text-center bg-gray-100 text-gray-800 py-3 rounded-lg cursor-not-allowed opacity-75"
+          >
+            Current Subscription
+          </button>
+        )}
       </div>
 
       {/* Pro Tier */}
@@ -162,12 +307,29 @@ export default function PricingClient() {
             Priority support
           </li>
         </ul>
-        <button
-          onClick={openCheckout}
-          className="block w-full text-center bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors"
-        >
-          Subscribe Now
-        </button>
+
+        {isActivePro ? (
+          <button
+            disabled
+            className="block w-full text-center bg-green-500 text-white py-3 rounded-lg opacity-90"
+          >
+            Current Subscription
+          </button>
+        ) : isCancelledPro && userSubscriptionEndDate ? (
+          <button
+            disabled
+            className="block w-full text-center bg-gray-500 text-white py-3 rounded-lg opacity-90"
+          >
+            Subscription Ending
+          </button>
+        ) : (
+          <button
+            onClick={openCheckout}
+            className="block w-full text-center bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            Subscribe Now
+          </button>
+        )}
       </div>
     </div>
   );
