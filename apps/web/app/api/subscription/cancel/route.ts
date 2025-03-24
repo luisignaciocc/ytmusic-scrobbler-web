@@ -48,15 +48,6 @@ export async function POST() {
       effectiveFrom: "next_billing_period", // Keep access until subscription period ends
     });
 
-    // Update user record to reflect cancellation
-    // We don't change the plan immediately, as they still have access
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        subscriptionStatus: "cancelled",
-      },
-    });
-
     return NextResponse.json({
       success: true,
       message:

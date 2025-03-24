@@ -280,6 +280,18 @@ class ProcessWebhook {
         console.log("Setting subscription plan to:", subscriptionPlan);
       }
 
+      // Handle scheduled changes
+      let scheduledCancellation: Date | undefined;
+      if (
+        eventData.data.scheduledChange?.action === "cancel" &&
+        eventData.data.scheduledChange.effectiveAt
+      ) {
+        scheduledCancellation = new Date(
+          eventData.data.scheduledChange.effectiveAt,
+        );
+        console.log("Scheduled cancellation found:", scheduledCancellation);
+      }
+
       // Log update operation
       // eslint-disable-next-line no-console
       console.log("Updating user record with:", {
@@ -287,6 +299,7 @@ class ProcessWebhook {
         subscriptionStatus: eventData.data.status,
         subscriptionPlan,
         subscriptionEndDate: endDate,
+        scheduledCancellationDate: scheduledCancellation,
       });
 
       const updateResult = await prisma.user.update({
@@ -298,6 +311,7 @@ class ProcessWebhook {
           subscriptionStatus: eventData.data.status,
           subscriptionPlan,
           subscriptionEndDate: endDate,
+          scheduledCancellationDate: scheduledCancellation,
         },
       });
 
@@ -347,6 +361,7 @@ class ProcessWebhook {
         data: {
           subscriptionStatus: "cancelled",
           subscriptionPlan: "free",
+          scheduledCancellationDate: null, // Clear the scheduled date once cancelled
         },
       });
 

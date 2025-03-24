@@ -14,27 +14,28 @@ datasource db {
 }
 
 model User {
-  id                     String    @id @default(cuid())
-  name                   String
-  email                  String    @unique
-  isActive               Boolean   @default(false)
-  picture                String
-  ytmusicCookie          String?   @db.Text
-  ytmusicAuthUser        String?
-  ytmusicOrigin          String?   @default("https://music.youtube.com")
-  ytmusicVisitorData     String?
-  ytmusicAuthorization   String?
-  lastFmSessionKey       String?
-  lastFmUsername         String?
-  Songs                  Song[]
-  lastSuccessfulScrobble DateTime?
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @default(now()) @updatedAt
-  deletedAt              DateTime?
-  subscriptionId         String? // Paddle subscription ID
-  subscriptionStatus     String? // active, trialing, past_due, paused, cancelled
-  subscriptionPlan       String    @default("free") // free, pro
-  subscriptionEndDate    DateTime?
+  id                        String    @id @default(cuid())
+  name                      String
+  email                     String    @unique
+  isActive                  Boolean   @default(false)
+  picture                   String
+  ytmusicCookie             String?   @db.Text
+  ytmusicAuthUser           String?
+  ytmusicOrigin             String?   @default("https://music.youtube.com")
+  ytmusicVisitorData        String?
+  ytmusicAuthorization      String?
+  lastFmSessionKey          String?
+  lastFmUsername            String?
+  Songs                     Song[]
+  lastSuccessfulScrobble    DateTime?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @default(now()) @updatedAt
+  deletedAt                 DateTime?
+  subscriptionId            String? // Paddle subscription ID
+  subscriptionStatus        String? // active, trialing, past_due, paused, cancelled
+  subscriptionPlan          String    @default("free") // free, pro
+  subscriptionEndDate       DateTime?
+  scheduledCancellationDate DateTime?
 }
 
 model Song {

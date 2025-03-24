@@ -29,6 +29,7 @@ interface SubscriptionInfo {
   subscriptionPlan: string;
   subscriptionStatus?: string | null;
   subscriptionEndDate?: string | null;
+  scheduledCancellationDate?: string | null; // Add this field
 }
 
 export default function PricingClient() {
@@ -213,6 +214,10 @@ export default function PricingClient() {
     }
   };
 
+  const hasScheduledCancellation = subscriptionInfo.scheduledCancellationDate
+    ? new Date(subscriptionInfo.scheduledCancellationDate)
+    : null;
+
   if (loading) {
     return (
       <div className="flex justify-center items-center p-8">
@@ -309,12 +314,29 @@ export default function PricingClient() {
         </ul>
 
         {isActivePro ? (
-          <button
-            disabled
-            className="block w-full text-center bg-green-500 text-white py-3 rounded-lg opacity-90"
-          >
-            Current Subscription
-          </button>
+          <div>
+            {hasScheduledCancellation && (
+              <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
+                Your subscription will be cancelled on{" "}
+                {formatDate(hasScheduledCancellation)}
+              </div>
+            )}
+            <button
+              onClick={cancelSubscription}
+              disabled={isLoading || !!hasScheduledCancellation}
+              className={`block w-full text-center py-3 rounded-lg transition-colors ${
+                hasScheduledCancellation
+                  ? "bg-gray-100 text-gray-800 cursor-not-allowed"
+                  : "bg-red-100 text-red-800 hover:bg-red-200"
+              }`}
+            >
+              {isLoading
+                ? "Processing..."
+                : hasScheduledCancellation
+                  ? "Cancellation Scheduled"
+                  : "Cancel Pro Subscription"}
+            </button>
+          </div>
         ) : isCancelledPro && userSubscriptionEndDate ? (
           <button
             disabled
