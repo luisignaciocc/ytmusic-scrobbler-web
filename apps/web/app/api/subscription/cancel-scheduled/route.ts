@@ -55,12 +55,6 @@ export async function POST() {
       scheduledChange: null, // This removes any scheduled changes
     });
 
-    // Update the user record to remove the scheduled cancellation date
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { scheduledCancellationDate: null },
-    });
-
     return NextResponse.json({
       success: true,
       message:
