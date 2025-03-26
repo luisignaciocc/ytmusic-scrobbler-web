@@ -89,7 +89,9 @@ export default function PricingClient() {
   const isActivePro =
     userSubscriptionPlan === "pro" &&
     (userSubscriptionStatus === "active" ||
-      userSubscriptionStatus === "trialing");
+      userSubscriptionStatus === "trialing") &&
+    (!userSubscriptionEndDate || userSubscriptionEndDate > new Date());
+
   const isCancelledPro =
     userSubscriptionPlan === "pro" && userSubscriptionStatus === "cancelled";
 
@@ -241,6 +243,43 @@ export default function PricingClient() {
     }
   };
 
+  // Cancel scheduled cancellation
+  const cancelScheduledCancellation = async () => {
+    setIsLoading(true);
+    setCancelStatus({});
+
+    try {
+      const response = await fetch("/api/subscription/cancel-scheduled", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setCancelStatus({ success: true, message: data.message });
+        // Refresh subscription data after successful cancellation
+        await fetchSubscriptionInfo();
+      } else {
+        setCancelStatus({
+          success: false,
+          message: data.error || "Failed to cancel scheduled cancellation",
+        });
+      }
+    } catch (error) {
+      console.error("Error cancelling scheduled cancellation:", error);
+      setCancelStatus({
+        success: false,
+        message:
+          "An error occurred while cancelling the scheduled cancellation",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (loading || isFetching) {
     return (
       <div className="flex justify-center items-center p-8">
@@ -279,22 +318,30 @@ export default function PricingClient() {
               </div>
             ) : null}
 
-            {isActivePro && !hasScheduledCancellation ? (
-              <button
-                onClick={cancelSubscription}
-                disabled={isLoading}
-                className="block w-full text-center bg-red-100 text-red-800 py-3 rounded-lg hover:bg-red-200 transition-colors"
-              >
-                {isLoading ? "Processing..." : "Cancel Pro Subscription"}
-              </button>
+            {isActivePro ? (
+              hasScheduledCancellation ? (
+                <button
+                  onClick={cancelScheduledCancellation}
+                  disabled={isLoading}
+                  className="block w-full text-center bg-green-100 text-green-800 py-3 rounded-lg hover:bg-green-200 transition-colors"
+                >
+                  {isLoading ? "Processing..." : "Keep Subscription Active"}
+                </button>
+              ) : (
+                <button
+                  onClick={cancelSubscription}
+                  disabled={isLoading}
+                  className="block w-full text-center bg-red-100 text-red-800 py-3 rounded-lg hover:bg-red-200 transition-colors"
+                >
+                  {isLoading ? "Processing..." : "Cancel Pro Subscription"}
+                </button>
+              )
             ) : (
               <button
                 disabled
                 className="block w-full text-center bg-gray-100 text-gray-800 py-3 rounded-lg cursor-not-allowed opacity-75"
               >
-                {hasScheduledCancellation
-                  ? "Cancellation Scheduled"
-                  : "Subscription Cancelled"}
+                Subscription Cancelled
               </button>
             )}
 
