@@ -18,6 +18,7 @@ export async function GET() {
         subscriptionStatus: true,
         subscriptionPlan: true,
         subscriptionEndDate: true,
+        scheduledCancellationDate: true,
       },
     });
 
@@ -30,6 +31,7 @@ export async function GET() {
       subscriptionStatus: user.subscriptionStatus,
       subscriptionPlan: user.subscriptionPlan,
       subscriptionEndDate: user.subscriptionEndDate,
+      scheduledCancellationDate: user.scheduledCancellationDate,
     });
   } catch (error) {
     console.error("Error fetching subscription info:", error);
