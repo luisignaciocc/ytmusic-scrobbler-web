@@ -48,6 +48,7 @@ export default function PricingClient() {
     subscriptionPlan: "free",
   });
   const [loading, setLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
 
   // Function to fetch subscription info
   const fetchSubscriptionInfo = useCallback(async () => {
@@ -56,7 +57,7 @@ export default function PricingClient() {
       return;
     }
 
-    setLoading(true);
+    setIsFetching(true);
     try {
       const response = await fetch("/api/subscription/info");
       if (response.ok) {
@@ -69,6 +70,7 @@ export default function PricingClient() {
       console.error("Error fetching subscription info:", error);
     } finally {
       setLoading(false);
+      setIsFetching(false);
     }
   }, [session?.user?.email]);
 
@@ -99,6 +101,10 @@ export default function PricingClient() {
       day: "numeric",
     });
   };
+
+  const hasScheduledCancellation = subscriptionInfo.scheduledCancellationDate
+    ? new Date(subscriptionInfo.scheduledCancellationDate)
+    : null;
 
   // Initialize Paddle when component mounts
   useEffect(() => {
@@ -235,11 +241,7 @@ export default function PricingClient() {
     }
   };
 
-  const hasScheduledCancellation = subscriptionInfo.scheduledCancellationDate
-    ? new Date(subscriptionInfo.scheduledCancellationDate)
-    : null;
-
-  if (loading) {
+  if (loading || isFetching) {
     return (
       <div className="flex justify-center items-center p-8">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -268,16 +270,16 @@ export default function PricingClient() {
           </li>
         </ul>
 
-        {isActivePro || isCancelledPro ? (
+        {userSubscriptionPlan === "pro" ? (
           <div>
-            {isCancelledPro && userSubscriptionEndDate ? (
+            {hasScheduledCancellation ? (
               <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
                 Your Pro subscription will be active until{" "}
-                {formatDate(userSubscriptionEndDate)}
+                {formatDate(hasScheduledCancellation)}
               </div>
             ) : null}
 
-            {isActivePro ? (
+            {isActivePro && !hasScheduledCancellation ? (
               <button
                 onClick={cancelSubscription}
                 disabled={isLoading}
@@ -290,7 +292,9 @@ export default function PricingClient() {
                 disabled
                 className="block w-full text-center bg-gray-100 text-gray-800 py-3 rounded-lg cursor-not-allowed opacity-75"
               >
-                Subscription Cancelled
+                {hasScheduledCancellation
+                  ? "Cancellation Scheduled"
+                  : "Subscription Cancelled"}
               </button>
             )}
 
