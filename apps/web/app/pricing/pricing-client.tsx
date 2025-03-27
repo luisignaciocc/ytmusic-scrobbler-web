@@ -420,6 +420,10 @@ export default function PricingClient() {
             </li>
             <li className="flex items-center">
               <CheckIcon />
+              Weekly notifications when headers need updating
+            </li>
+            <li className="flex items-center">
+              <CheckIcon />
               Basic support
             </li>
           </ul>
@@ -456,6 +460,10 @@ export default function PricingClient() {
             <li className="flex items-center">
               <CheckIcon />
               5-minute update interval
+            </li>
+            <li className="flex items-center">
+              <CheckIcon />
+              Immediate notifications when headers need updating
             </li>
             <li className="flex items-center">
               <CheckIcon />
