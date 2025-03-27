@@ -51,20 +51,60 @@ export class AppConsumer implements OnModuleInit {
         return job.discard();
       }
 
-      const [songs, songsOnDB] = await Promise.all([
-        getYTMusicHistory({
-          cookie: user.ytmusicCookie,
-          authUser: user.ytmusicAuthUser,
-          origin: user.ytmusicOrigin || undefined,
-          visitorData: user.ytmusicVisitorData,
-          authorization: user.ytmusicAuthorization,
-        }),
-        this.prisma.song.findMany({
-          where: {
-            userId: user.id,
-          },
-        }),
-      ]);
+      let songs: {
+        title: string;
+        artist: string;
+        album: string;
+        playedAt?: string;
+      }[] = [];
+      let songsOnDB: {
+        id: string;
+        title: string;
+        artist: string;
+        album: string;
+        arrayPosition: number;
+        addedAt: Date;
+        userId: string;
+      }[] = [];
+
+      try {
+        [songs, songsOnDB] = await Promise.all([
+          getYTMusicHistory({
+            cookie: user.ytmusicCookie,
+            authUser: user.ytmusicAuthUser,
+            origin: user.ytmusicOrigin || undefined,
+            visitorData: user.ytmusicVisitorData,
+            authorization: user.ytmusicAuthorization,
+          }),
+          this.prisma.song.findMany({
+            where: {
+              userId: user.id,
+            },
+          }),
+        ]);
+      } catch (error) {
+        // Check if this is the specific 401 error we want to handle differently
+        if (
+          error.message?.includes("401") &&
+          error.message?.includes("UNAUTHENTICATED") &&
+          error.message?.includes(
+            "Request is missing required authentication credential",
+          )
+        ) {
+          job.log(
+            `Authentication error detected for user ${userId}: YouTube Music credentials expired`,
+          );
+          // Mark the job as successful but with special status
+          await job.progress(100);
+          return {
+            status: "success",
+            authError: true,
+            message: "YouTube Music authentication credentials expired",
+          };
+        }
+        // Re-throw other errors to be caught by the outer try-catch
+        throw error;
+      }
 
       const todaySongs = songs.filter((song) => song.playedAt === "Today");
 
