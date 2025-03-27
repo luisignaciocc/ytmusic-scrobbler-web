@@ -94,6 +94,47 @@ export class AppConsumer implements OnModuleInit {
           job.log(
             `Authentication error detected for user ${userId}: YouTube Music credentials expired`,
           );
+
+          // Send an email notification to the user about expired credentials
+          try {
+            const { RESEND_API_KEY } = process.env;
+
+            if (RESEND_API_KEY && user.email) {
+              // Import Resend only when needed to avoid unnecessary imports
+              const { Resend } = await import("resend");
+              const resend = new Resend(RESEND_API_KEY);
+
+              await resend.emails.send({
+                from: "YTMusic Scrobbler <noreply@bocono-labs.com>",
+                to: user.email,
+                subject: "Action Required: YouTube Music Credentials Expired",
+                html: `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2>YouTube Music Credentials Expired</h2>
+                    <p>Hello ${user.name},</p>
+                    <p>We noticed that your YouTube Music credentials have expired, which means we can no longer access your listening history to scrobble tracks to Last.fm.</p>
+                    <p>To continue using the YTMusic Scrobbler service, please visit our website and update your authentication headers:</p>
+                    <p style="text-align: center;">
+                      <a href="https://scrobbler.bocono-labs.com" style="display: inline-block; background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Update My Credentials</a>
+                    </p>
+                    <p>If you need help, please contact our support team at <a href="mailto:me@luisignacio.cc">me@luisignacio.cc</a>.</p>
+                    <p>Thank you for using YTMusic Scrobbler!</p>
+                    <p>- The Bocono Labs Team</p>
+                  </div>
+                `,
+              });
+
+              job.log(`Notification email sent to ${user.email}`);
+            } else {
+              job.log(
+                `Cannot send email notification: Missing RESEND_API_KEY or user email`,
+              );
+            }
+          } catch (emailError) {
+            job.log(`Failed to send email notification: ${emailError.message}`);
+            // Don't throw the error, just log it
+          }
+
           // Mark the job as successful but with special status
           await job.progress(100);
           return {
