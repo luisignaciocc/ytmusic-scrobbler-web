@@ -6,6 +6,24 @@ import { Environment } from "@paddle/paddle-node-sdk";
 import { useSession } from "next-auth/react";
 import React, { useCallback, useEffect, useState } from "react";
 
+// Type for extended user session
+interface SubscriptionInfo {
+  subscriptionId?: string | null;
+  subscriptionPlan: string;
+  subscriptionStatus?: string | null;
+  subscriptionEndDate?: string | null;
+  scheduledCancellationDate?: string | null;
+}
+
+// Format date to readable string
+const formatDate = (date: Date) => {
+  return date.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
+
 // Checkbox component for billing cycle toggle
 const CheckIcon = () => (
   <svg
@@ -23,14 +41,68 @@ const CheckIcon = () => (
   </svg>
 );
 
-// Type for extended user session
-interface SubscriptionInfo {
-  subscriptionId?: string | null;
-  subscriptionPlan: string;
-  subscriptionStatus?: string | null;
-  subscriptionEndDate?: string | null;
-  scheduledCancellationDate?: string | null; // Add this field
-}
+// Loading spinner component
+const LoadingSpinner = () => (
+  <div className="flex flex-col items-center justify-center p-8 space-y-4">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    <p className="text-gray-600">Loading subscription information...</p>
+  </div>
+);
+
+// Status badge component
+const StatusBadge = ({
+  status,
+  message,
+}: {
+  status: "success" | "error" | "warning";
+  message: string;
+}) => (
+  <div
+    className={`mt-2 p-3 text-sm rounded-lg ${
+      status === "success"
+        ? "bg-green-50 text-green-800 border border-green-200"
+        : status === "error"
+          ? "bg-red-50 text-red-800 border border-red-200"
+          : "bg-yellow-50 text-yellow-800 border border-yellow-200"
+    }`}
+  >
+    {message}
+  </div>
+);
+
+// Subscription status component
+const SubscriptionStatus = ({
+  status,
+  endDate,
+  scheduledCancellationDate,
+}: {
+  status: string | null;
+  endDate: Date | null;
+  scheduledCancellationDate: Date | null;
+}) => {
+  if (!status) return null;
+
+  return (
+    <div className="mb-6 p-4 rounded-lg bg-gray-50 border border-gray-200">
+      <h3 className="font-semibold text-gray-900 mb-2">Subscription Status</h3>
+      <div className="space-y-2">
+        <p className="text-sm text-gray-600">
+          Status: <span className="font-medium capitalize">{status}</span>
+        </p>
+        {endDate && (
+          <p className="text-sm text-gray-600">
+            End Date: {formatDate(endDate)}
+          </p>
+        )}
+        {scheduledCancellationDate && (
+          <p className="text-sm text-yellow-800">
+            Scheduled Cancellation: {formatDate(scheduledCancellationDate)}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default function PricingClient() {
   const { data: session } = useSession();
@@ -94,15 +166,6 @@ export default function PricingClient() {
 
   const isCancelledPro =
     userSubscriptionPlan === "pro" && userSubscriptionStatus === "cancelled";
-
-  // Format date to readable string
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
 
   const hasScheduledCancellation = subscriptionInfo.scheduledCancellationDate
     ? new Date(subscriptionInfo.scheduledCancellationDate)
@@ -281,150 +344,137 @@ export default function PricingClient() {
   };
 
   if (loading || isFetching) {
-    return (
-      <div className="flex justify-center items-center p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
-    <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-      {/* Free Tier */}
-      <div className="bg-white rounded-lg shadow-lg p-8">
-        <h2 className="text-2xl font-bold mb-4">Free</h2>
-        <div className="text-4xl font-bold mb-6">$0</div>
-        <ul className="space-y-4 mb-8">
-          <li className="flex items-center">
-            <CheckIcon />
-            Basic scrobbling functionality
-          </li>
-          <li className="flex items-center">
-            <CheckIcon />
-            30-minute update interval
-          </li>
-          <li className="flex items-center">
-            <CheckIcon />
-            Basic support
-          </li>
-        </ul>
+    <div className="max-w-4xl mx-auto space-y-8">
+      {/* Subscription Status Section */}
+      {session?.user?.email && (
+        <SubscriptionStatus
+          status={userSubscriptionStatus}
+          endDate={userSubscriptionEndDate}
+          scheduledCancellationDate={hasScheduledCancellation}
+        />
+      )}
 
-        {userSubscriptionPlan === "pro" ? (
-          <div>
-            {hasScheduledCancellation ? (
-              <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
-                Your Pro subscription will be active until{" "}
-                {formatDate(hasScheduledCancellation)}
-              </div>
-            ) : null}
+      {/* Pricing Grid */}
+      <div className="grid md:grid-cols-2 gap-8">
+        {/* Free Tier */}
+        <div className="bg-white rounded-lg shadow-lg p-8">
+          <h2 className="text-2xl font-bold mb-4">Free</h2>
+          <div className="text-4xl font-bold mb-6">$0</div>
+          <ul className="space-y-4 mb-8">
+            <li className="flex items-center">
+              <CheckIcon />
+              Basic scrobbling functionality
+            </li>
+            <li className="flex items-center">
+              <CheckIcon />
+              30-minute update interval
+            </li>
+            <li className="flex items-center">
+              <CheckIcon />
+              Basic support
+            </li>
+          </ul>
 
-            {isActivePro ? (
-              hasScheduledCancellation ? (
-                <button
-                  onClick={cancelScheduledCancellation}
-                  disabled={isLoading}
-                  className="block w-full text-center bg-green-100 text-green-800 py-3 rounded-lg hover:bg-green-200 transition-colors"
-                >
-                  {isLoading ? "Processing..." : "Keep Subscription Active"}
-                </button>
+          {userSubscriptionPlan === "pro" ? (
+            <button
+              disabled
+              className="block w-full text-center bg-gray-100 text-gray-800 py-3 rounded-lg cursor-not-allowed opacity-75"
+            >
+              Current Plan
+            </button>
+          ) : (
+            <button
+              disabled
+              className="block w-full text-center bg-gray-100 text-gray-800 py-3 rounded-lg cursor-not-allowed opacity-75"
+            >
+              Current Plan
+            </button>
+          )}
+        </div>
+
+        {/* Pro Tier */}
+        <div className="bg-white rounded-lg shadow-lg p-8 border-2 border-blue-500">
+          <h2 className="text-2xl font-bold mb-4">Pro</h2>
+          <div className="text-4xl font-bold mb-6">
+            {proPrice}
+            <span className="text-lg text-gray-500">/month</span>
+          </div>
+          <ul className="space-y-4 mb-8">
+            <li className="flex items-center">
+              <CheckIcon />
+              Everything in Free
+            </li>
+            <li className="flex items-center">
+              <CheckIcon />
+              5-minute update interval
+            </li>
+            <li className="flex items-center">
+              <CheckIcon />
+              Priority support
+            </li>
+          </ul>
+
+          {isActivePro ? (
+            <div className="space-y-4">
+              {hasScheduledCancellation ? (
+                <>
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm">
+                    Your subscription will be cancelled on{" "}
+                    {formatDate(hasScheduledCancellation)}
+                  </div>
+                  <button
+                    onClick={cancelScheduledCancellation}
+                    disabled={isLoading}
+                    className="block w-full text-center bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 transition-colors disabled:opacity-75 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? "Processing..." : "Keep Subscription Active"}
+                  </button>
+                </>
               ) : (
                 <button
                   onClick={cancelSubscription}
                   disabled={isLoading}
-                  className="block w-full text-center bg-red-100 text-red-800 py-3 rounded-lg hover:bg-red-200 transition-colors"
+                  className="block w-full text-center bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 transition-colors disabled:opacity-75 disabled:cursor-not-allowed"
                 >
                   {isLoading ? "Processing..." : "Cancel Pro Subscription"}
                 </button>
-              )
-            ) : (
+              )}
+            </div>
+          ) : isCancelledPro && userSubscriptionEndDate ? (
+            <div className="space-y-4">
+              <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm">
+                Your subscription will remain active until{" "}
+                {formatDate(userSubscriptionEndDate)}
+              </div>
               <button
                 disabled
-                className="block w-full text-center bg-gray-100 text-gray-800 py-3 rounded-lg cursor-not-allowed opacity-75"
+                className="block w-full text-center bg-gray-500 text-white py-3 rounded-lg opacity-90 cursor-not-allowed"
               >
-                Subscription Cancelled
+                Subscription Ending
               </button>
-            )}
-
-            {cancelStatus.message && (
-              <div
-                className={`mt-2 p-2 text-sm rounded ${cancelStatus.success ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"}`}
-              >
-                {cancelStatus.message}
-              </div>
-            )}
-          </div>
-        ) : (
-          <button
-            disabled
-            className="block w-full text-center bg-gray-100 text-gray-800 py-3 rounded-lg cursor-not-allowed opacity-75"
-          >
-            Current Subscription
-          </button>
-        )}
-      </div>
-
-      {/* Pro Tier */}
-      <div className="bg-white rounded-lg shadow-lg p-8 border-2 border-blue-500">
-        <h2 className="text-2xl font-bold mb-4">Pro</h2>
-        <div className="text-4xl font-bold mb-6">
-          {proPrice}
-          <span className="text-lg text-gray-500">/month</span>
-        </div>
-        <ul className="space-y-4 mb-8">
-          <li className="flex items-center">
-            <CheckIcon />
-            Everything in Free
-          </li>
-          <li className="flex items-center">
-            <CheckIcon />
-            5-minute update interval
-          </li>
-          <li className="flex items-center">
-            <CheckIcon />
-            Priority support
-          </li>
-        </ul>
-
-        {isActivePro ? (
-          <div>
-            {hasScheduledCancellation && (
-              <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
-                Your subscription will be cancelled on{" "}
-                {formatDate(hasScheduledCancellation)}
-              </div>
-            )}
+            </div>
+          ) : (
             <button
-              onClick={cancelSubscription}
-              disabled={isLoading || !!hasScheduledCancellation}
-              className={`block w-full text-center py-3 rounded-lg transition-colors ${
-                hasScheduledCancellation
-                  ? "bg-gray-100 text-gray-800 cursor-not-allowed"
-                  : "bg-red-100 text-red-800 hover:bg-red-200"
-              }`}
+              onClick={openCheckout}
+              className="block w-full text-center bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors"
             >
-              {isLoading
-                ? "Processing..."
-                : hasScheduledCancellation
-                  ? "Cancellation Scheduled"
-                  : "Cancel Pro Subscription"}
+              Subscribe Now
             </button>
-          </div>
-        ) : isCancelledPro && userSubscriptionEndDate ? (
-          <button
-            disabled
-            className="block w-full text-center bg-gray-500 text-white py-3 rounded-lg opacity-90"
-          >
-            Subscription Ending
-          </button>
-        ) : (
-          <button
-            onClick={openCheckout}
-            className="block w-full text-center bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            Subscribe Now
-          </button>
-        )}
+          )}
+        </div>
       </div>
+
+      {/* Status Messages */}
+      {cancelStatus.message && (
+        <StatusBadge
+          status={cancelStatus.success ? "success" : "error"}
+          message={cancelStatus.message}
+        />
+      )}
     </div>
   );
 }
