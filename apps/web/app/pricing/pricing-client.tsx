@@ -149,7 +149,18 @@ export default function PricingClient() {
   // Fetch subscription info when session changes
   useEffect(() => {
     fetchSubscriptionInfo();
-  }, [fetchSubscriptionInfo, cancelStatus.success]);
+  }, [fetchSubscriptionInfo]);
+
+  // Add a separate effect for refreshing data periodically (but not immediately after actions)
+  useEffect(() => {
+    // Refresh data every 30 seconds - this will eventually sync with server state
+    // but won't immediately override our optimistic updates
+    const intervalId = setInterval(() => {
+      fetchSubscriptionInfo();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(intervalId);
+  }, [fetchSubscriptionInfo]);
 
   // Get user subscription data from subscription info
   const userSubscriptionPlan = subscriptionInfo.subscriptionPlan || "free";
@@ -413,7 +424,7 @@ export default function PricingClient() {
             </li>
           </ul>
 
-          {userSubscriptionPlan === "pro" ? (
+          {userSubscriptionPlan === "free" ? (
             <button
               disabled
               className="block w-full text-center bg-gray-100 text-gray-800 py-3 rounded-lg cursor-not-allowed opacity-75"
@@ -425,7 +436,7 @@ export default function PricingClient() {
               disabled
               className="block w-full text-center bg-gray-100 text-gray-800 py-3 rounded-lg cursor-not-allowed opacity-75"
             >
-              Current Plan
+              Free Plan
             </button>
           )}
         </div>
