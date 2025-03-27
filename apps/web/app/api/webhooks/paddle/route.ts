@@ -281,15 +281,21 @@ class ProcessWebhook {
       }
 
       // Handle scheduled changes
-      let scheduledCancellation: Date | undefined;
-      if (
-        eventData.data.scheduledChange?.action === "cancel" &&
-        eventData.data.scheduledChange.effectiveAt
-      ) {
-        scheduledCancellation = new Date(
-          eventData.data.scheduledChange.effectiveAt,
-        );
-        console.log("Scheduled cancellation found:", scheduledCancellation);
+      let scheduledCancellation: Date | null | undefined;
+      if (eventData.data.scheduledChange) {
+        if (
+          eventData.data.scheduledChange.action === "cancel" &&
+          eventData.data.scheduledChange.effectiveAt
+        ) {
+          scheduledCancellation = new Date(
+            eventData.data.scheduledChange.effectiveAt,
+          );
+          console.log("Scheduled cancellation found:", scheduledCancellation);
+        }
+      } else {
+        // If scheduledChange is null, it means any scheduled changes were cancelled
+        scheduledCancellation = null;
+        console.log("Scheduled changes cancelled");
       }
 
       // Log update operation
