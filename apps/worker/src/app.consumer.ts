@@ -99,7 +99,11 @@ export class AppConsumer implements OnModuleInit {
           try {
             const { RESEND_API_KEY } = process.env;
 
-            if (RESEND_API_KEY && user.email) {
+            if (
+              RESEND_API_KEY &&
+              user.email &&
+              user.subscriptionPlan === "pro"
+            ) {
               // Import Resend only when needed to avoid unnecessary imports
               const { Resend } = await import("resend");
               const resend = new Resend(RESEND_API_KEY);
@@ -124,10 +128,14 @@ export class AppConsumer implements OnModuleInit {
                 `,
               });
 
-              job.log(`Notification email sent to ${user.email}`);
-            } else {
+              job.log(`Notification email sent to PRO user ${user.email}`);
+            } else if (!user.email) {
+              job.log(`Cannot send email notification: Missing user email`);
+            } else if (!RESEND_API_KEY) {
+              job.log(`Cannot send email notification: Missing RESEND_API_KEY`);
+            } else if (user.subscriptionPlan !== "pro") {
               job.log(
-                `Cannot send email notification: Missing RESEND_API_KEY or user email`,
+                `Email notification skipped: User ${userId} is not a PRO subscriber`,
               );
             }
           } catch (emailError) {
