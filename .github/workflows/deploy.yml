@@ -53,5 +53,6 @@ jobs:
             pnpm build --filter worker
             pkill turbo
             redis-cli flushall
+            pm2 flush
             pm2 start yt-music-scrobbler-worker
           EOF
