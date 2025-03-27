@@ -1,7 +1,7 @@
 import React from "react";
 
 const PrivacyPolicy = () => (
-  <div className="flex justify-center items-center min-h-screen bg-gray-100">
+  <main className="flex-1 flex justify-center items-center py-12 bg-gray-100">
     <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
       <h1 className="text-4xl font-bold mb-6 text-center">Privacy Policy</h1>
 
@@ -186,7 +186,7 @@ const PrivacyPolicy = () => (
         .
       </p>
     </div>
-  </div>
+  </main>
 );
 
 export default PrivacyPolicy;

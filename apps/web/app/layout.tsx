@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 
+import Header from "./components/header";
 import SessionAuthProvider from "./components/session-provider";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -16,7 +17,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <SessionAuthProvider>{children}</SessionAuthProvider>
+        <SessionAuthProvider>
+          <div className="flex flex-col min-h-[100dvh]">
+            <Header />
+            {children}
+          </div>
+        </SessionAuthProvider>
         <Analytics />
       </body>
     </html>

@@ -1,7 +1,8 @@
+import Link from "next/link";
 import React from "react";
 
 const TermsOfService = () => (
-  <div className="flex justify-center items-center min-h-screen bg-gray-100">
+  <main className="flex-1 flex justify-center items-center py-12 bg-gray-100">
     <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
       <h1 className="text-4xl font-bold mb-6 text-center">Terms of Service</h1>
 
@@ -49,7 +50,11 @@ const TermsOfService = () => (
       <p className="mb-6 text-justify">
         We are committed to protecting your privacy. For more information on how
         we collect, use, and protect your personal information, please review
-        our Privacy Policy.
+        our{" "}
+        <Link href="/privacy" className="underline text-blue-500">
+          Privacy Policy
+        </Link>
+        .
       </p>
 
       <h2 className="text-2xl font-semibold mb-4">5. User Responsibilities</h2>
@@ -119,7 +124,7 @@ const TermsOfService = () => (
         .
       </p>
     </div>
-  </div>
+  </main>
 );
 
 export default TermsOfService;

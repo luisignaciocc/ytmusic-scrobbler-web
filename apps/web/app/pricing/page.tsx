@@ -5,7 +5,7 @@ import PricingClient from "./pricing-client";
 
 export default function PricingPage() {
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100">
+    <main className="flex-1 bg-gray-100">
       <div className="container mx-auto px-4 py-16">
         {/* Alert */}
         <div
@@ -64,6 +64,6 @@ export default function PricingPage() {
           </p>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

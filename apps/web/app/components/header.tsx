@@ -17,6 +17,9 @@ const Header = () => {
         <Link href="/pricing" className="text-sm font-medium hover:underline">
           Pricing
         </Link>
+        <Link href="/privacy" className="text-sm font-medium hover:underline">
+          Privacy
+        </Link>
         <Link href="/terms" className="text-sm font-medium hover:underline">
           Terms
         </Link>
