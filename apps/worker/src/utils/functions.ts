@@ -247,6 +247,15 @@ export async function getYTMusicHistory({
   return songs;
 }
 
+function sanitizeString(str: string): string {
+  return str
+    .replace(/[\u2026]/g, "...") // Replace ellipsis
+    .replace(/[\u2013\u2014]/g, "-") // Replace en/em dashes
+    .replace(/[\u2018\u2019]/g, "'") // Replace smart single quotes
+    .replace(/[\u201C\u201D]/g, '"') // Replace smart double quotes
+    .replace(/[^\x00-\x7F]/g, ""); // Remove any other non-ASCII characters
+}
+
 export async function scrobbleSong({
   song,
   lastFmSessionKey,
@@ -263,12 +272,12 @@ export async function scrobbleSong({
   const url = new URL("http://ws.audioscrobbler.com/2.0/");
 
   const params = {
-    album: song.album,
+    album: sanitizeString(song.album),
     api_key: lastFmApiKey,
     method: "track.scrobble",
     timestamp,
-    track: song.title,
-    artist: song.artist,
+    track: sanitizeString(song.title),
+    artist: sanitizeString(song.artist),
     sk: lastFmSessionKey,
   };
 
