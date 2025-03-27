@@ -11,9 +11,9 @@ const TermsOfService = () => (
       </h2>
       <p className="mb-6 text-justify">
         By using our application (&quot;the Application&quot;), which takes your
-        YouTube history and scrobbles it to Last.fm, you agree to be bound by
-        these Terms of Service (&quot;the Terms&quot;). If you do not agree with
-        these Terms, you should not use the Application.
+        YouTube Music listening history and scrobbles it to Last.fm, you agree
+        to be bound by these Terms of Service (&quot;the Terms&quot;). If you do
+        not agree with these Terms, you should not use the Application.
       </p>
 
       <h2 className="text-2xl font-semibold mb-4">
@@ -21,9 +21,9 @@ const TermsOfService = () => (
       </h2>
       <p className="mb-6 text-justify">
         The Application, operated by Bocono Labs, offers a service that collects
-        your YouTube viewing history and sends it to your Last.fm account. This
-        service is designed to enhance your musical experience and allow better
-        tracking of your listening habits.
+        your YouTube Music listening history and sends it to your Last.fm
+        account. This service is designed to enhance your musical experience and
+        allow better tracking of your listening habits.
       </p>
 
       <h2 className="text-2xl font-semibold mb-4">3. Data Usage</h2>
@@ -32,8 +32,8 @@ const TermsOfService = () => (
       </p>
       <ul className="list-disc list-inside mb-6">
         <li>
-          <strong>YouTube History:</strong> Information about the videos you
-          have watched on YouTube.
+          <strong>YouTube Music History:</strong> Information about the music
+          you have listened to on YouTube Music.
         </li>
         <li>
           <strong>Last.fm Information:</strong> Data needed to authenticate your
@@ -94,7 +94,18 @@ const TermsOfService = () => (
         Terms.
       </p>
 
-      <h2 className="text-2xl font-semibold mb-4">9. Refund Policy</h2>
+      <h2 className="text-2xl font-semibold mb-4">
+        9. Subscription Plans and Refund Policy
+      </h2>
+      <p className="mb-6 text-justify">
+        The Application offers different subscription plans (Free and Pro) with
+        varying update intervals and features. Details about these plans can be
+        found on our{" "}
+        <Link href="/pricing" className="underline text-blue-500">
+          Pricing page
+        </Link>
+        .
+      </p>
       <p className="mb-6 text-justify">
         Bocono Labs offers a 30-day money-back guarantee for all paid
         subscriptions. If you are not satisfied with our service, you may

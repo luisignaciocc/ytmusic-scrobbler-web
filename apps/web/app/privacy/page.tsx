@@ -19,8 +19,8 @@ const PrivacyPolicy = () => (
       </p>
       <ul className="list-disc list-inside mb-6">
         <li>
-          <strong>YouTube History:</strong> Information about the videos you
-          have watched on YouTube.
+          <strong>YouTube Music History:</strong> Information about the music
+          you have listened to on YouTube Music.
         </li>
         <li>
           <strong>Last.fm Information:</strong> Data needed to authenticate your
@@ -104,8 +104,7 @@ const PrivacyPolicy = () => (
         <li>
           The right to rectification – You have the right to request that we
           correct any information you believe is inaccurate or complete
-          information you believe is inaccurate or complete information you
-          believe is incomplete.
+          information you believe is incomplete.
         </li>
         <li>
           The right to erasure – You have the right to request that we erase
@@ -176,7 +175,7 @@ const PrivacyPolicy = () => (
         this page.
       </p>
 
-      <h2 className="text-2xl font-semibold mb-4">11. Contact Us</h2>
+      <h2 className="text-2xl font-semibold mb-4">12. Contact Us</h2>
       <p className="mb-6 text-justify">
         If you have any questions about this Privacy Policy, please contact us
         at{" "}

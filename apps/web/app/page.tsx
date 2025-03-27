@@ -201,8 +201,9 @@ export default async function Home() {
                 </p>
                 <ul className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400 space-y-2">
                   <li>
-                    • Every 5 minutes, we check your YouTube Music listening
-                    history for new songs
+                    • We check your YouTube Music listening history for new
+                    songs at regular intervals - every 30 minutes with our free
+                    plan, or every 5 minutes with our Pro plan
                   </li>
                   <li>
                     • We maintain a secure database of your recently played
