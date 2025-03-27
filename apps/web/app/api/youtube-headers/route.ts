@@ -29,6 +29,7 @@ export async function POST(request: Request) {
         ytmusicOrigin: origin || undefined,
         ytmusicVisitorData: visitorData,
         ytmusicAuthorization: authorization,
+        lastNotificationSent: null,
       },
     });
 
