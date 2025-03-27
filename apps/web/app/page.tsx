@@ -54,7 +54,7 @@ export default async function Home() {
                 </p>
               </div>
 
-              <div className="space-y-6 mt-8">
+              <div className="space-y-4 mt-6">
                 <div className="flex items-center gap-4">
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
@@ -185,7 +185,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-800">
+      <section className="w-full py-8 md:py-16 lg:py-24 bg-gray-100 dark:bg-gray-800">
         <div className="container px-4 md:px-6 mx-auto">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
@@ -245,7 +245,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="w-full py-12 md:py-24 lg:py-32">
+      <section className="w-full py-8 md:py-16 lg:py-24">
         <div className="container px-4 md:px-6 mx-auto">
           <div className="grid gap-6 lg:grid-cols-2 lg:gap-12">
             <div className="space-y-4">
