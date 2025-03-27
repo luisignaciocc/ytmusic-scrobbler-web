@@ -101,9 +101,9 @@ export class AppConsumer implements OnModuleInit {
             const currentDate = new Date();
 
             // Only send if:
-            // 1. User is pro
+            // 1. User is pro (paused)
             // 2. Notifications are enabled
-            // 3. Has not received a notification in the last 24 hours
+            // 3. Has not received a notification in the last 48 hours
             // 4. Either has a notification email or regular email
             const canSendNotification =
               // user.subscriptionPlan === "pro" &&
@@ -128,7 +128,13 @@ export class AppConsumer implements OnModuleInit {
                     <h2>YouTube Music Credentials Expired</h2>
                     <p>Hello ${user.name},</p>
                     <p>We noticed that your YouTube Music credentials have expired, which means we can no longer access your listening history to scrobble tracks to Last.fm.</p>
-                    <p>To continue using the YTMusic Scrobbler service, please visit our website and update your authentication headers:</p>
+                    <p>You will receive this notification every 48 hours until you either:</p>
+                    <ul>
+                      <li>Update your authentication headers by visiting our website</li>
+                      <li>Pause your scrobbling from your account settings</li>
+                      <li>Reply to this email to stop receiving notifications</li>
+                    </ul>
+                    <p>If you want to continue using the YTMusic Scrobbler service, please visit our website and update your authentication headers:</p>
                     <p style="text-align: center;">
                       <a href="https://scrobbler.bocono-labs.com" style="display: inline-block; background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Update My Credentials</a>
                     </p>
