@@ -21,11 +21,9 @@ export default function RootLayout({
         <SessionAuthProvider>
           <div className="flex flex-col min-h-[100dvh]">
             <Header />
-            <div className="container mx-auto px-4 mt-4">
-              <ImplementationNotice />
-            </div>
-            {children}
+            <div className="container mx-auto px-4 mt-4">{children}</div>
           </div>
+          <ImplementationNotice />
         </SessionAuthProvider>
         <Analytics />
       </body>
