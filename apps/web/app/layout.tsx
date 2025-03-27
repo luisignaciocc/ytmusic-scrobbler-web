@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 
 import Header from "./components/header";
+import ImplementationNotice from "./components/implementation-notice";
 import SessionAuthProvider from "./components/session-provider";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -20,6 +21,9 @@ export default function RootLayout({
         <SessionAuthProvider>
           <div className="flex flex-col min-h-[100dvh]">
             <Header />
+            <div className="container mx-auto px-4 mt-4">
+              <ImplementationNotice />
+            </div>
             {children}
           </div>
         </SessionAuthProvider>

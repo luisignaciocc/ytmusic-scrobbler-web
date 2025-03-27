@@ -1,15 +1,13 @@
 import Link from "next/link";
 import React from "react";
 
-import ImplementationNotice from "../components/implementation-notice";
 import PricingClient from "./pricing-client";
 
 export default function PricingPage() {
   return (
     <main className="flex-1 bg-gray-100">
       <div className="container mx-auto px-4 py-16">
-        {/* Usando el componente de alerta */}
-        <ImplementationNotice />
+        {/* La alerta ya está en el layout principal, la eliminamos de aquí */}
 
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold mb-4">
