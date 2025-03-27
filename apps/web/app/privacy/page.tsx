@@ -1,8 +1,12 @@
 import React from "react";
 
+import ImplementationNotice from "../components/implementation-notice";
+
 const PrivacyPolicy = () => (
   <main className="flex-1 flex justify-center items-center py-12 bg-gray-100">
     <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
+      <ImplementationNotice />
+
       <h1 className="text-4xl font-bold mb-6 text-center">Privacy Policy</h1>
 
       <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>
@@ -26,6 +30,14 @@ const PrivacyPolicy = () => (
           <strong>Last.fm Information:</strong> Data needed to authenticate your
           Last.fm account and perform scrobbling.
         </li>
+        <li>
+          <strong>Account Preferences:</strong> Information about your
+          subscription plan and notification preferences.
+        </li>
+        <li>
+          <strong>Contact Information:</strong> Email address used to send you
+          service notifications and updates.
+        </li>
       </ul>
 
       <h2 className="text-2xl font-semibold mb-4">
@@ -44,6 +56,11 @@ const PrivacyPolicy = () => (
           promotional purposes.
         </li>
         <li>Process your transactions and manage your orders.</li>
+        <li>
+          Send service notifications according to your subscription plan (weekly
+          notifications for Free users, immediate notifications for Pro users)
+          when your YouTube Music headers need updating.
+        </li>
       </ul>
 
       <h2 className="text-2xl font-semibold mb-4">

@@ -1,24 +1,15 @@
 import Link from "next/link";
 import React from "react";
 
+import ImplementationNotice from "../components/implementation-notice";
 import PricingClient from "./pricing-client";
 
 export default function PricingPage() {
   return (
     <main className="flex-1 bg-gray-100">
       <div className="container mx-auto px-4 py-16">
-        {/* Alert */}
-        <div
-          className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-8"
-          role="alert"
-        >
-          <p className="font-medium">Implementation Notice</p>
-          <p>
-            We are currently implementing our pricing structure. During this
-            period, all users have access to 5-minute update intervals.
-            We&apos;ll notify you when the pricing tiers are fully implemented.
-          </p>
-        </div>
+        {/* Usando el componente de alerta */}
+        <ImplementationNotice />
 
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold mb-4">
@@ -47,10 +38,11 @@ export default function PricingPage() {
               <li>Customer support and service reliability</li>
             </ul>
             <p className="mt-6 text-gray-600">
-              The free tier checks for new music every 30 minutes, while the Pro
-              tier checks every 5 minutes. This means Pro users get their
-              Last.fm profile updated much more quickly, but it also means we
-              need to process 6 times more requests for Pro users.
+              The free tier checks for new music every 30 minutes and provides
+              weekly notifications when your YouTube Music headers need
+              updating. The Pro tier checks every 5 minutes and sends immediate
+              notifications when headers need refreshing, ensuring minimal
+              interruption to your scrobbling service.
             </p>
           </div>
         </div>

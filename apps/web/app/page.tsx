@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import Image from "next/image";
 import { getServerSession } from "next-auth";
 
+import ImplementationNotice from "./components/implementation-notice";
 import LastfmBtn from "./components/lastfm-btn";
 import LoginBtn from "./components/login-btn";
 import ScrobbleBtnServer from "./components/scrobble-button-server";
@@ -41,6 +42,8 @@ export default async function Home() {
     <main className="flex-1">
       <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
         <div className="container px-4 md:px-6 mx-auto">
+          <ImplementationNotice />
+
           <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px] items-center">
             <div className="flex flex-col justify-center space-y-4">
               <div className="space-y-2">
@@ -216,6 +219,11 @@ export default async function Home() {
                   <li>
                     • We handle connection issues gracefully and ensure no songs
                     are lost
+                  </li>
+                  <li>
+                    • Free plan users receive weekly notifications when YouTube
+                    Music headers need updating, while Pro users get immediate
+                    notifications for uninterrupted service
                   </li>
                 </ul>
                 <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">

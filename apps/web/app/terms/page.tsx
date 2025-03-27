@@ -1,9 +1,13 @@
 import Link from "next/link";
 import React from "react";
 
+import ImplementationNotice from "../components/implementation-notice";
+
 const TermsOfService = () => (
   <main className="flex-1 flex justify-center items-center py-12 bg-gray-100">
     <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
+      <ImplementationNotice />
+
       <h1 className="text-4xl font-bold mb-6 text-center">Terms of Service</h1>
 
       <h2 className="text-2xl font-semibold mb-4">
@@ -99,8 +103,11 @@ const TermsOfService = () => (
       </h2>
       <p className="mb-6 text-justify">
         The Application offers different subscription plans (Free and Pro) with
-        varying update intervals and features. Details about these plans can be
-        found on our{" "}
+        varying update intervals and features. The Free plan checks for new
+        music every 30 minutes and provides weekly notifications when YouTube
+        Music headers need updating. The Pro plan checks every 5 minutes and
+        sends immediate notifications when headers need refreshing. Details
+        about these plans can be found on our{" "}
         <Link href="/pricing" className="underline text-blue-500">
           Pricing page
         </Link>
