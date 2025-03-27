@@ -275,6 +275,14 @@ export default function PricingClient() {
     setIsLoading(true);
     setCancelStatus({});
 
+    // Optimistically update the local state
+    setSubscriptionInfo((prev) => ({
+      ...prev,
+      scheduledCancellationDate: new Date(
+        Date.now() + 30 * 24 * 60 * 60 * 1000,
+      ).toISOString(), // 30 days from now
+    }));
+
     try {
       const response = await fetch("/api/subscription/cancel", {
         method: "POST",
@@ -287,15 +295,23 @@ export default function PricingClient() {
 
       if (response.ok) {
         setCancelStatus({ success: true, message: data.message });
-        // Refresh subscription data after successful cancellation
-        await fetchSubscriptionInfo();
       } else {
+        // Revert optimistic update on error
+        setSubscriptionInfo((prev) => ({
+          ...prev,
+          scheduledCancellationDate: null,
+        }));
         setCancelStatus({
           success: false,
           message: data.error || "Failed to cancel subscription",
         });
       }
     } catch (error) {
+      // Revert optimistic update on error
+      setSubscriptionInfo((prev) => ({
+        ...prev,
+        scheduledCancellationDate: null,
+      }));
       console.error("Error cancelling subscription:", error);
       setCancelStatus({
         success: false,
@@ -311,6 +327,12 @@ export default function PricingClient() {
     setIsLoading(true);
     setCancelStatus({});
 
+    // Optimistically update the local state
+    setSubscriptionInfo((prev) => ({
+      ...prev,
+      scheduledCancellationDate: null,
+    }));
+
     try {
       const response = await fetch("/api/subscription/cancel-scheduled", {
         method: "POST",
@@ -323,15 +345,27 @@ export default function PricingClient() {
 
       if (response.ok) {
         setCancelStatus({ success: true, message: data.message });
-        // Refresh subscription data after successful cancellation
-        await fetchSubscriptionInfo();
       } else {
+        // Revert optimistic update on error
+        setSubscriptionInfo((prev) => ({
+          ...prev,
+          scheduledCancellationDate: new Date(
+            Date.now() + 30 * 24 * 60 * 60 * 1000,
+          ).toISOString(), // 30 days from now
+        }));
         setCancelStatus({
           success: false,
           message: data.error || "Failed to cancel scheduled cancellation",
         });
       }
     } catch (error) {
+      // Revert optimistic update on error
+      setSubscriptionInfo((prev) => ({
+        ...prev,
+        scheduledCancellationDate: new Date(
+          Date.now() + 30 * 24 * 60 * 60 * 1000,
+        ).toISOString(), // 30 days from now
+      }));
       console.error("Error cancelling scheduled cancellation:", error);
       setCancelStatus({
         success: false,
