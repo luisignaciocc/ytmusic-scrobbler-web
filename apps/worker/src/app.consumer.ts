@@ -98,19 +98,30 @@ export class AppConsumer implements OnModuleInit {
           // Send an email notification to the user about expired credentials
           try {
             const { RESEND_API_KEY } = process.env;
+            const currentDate = new Date();
 
-            if (
-              RESEND_API_KEY &&
-              user.email &&
-              user.subscriptionPlan === "pro"
-            ) {
+            // Only send if:
+            // 1. User is pro
+            // 2. Notifications are enabled
+            // 3. Has not received a notification in the last 24 hours
+            // 4. Either has a notification email or regular email
+            const canSendNotification =
+              user.subscriptionPlan === "pro" &&
+              user.notificationsEnabled !== false &&
+              (!user.lastNotificationSent ||
+                currentDate.getTime() - user.lastNotificationSent.getTime() >
+                  24 * 60 * 60 * 1000);
+
+            const recipientEmail = user.notificationEmail || user.email;
+
+            if (RESEND_API_KEY && recipientEmail && canSendNotification) {
               // Import Resend only when needed to avoid unnecessary imports
               const { Resend } = await import("resend");
               const resend = new Resend(RESEND_API_KEY);
 
               await resend.emails.send({
                 from: "YTMusic Scrobbler <noreply@bocono-labs.com>",
-                to: user.email,
+                to: recipientEmail,
                 subject: "Action Required: YouTube Music Credentials Expired",
                 html: `
                   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -128,14 +139,32 @@ export class AppConsumer implements OnModuleInit {
                 `,
               });
 
-              job.log(`Notification email sent to PRO user ${user.email}`);
-            } else if (!user.email) {
-              job.log(`Cannot send email notification: Missing user email`);
+              // Update the lastNotificationSent timestamp
+              await this.prisma.user.update({
+                where: { id: user.id },
+                data: { lastNotificationSent: currentDate },
+              });
+
+              job.log(`Notification email sent to PRO user ${recipientEmail}`);
+            } else if (!recipientEmail) {
+              job.log(`Cannot send email notification: No valid email address`);
             } else if (!RESEND_API_KEY) {
               job.log(`Cannot send email notification: Missing RESEND_API_KEY`);
             } else if (user.subscriptionPlan !== "pro") {
               job.log(
                 `Email notification skipped: User ${userId} is not a PRO subscriber`,
+              );
+            } else if (user.notificationsEnabled === false) {
+              job.log(
+                `Email notification skipped: User ${userId} has disabled notifications`,
+              );
+            } else if (
+              user.lastNotificationSent &&
+              currentDate.getTime() - user.lastNotificationSent.getTime() <=
+                24 * 60 * 60 * 1000
+            ) {
+              job.log(
+                `Email notification skipped: Already sent notification to ${userId} within the last 24 hours`,
               );
             }
           } catch (emailError) {

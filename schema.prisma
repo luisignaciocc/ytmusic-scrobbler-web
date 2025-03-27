@@ -36,6 +36,9 @@ model User {
   subscriptionPlan          String    @default("free") // free, pro
   subscriptionEndDate       DateTime?
   scheduledCancellationDate DateTime?
+  lastNotificationSent      DateTime?
+  notificationsEnabled      Boolean   @default(true)
+  notificationEmail         String?
 }
 
 model Song {
