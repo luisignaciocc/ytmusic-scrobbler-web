@@ -83,6 +83,15 @@ export async function getGoogleVisitorId() {
   }
 }
 
+function sanitizeString(str: string): string {
+  return str
+    .replace(/[\u2026]/g, "...") // Replace ellipsis
+    .replace(/[\u2013\u2014]/g, "-") // Replace en/em dashes
+    .replace(/[\u2018\u2019]/g, "'") // Replace smart single quotes
+    .replace(/[\u201C\u201D]/g, '"') // Replace smart double quotes
+    .replace(/[^\x00-\x7F]/g, ""); // Remove any other non-ASCII characters
+}
+
 export async function getYTMusicHistory({
   cookie,
   authUser,
@@ -104,10 +113,10 @@ export async function getYTMusicHistory({
       headers: {
         accept: "*/*",
         "accept-language": "en-US,en;q=0.9",
-        authorization: authorization,
+        authorization: sanitizeString(authorization),
         "content-type": "application/json",
-        Cookie: cookie,
-        origin: origin,
+        Cookie: sanitizeString(cookie),
+        origin: sanitizeString(origin),
         referer: "https://music.youtube.com/library",
         "sec-ch-ua":
           '"Not(A:Brand";v="99", "Google Chrome";v="133", "Chromium";v="133"',
@@ -118,9 +127,9 @@ export async function getYTMusicHistory({
         "sec-fetch-site": "same-origin",
         "User-Agent":
           "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
-        "x-goog-authuser": authUser,
-        "x-goog-visitor-id": visitorData,
-        "x-origin": origin,
+        "x-goog-authuser": sanitizeString(authUser),
+        "x-goog-visitor-id": sanitizeString(visitorData),
+        "x-origin": sanitizeString(origin),
         "x-youtube-bootstrap-logged-in": "true",
         "x-youtube-client-name": "67",
         "x-youtube-client-version": "1.20250310.01.00",
@@ -245,15 +254,6 @@ export async function getYTMusicHistory({
   });
 
   return songs;
-}
-
-function sanitizeString(str: string): string {
-  return str
-    .replace(/[\u2026]/g, "...") // Replace ellipsis
-    .replace(/[\u2013\u2014]/g, "-") // Replace en/em dashes
-    .replace(/[\u2018\u2019]/g, "'") // Replace smart single quotes
-    .replace(/[\u201C\u201D]/g, '"') // Replace smart double quotes
-    .replace(/[^\x00-\x7F]/g, ""); // Remove any other non-ASCII characters
 }
 
 export async function scrobbleSong({
