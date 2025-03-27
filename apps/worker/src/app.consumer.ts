@@ -106,11 +106,11 @@ export class AppConsumer implements OnModuleInit {
             // 3. Has not received a notification in the last 24 hours
             // 4. Either has a notification email or regular email
             const canSendNotification =
-              user.subscriptionPlan === "pro" &&
+              // user.subscriptionPlan === "pro" &&
               user.notificationsEnabled !== false &&
               (!user.lastNotificationSent ||
                 currentDate.getTime() - user.lastNotificationSent.getTime() >
-                  24 * 60 * 60 * 1000);
+                  48 * 60 * 60 * 1000);
 
             const recipientEmail = user.notificationEmail || user.email;
 
