@@ -175,143 +175,120 @@ export async function getYTMusicHistory({
     cookie += "; SOCS=CAI";
   }
 
-  try {
-    const requestBody = {
-      browseId: "FEmusic_history",
-      ...context,
-    };
+  const requestBody = {
+    browseId: "FEmusic_history",
+    ...context,
+  };
 
-    const musicResponse = await fetch(
-      "https://music.youtube.com/youtubei/v1/browse?alt=json&key=AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30",
-      {
-        method: "POST",
-        cache: "no-store",
-        headers: requestHeaders,
-        body: JSON.stringify(requestBody),
-        credentials: "include",
+  const musicResponse = await fetch(
+    "https://music.youtube.com/youtubei/v1/browse?alt=json&key=AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30",
+    {
+      method: "POST",
+      cache: "no-store",
+      headers: requestHeaders,
+      body: JSON.stringify(requestBody),
+      credentials: "include",
+    },
+  );
+
+  if (!musicResponse.ok) {
+    const error = await musicResponse.text();
+    // throw error but append the request data and the headers
+    throw new Error(
+      error +
+        "\n\n" +
+        JSON.stringify(requestBody, null, 2) +
+        "\n\n" +
+        JSON.stringify(requestHeaders, null, 2),
+    );
+  }
+
+  const data = await musicResponse.json();
+
+  const results: YTAPIResponse =
+    data.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer
+      ?.content?.sectionListRenderer?.contents;
+
+  if (!results) {
+    throw new Error("No results found");
+  }
+
+  const songs: {
+    title: string;
+    artist: string;
+    album: string;
+    playedAt?: string;
+  }[] = [];
+
+  results.forEach(({ musicShelfRenderer }) => {
+    if (!musicShelfRenderer) {
+      return;
+    }
+    const playedAt = musicShelfRenderer?.title?.runs?.[0]?.text;
+
+    musicShelfRenderer?.contents?.forEach(
+      ({ musicResponsiveListItemRenderer }) => {
+        if (!musicResponsiveListItemRenderer) {
+          return;
+        }
+        const flexColumns = musicResponsiveListItemRenderer?.flexColumns;
+
+        if (!flexColumns) {
+          return;
+        }
+
+        const watchEndpointFlexColumn = flexColumns.find(
+          (flexColumn) =>
+            flexColumn.musicResponsiveListItemFlexColumnRenderer?.text
+              ?.runs?.[0]?.navigationEndpoint?.watchEndpoint,
+        );
+
+        const browseEndpointFlexColumnArtist = flexColumns.find(
+          (flexColumn) =>
+            flexColumn.musicResponsiveListItemFlexColumnRenderer?.text
+              ?.runs?.[0]?.navigationEndpoint?.browseEndpoint
+              ?.browseEndpointContextSupportedConfigs
+              ?.browseEndpointContextMusicConfig?.pageType ===
+            "MUSIC_PAGE_TYPE_ARTIST",
+        );
+
+        const browseEndpointFlexColumnAlbum = flexColumns.find(
+          (flexColumn) =>
+            flexColumn.musicResponsiveListItemFlexColumnRenderer?.text
+              ?.runs?.[0]?.navigationEndpoint?.browseEndpoint
+              ?.browseEndpointContextSupportedConfigs
+              ?.browseEndpointContextMusicConfig?.pageType ===
+            "MUSIC_PAGE_TYPE_ALBUM",
+        );
+
+        if (!watchEndpointFlexColumn || !browseEndpointFlexColumnArtist) {
+          return;
+        }
+
+        const title =
+          watchEndpointFlexColumn.musicResponsiveListItemFlexColumnRenderer
+            ?.text?.runs?.[0]?.text;
+        const artist =
+          browseEndpointFlexColumnArtist
+            .musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.text;
+        const album =
+          browseEndpointFlexColumnAlbum
+            ?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]
+            ?.text || title;
+
+        if (title && artist && !title.endsWith(" - Topic")) {
+          songs.push({
+            title,
+            artist,
+            album: album!,
+            playedAt,
+          });
+        }
       },
     );
+  });
 
-    if (!musicResponse.ok) {
-      const data = await musicResponse.text();
-      const errorInfo = {
-        message: "Failed to fetch music history",
-        data,
-        headers: requestHeaders,
-        body: JSON.stringify(requestBody, null, 2),
-        status: musicResponse.status,
-        statusText: musicResponse.statusText,
-      };
-      throw errorInfo;
-    }
-
-    const data = await musicResponse.json();
-
-    const results: YTAPIResponse =
-      data.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer
-        ?.content?.sectionListRenderer?.contents;
-
-    if (!results) {
-      const errorInfo = {
-        message: "Failed to fetch music history",
-        data: JSON.stringify(data, null, 2),
-        headers: requestHeaders,
-        body: JSON.stringify(requestBody, null, 2),
-      };
-      throw errorInfo;
-    }
-
-    const songs: {
-      title: string;
-      artist: string;
-      album: string;
-      playedAt?: string;
-    }[] = [];
-
-    results.forEach(({ musicShelfRenderer }) => {
-      if (!musicShelfRenderer) {
-        return;
-      }
-      const playedAt = musicShelfRenderer?.title?.runs?.[0]?.text;
-
-      musicShelfRenderer?.contents?.forEach(
-        ({ musicResponsiveListItemRenderer }) => {
-          if (!musicResponsiveListItemRenderer) {
-            return;
-          }
-          const flexColumns = musicResponsiveListItemRenderer?.flexColumns;
-
-          if (!flexColumns) {
-            return;
-          }
-
-          const watchEndpointFlexColumn = flexColumns.find(
-            (flexColumn) =>
-              flexColumn.musicResponsiveListItemFlexColumnRenderer?.text
-                ?.runs?.[0]?.navigationEndpoint?.watchEndpoint,
-          );
-
-          const browseEndpointFlexColumnArtist = flexColumns.find(
-            (flexColumn) =>
-              flexColumn.musicResponsiveListItemFlexColumnRenderer?.text
-                ?.runs?.[0]?.navigationEndpoint?.browseEndpoint
-                ?.browseEndpointContextSupportedConfigs
-                ?.browseEndpointContextMusicConfig?.pageType ===
-              "MUSIC_PAGE_TYPE_ARTIST",
-          );
-
-          const browseEndpointFlexColumnAlbum = flexColumns.find(
-            (flexColumn) =>
-              flexColumn.musicResponsiveListItemFlexColumnRenderer?.text
-                ?.runs?.[0]?.navigationEndpoint?.browseEndpoint
-                ?.browseEndpointContextSupportedConfigs
-                ?.browseEndpointContextMusicConfig?.pageType ===
-              "MUSIC_PAGE_TYPE_ALBUM",
-          );
-
-          if (!watchEndpointFlexColumn || !browseEndpointFlexColumnArtist) {
-            return;
-          }
-
-          const title =
-            watchEndpointFlexColumn.musicResponsiveListItemFlexColumnRenderer
-              ?.text?.runs?.[0]?.text;
-          const artist =
-            browseEndpointFlexColumnArtist
-              .musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.text;
-          const album =
-            browseEndpointFlexColumnAlbum
-              ?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]
-              ?.text || title;
-
-          if (title && artist && !title.endsWith(" - Topic")) {
-            songs.push({
-              title,
-              artist,
-              album: album!,
-              playedAt,
-            });
-          }
-        },
-      );
-    });
-
-    return songs;
-  } catch (error) {
-    // Si el error ya tiene la propiedad headers, significa que es nuestro error personalizado
-    if (error.headers) {
-      throw error;
-    }
-
-    // Si es otro tipo de error, agregar los headers al objeto de error
-    const errorWithHeaders = {
-      message: error.message || "Error desconocido en getYTMusicHistory",
-      originalError: error,
-      headers: requestHeaders,
-    };
-
-    throw errorWithHeaders;
-  }
+  return songs;
 }
 
 export async function scrobbleSong({
