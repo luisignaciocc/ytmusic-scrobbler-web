@@ -119,6 +119,8 @@ function initializeContext() {
       client: {
         clientName: "WEB_REMIX",
         clientVersion: "1." + formattedDate + ".01.00",
+        hl: "en",
+        gl: "US",
       },
       user: {},
     },
@@ -148,8 +150,8 @@ export async function getYTMusicHistory({
   const requestHeaders: { [key: string]: string } = {
     accept: "*/*",
     "accept-encoding": "gzip, deflate",
+    "accept-language": "en-US,en;q=0.9",
     authorization,
-    "content-encoding": "gzip",
     "content-type": "application/json",
     cookie,
     origin,
@@ -157,22 +159,51 @@ export async function getYTMusicHistory({
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0",
     "x-goog-authuser": authUser,
     "x-origin": origin,
-    "x-goog-visitor-id": visitorId,
   };
 
+  if (visitorId) {
+    requestHeaders["x-goog-visitor-id"] = visitorId;
+  }
+
+  // Añadir cookie SOCS
+  const cookies = new Map();
+  cookie.split(";").forEach((pair) => {
+    const [name, ...rest] = pair.trim().split("=");
+    cookies.set(name, rest.join("="));
+  });
+  if (!cookies.has("SOCS")) {
+    cookie += "; SOCS=CAI";
+  }
+
   try {
+    const requestBody = {
+      browseId: "FEmusic_history",
+      ...context,
+    };
+
     const musicResponse = await fetch(
       "https://music.youtube.com/youtubei/v1/browse?alt=json&key=AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30",
       {
         method: "POST",
         cache: "no-store",
         headers: requestHeaders,
-        body: JSON.stringify({
-          browseId: "FEmusic_history",
-          context,
-        }),
+        body: JSON.stringify(requestBody),
+        credentials: "include",
       },
     );
+
+    if (!musicResponse.ok) {
+      const data = await musicResponse.text();
+      const errorInfo = {
+        message: "Failed to fetch music history",
+        data,
+        headers: requestHeaders,
+        body: JSON.stringify(requestBody, null, 2),
+        status: musicResponse.status,
+        statusText: musicResponse.statusText,
+      };
+      throw errorInfo;
+    }
 
     const data = await musicResponse.json();
 
@@ -185,6 +216,7 @@ export async function getYTMusicHistory({
         message: "Failed to fetch music history",
         data: JSON.stringify(data, null, 2),
         headers: requestHeaders,
+        body: JSON.stringify(requestBody, null, 2),
       };
       throw errorInfo;
     }
