@@ -21,9 +21,6 @@ model User {
   picture                   String
   ytmusicCookie             String?   @db.Text
   ytmusicAuthUser           String?
-  ytmusicPageId             String?
-  ytmusicVisitorData        String?
-  ytmusicAuthorization      String?
   lastFmSessionKey          String?
   lastFmUsername            String?
   Songs                     Song[]

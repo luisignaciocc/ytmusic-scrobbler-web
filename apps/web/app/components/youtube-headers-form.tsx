@@ -23,9 +23,6 @@ export default function YouTubeHeadersForm({
 }: YouTubeHeadersFormProps) {
   const [cookie, setCookie] = useState("");
   const [authUser, setAuthUser] = useState("");
-  const [visitorData, setVisitorData] = useState("");
-  const [authorization, setAuthorization] = useState("");
-  const [pageId, setPageId] = useState("");
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -43,9 +40,6 @@ export default function YouTubeHeadersForm({
         body: JSON.stringify({
           cookie,
           authUser,
-          visitorData,
-          authorization,
-          pageId,
         }),
       });
 
@@ -108,7 +102,7 @@ export default function YouTubeHeadersForm({
     {
       title: "Copy Connection Details",
       description:
-        "Scroll down to 'Request Headers' section and copy these values: Authorization, Cookie, X-Goog-AuthUser, X-Goog-Visitor-Id, and X-Goog-PageId",
+        "Scroll down to 'Request Headers' section and copy these values: Cookie and X-Goog-AuthUser",
       image: "/tutorial/step9.png",
     },
     {
@@ -161,27 +155,6 @@ export default function YouTubeHeadersForm({
             >
               <div className="space-y-2">
                 <label
-                  htmlFor="authorization"
-                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Authorization
-                  <span className="text-xs text-gray-500 ml-2">
-                    (Find in the Connection Details under
-                    &quot;Authorization&quot;)
-                  </span>
-                </label>
-                <textarea
-                  id="authorization"
-                  value={authorization}
-                  onChange={(e) => setAuthorization(e.target.value)}
-                  className="flex min-h-[80px] w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
-                  placeholder="Copy and paste the Authorization value here..."
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label
                   htmlFor="cookie"
                   className="text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
@@ -218,50 +191,6 @@ export default function YouTubeHeadersForm({
                   onChange={(e) => setAuthUser(e.target.value)}
                   className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
                   placeholder="Usually '0'"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label
-                  htmlFor="visitorData"
-                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  X-Goog-Visitor-Id
-                  <span className="text-xs text-gray-500 ml-2">
-                    (Find in the Connection Details under
-                    &quot;X-Goog-Visitor-Id&quot;)
-                  </span>
-                </label>
-                <input
-                  type="text"
-                  id="visitorData"
-                  value={visitorData}
-                  onChange={(e) => setVisitorData(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
-                  placeholder="Copy and paste the X-Goog-Visitor-Id value here..."
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label
-                  htmlFor="pageId"
-                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  X-Goog-PageId
-                  <span className="text-xs text-gray-500 ml-2">
-                    (Find in the Connection Details under
-                    &quot;X-Goog-PageId&quot;)
-                  </span>
-                </label>
-                <input
-                  type="text"
-                  id="pageId"
-                  value={pageId}
-                  onChange={(e) => setPageId(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
-                  placeholder="Copy and paste the X-Goog-PageId value here..."
                   required
                 />
               </div>
