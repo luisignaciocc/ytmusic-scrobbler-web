@@ -394,7 +394,7 @@ export class AppConsumer implements OnModuleInit {
         songsScrobbled,
       };
     } catch (error) {
-      job.log(`Error scrobbling for user ${userId}`);
+      job.log(`Error scrobbling for user ${userId} (${user.lastFmUsername})`);
       job.log(error);
       return job.moveToFailed(error);
     }
