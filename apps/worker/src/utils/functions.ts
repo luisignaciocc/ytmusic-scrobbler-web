@@ -147,12 +147,12 @@ export async function getYTMusicHistory({
 
   const requestHeaders: { [key: string]: string } = {
     accept: "*/*",
-    "accept-language": "en-US,en;q=0.9",
+    "accept-encoding": "gzip, deflate",
     authorization,
+    "content-encoding": "gzip",
     "content-type": "application/json",
     cookie,
     origin,
-    referer: "https://music.youtube.com/",
     "user-agent":
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0",
     "x-goog-authuser": authUser,
