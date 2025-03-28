@@ -158,9 +158,6 @@ export async function getYTMusicHistory({
     "x-goog-authuser": authUser,
     "x-origin": origin,
     "x-goog-visitor-id": visitorId,
-    "x-youtube-bootstrap-logged-in": "true",
-    "x-youtube-client-name": "67",
-    "x-youtube-client-version": "1.20241211.01.0",
   };
 
   try {
