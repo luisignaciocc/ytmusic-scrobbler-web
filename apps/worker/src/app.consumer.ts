@@ -72,9 +72,6 @@ export class AppConsumer implements OnModuleInit {
           getYTMusicHistory({
             cookie: user.ytmusicCookie,
             authUser: user.ytmusicAuthUser,
-            visitorData: user.ytmusicVisitorData,
-            authorization: user.ytmusicAuthorization,
-            pageId: user.ytmusicPageId,
           }),
           this.prisma.song.findMany({
             where: {

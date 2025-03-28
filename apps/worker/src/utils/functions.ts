@@ -65,8 +65,13 @@ export async function getNewGoogleToken({
 export async function getGoogleVisitorId() {
   const res = await fetch("https://music.youtube.com", {
     headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+      "user-agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0",
+      accept: "*/*",
+      "accept-encoding": "gzip, deflate",
+      "content-type": "application/json",
+      "content-encoding": "gzip",
+      origin: "https://music.youtube.com",
     },
   });
 
@@ -92,53 +97,81 @@ function sanitizeString(str: string): string {
     .replace(/[^\x00-\x7F]/g, ""); // Remove any other non-ASCII characters
 }
 
+function sapisidFromCookie(rawCookie: string): string {
+  const match = rawCookie.match(/__Secure-3PAPISID=([^;]+)/);
+  if (!match) {
+    throw new Error(
+      "Your cookie is missing the required value __Secure-3PAPISID",
+    );
+  }
+  return match[1];
+}
+
+function initializeContext() {
+  const date = new Date();
+  const formattedDate =
+    date.getFullYear() +
+    ("0" + (date.getMonth() + 1)).slice(-2) +
+    ("0" + date.getDate()).slice(-2);
+
+  return {
+    context: {
+      client: {
+        clientName: "WEB_REMIX",
+        clientVersion: "1." + formattedDate + ".01.00",
+      },
+      user: {},
+    },
+  };
+}
+
+function getAuthorization(auth: string): string {
+  const unixTimestamp = Math.floor(Date.now() / 1000).toString();
+  const data = unixTimestamp + " " + auth;
+  const hash = crypto.createHash("sha1").update(data).digest("hex");
+  return "SAPISIDHASH " + unixTimestamp + "_" + hash;
+}
+
 export async function getYTMusicHistory({
   cookie,
   authUser,
-  visitorData,
-  authorization,
-  pageId = "106563489655246329102",
 }: {
   cookie: string;
   authUser: string;
-  visitorData: string;
-  authorization: string;
-  pageId?: string;
 }) {
+  const sapisid = sapisidFromCookie(cookie);
+  const context = initializeContext();
+  const origin = "https://music.youtube.com";
+  const authorization = getAuthorization(sapisid + " " + origin);
+  const visitorId = await getGoogleVisitorId();
+
+  const requestHeaders: { [key: string]: string } = {
+    accept: "*/*",
+    "accept-language": "en-US,en;q=0.9",
+    authorization,
+    "content-type": "application/json",
+    cookie,
+    origin,
+    referer: "https://music.youtube.com/",
+    "user-agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0",
+    "x-goog-authuser": authUser,
+    "x-origin": origin,
+    "x-goog-visitor-id": visitorId,
+    "x-youtube-bootstrap-logged-in": "true",
+    "x-youtube-client-name": "67",
+    "x-youtube-client-version": "1.20241211.01.0",
+  };
+
   const musicResponse = await fetch(
     "https://music.youtube.com/youtubei/v1/browse?alt=json&key=AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30",
     {
       method: "POST",
       cache: "no-store",
-      headers: {
-        accept: "*/*",
-        "accept-language": "en-US,en;q=0.9",
-        authorization: sanitizeString(authorization),
-        "content-type": "application/json",
-        cookie: sanitizeString(cookie),
-        origin: "https://music.youtube.com",
-        referer: "https://music.youtube.com/",
-        "user-agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0",
-        "x-goog-authuser": sanitizeString(authUser),
-        "x-goog-pageid": sanitizeString(pageId),
-        "x-goog-visitor-id": sanitizeString(visitorData),
-        "x-origin": "https://music.youtube.com",
-        "x-youtube-bootstrap-logged-in": "true",
-        "x-youtube-client-name": "67",
-        "x-youtube-client-version": "1.20241211.01.0",
-      },
+      headers: requestHeaders,
       body: JSON.stringify({
         browseId: "FEmusic_history",
-        context: {
-          client: {
-            clientName: "WEB_REMIX",
-            clientVersion: "1.20241211.01.0",
-            hl: "en",
-            gl: "US",
-            experimentIds: [],
-          },
-        },
+        context,
       }),
     },
   );
