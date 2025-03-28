@@ -257,6 +257,7 @@ export class AppConsumer implements OnModuleInit {
           job.log(JSON.stringify(error.headers, null, 2));
           throw error.originalError;
         }
+        throw error;
       }
 
       const todaySongs = songs.filter((song) => song.playedAt === "Today");
