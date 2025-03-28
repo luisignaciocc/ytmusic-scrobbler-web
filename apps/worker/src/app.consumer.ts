@@ -170,7 +170,7 @@ export class AppConsumer implements OnModuleInit {
                 24 * 60 * 60 * 1000
             ) {
               job.log(
-                `Email notification skipped: Already sent notification to ${userId} within the last 24 hours`,
+                `Email notification skipped: Already sent notification to ${userId} within the last 5 days`,
               );
             }
           } catch (emailError) {
