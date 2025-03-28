@@ -252,6 +252,10 @@ export class AppConsumer implements OnModuleInit {
         // }
 
         // Re-throw other errors to be caught by the outer try-catch
+        if (error.headers) {
+          job.log(`Error headers for user ${userId}:`);
+          job.log(JSON.stringify(error.headers, null, 2));
+        }
         throw error;
       }
 
