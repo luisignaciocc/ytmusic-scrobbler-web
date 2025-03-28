@@ -21,7 +21,7 @@ model User {
   picture                   String
   ytmusicCookie             String?   @db.Text
   ytmusicAuthUser           String?
-  ytmusicOrigin             String?   @default("https://music.youtube.com")
+  ytmusicPageId             String?
   ytmusicVisitorData        String?
   ytmusicAuthorization      String?
   lastFmSessionKey          String?

@@ -12,7 +12,7 @@ export async function POST(request: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { cookie, authUser, origin, visitorData, authorization } =
+    const { cookie, authUser, visitorData, authorization, pageId } =
       await request.json();
 
     if (!cookie || !authUser || !visitorData || !authorization) {
@@ -24,11 +24,11 @@ export async function POST(request: Request) {
         email: session.user.email,
       },
       data: {
+        ytmusicAuthorization: authorization,
         ytmusicCookie: cookie,
         ytmusicAuthUser: authUser,
-        ytmusicOrigin: origin || undefined,
         ytmusicVisitorData: visitorData,
-        ytmusicAuthorization: authorization,
+        ytmusicPageId: pageId,
         lastNotificationSent: null,
       },
     });

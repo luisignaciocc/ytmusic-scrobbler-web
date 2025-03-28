@@ -95,18 +95,18 @@ function sanitizeString(str: string): string {
 export async function getYTMusicHistory({
   cookie,
   authUser,
-  origin = "https://music.youtube.com",
   visitorData,
   authorization,
+  pageId = "106563489655246329102",
 }: {
   cookie: string;
   authUser: string;
-  origin?: string;
   visitorData: string;
   authorization: string;
+  pageId?: string;
 }) {
   const musicResponse = await fetch(
-    "https://music.youtube.com/youtubei/v1/browse",
+    "https://music.youtube.com/youtubei/v1/browse?alt=json&key=AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30",
     {
       method: "POST",
       cache: "no-store",
@@ -115,53 +115,30 @@ export async function getYTMusicHistory({
         "accept-language": "en-US,en;q=0.9",
         authorization: sanitizeString(authorization),
         "content-type": "application/json",
-        Cookie: sanitizeString(cookie),
-        origin: sanitizeString(origin),
-        referer: "https://music.youtube.com/library",
-        "sec-ch-ua":
-          '"Not(A:Brand";v="99", "Google Chrome";v="133", "Chromium";v="133"',
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": "macOS",
-        "sec-fetch-dest": "empty",
-        "sec-fetch-mode": "same-origin",
-        "sec-fetch-site": "same-origin",
-        "User-Agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+        cookie: sanitizeString(cookie),
+        origin: "https://music.youtube.com",
+        referer: "https://music.youtube.com/",
+        "user-agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0",
         "x-goog-authuser": sanitizeString(authUser),
+        "x-goog-pageid": sanitizeString(pageId),
         "x-goog-visitor-id": sanitizeString(visitorData),
-        "x-origin": sanitizeString(origin),
+        "x-origin": "https://music.youtube.com",
         "x-youtube-bootstrap-logged-in": "true",
         "x-youtube-client-name": "67",
-        "x-youtube-client-version": "1.20250310.01.00",
+        "x-youtube-client-version": "1.20241211.01.0",
       },
       body: JSON.stringify({
+        browseId: "FEmusic_history",
         context: {
           client: {
-            hl: "en",
-            gl: "CL",
             clientName: "WEB_REMIX",
-            clientVersion: "1.20250310.01.00",
-            userAgent:
-              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36,gzip(gfe)",
-            clientFormFactor: "UNKNOWN_FORM_FACTOR",
-            userInterfaceTheme: "USER_INTERFACE_THEME_DARK",
-            timeZone: "America/Santiago",
-            browserName: "Chrome",
-            browserVersion: "133.0.0.0",
-            osName: "Macintosh",
-            osVersion: "10_15_7",
-            platform: "DESKTOP",
-            utcOffsetMinutes: -180,
-            visitorData: visitorData,
-          },
-          user: {
-            lockedSafetyMode: false,
-          },
-          request: {
-            useSsl: true,
+            clientVersion: "1.20241211.01.0",
+            hl: "en",
+            gl: "US",
+            experimentIds: [],
           },
         },
-        browseId: "FEmusic_history",
       }),
     },
   );
