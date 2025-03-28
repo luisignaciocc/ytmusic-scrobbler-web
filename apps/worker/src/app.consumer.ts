@@ -88,183 +88,178 @@ export class AppConsumer implements OnModuleInit {
           }),
         ]);
       } catch (error) {
-        // // Only send if:
-        // // 1. User is pro (paused)
-        // // 2. Notifications are enabled
-        // // 3. Has not received a notification in the last 48 hours
-        // // 4. Either has a notification email or regular email
-        // const currentDate = new Date();
-        // const canSendNotification =
-        //   // user.subscriptionPlan === "pro" &&
-        //   user.notificationsEnabled !== false &&
-        //   (!user.lastNotificationSent ||
-        //     currentDate.getTime() - user.lastNotificationSent.getTime() >
-        //       48 * 60 * 60 * 1000);
-        // // Check if this is the specific 401 error we want to handle differently
-        // if (
-        //   error.message?.includes("401") &&
-        //   error.message?.includes("UNAUTHENTICATED") &&
-        //   error.message?.includes(
-        //     "Request is missing required authentication credential",
-        //   )
-        // ) {
-        //   job.log(
-        //     `Authentication error detected for user ${userId}: YouTube Music credentials expired`,
-        //   );
+        // Only send if:
+        // 1. User is pro (paused)
+        // 2. Notifications are enabled
+        // 3. Has not received a notification in the last 5 days
+        // 4. Either has a notification email or regular email
+        const currentDate = new Date();
+        const canSendNotification =
+          // user.subscriptionPlan === "pro" &&
+          user.notificationsEnabled !== false &&
+          (!user.lastNotificationSent ||
+            currentDate.getTime() - user.lastNotificationSent.getTime() >
+              5 * 24 * 60 * 60 * 1000);
+        // Check if this is the specific 401 error we want to handle differently
+        if (
+          error.message?.includes("401") &&
+          error.message?.includes("UNAUTHENTICATED") &&
+          error.message?.includes(
+            "Request is missing required authentication credential",
+          )
+        ) {
+          job.log(
+            `Authentication error detected for user ${userId}: YouTube Music credentials expired`,
+          );
 
-        //   // Send an email notification to the user about expired credentials
-        //   try {
-        //     const { RESEND_API_KEY } = process.env;
+          // Send an email notification to the user about expired credentials
+          try {
+            const { RESEND_API_KEY } = process.env;
 
-        //     const recipientEmail = user.notificationEmail || user.email;
+            const recipientEmail = user.notificationEmail || user.email;
 
-        //     if (RESEND_API_KEY && recipientEmail && canSendNotification) {
-        //       // Import Resend only when needed to avoid unnecessary imports
-        //       const { Resend } = await import("resend");
-        //       const resend = new Resend(RESEND_API_KEY);
+            if (RESEND_API_KEY && recipientEmail && canSendNotification) {
+              // Import Resend only when needed to avoid unnecessary imports
+              const { Resend } = await import("resend");
+              const resend = new Resend(RESEND_API_KEY);
 
-        //       await resend.emails.send({
-        //         from: "YTMusic Scrobbler <noreply@bocono-labs.com>",
-        //         to: recipientEmail,
-        //         subject: "Action Required: YouTube Music Credentials Expired",
-        //         html: `
-        //           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        //             <h2>YouTube Music Credentials Expired</h2>
-        //             <p>Hello ${user.name},</p>
-        //             <p>We noticed that your YouTube Music credentials have expired, which means we can no longer access your listening history to scrobble tracks to Last.fm.</p>
-        //             <p>You will receive this notification every 48 hours until you either:</p>
-        //             <ul>
-        //               <li>Update your authentication headers by visiting our website</li>
-        //               <li>Pause your scrobbling from your account settings</li>
-        //               <li>Reply to this email to stop receiving notifications</li>
-        //             </ul>
-        //             <p>If you want to continue using the YTMusic Scrobbler service, please visit our website and update your authentication headers:</p>
-        //             <p style="text-align: center;">
-        //               <a href="https://scrobbler.bocono-labs.com" style="display: inline-block; background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Update My Credentials</a>
-        //             </p>
-        //             <p>If you need help, please contact our support team at <a href="mailto:me@luisignacio.cc">me@luisignacio.cc</a>.</p>
-        //             <p>Thank you for using YTMusic Scrobbler!</p>
-        //             <p>- The Bocono Labs Team</p>
-        //           </div>
-        //         `,
-        //       });
+              await resend.emails.send({
+                from: "YTMusic Scrobbler <noreply@bocono-labs.com>",
+                to: recipientEmail,
+                subject: "Action Required: YouTube Music Credentials Expired",
+                html: `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2>YouTube Music Credentials Expired</h2>
+                    <p>Hello ${user.name},</p>
+                    <p>We noticed that your YouTube Music credentials have expired, which means we can no longer access your listening history to scrobble tracks to Last.fm.</p>
+                    <p>You will receive this notification every 48 hours until you either:</p>
+                    <ul>
+                      <li>Update your authentication headers by visiting our website</li>
+                      <li>Pause your scrobbling from your account settings</li>
+                      <li>Reply to this email to stop receiving notifications</li>
+                    </ul>
+                    <p>If you want to continue using the YTMusic Scrobbler service, please visit our website and update your authentication headers:</p>
+                    <p style="text-align: center;">
+                      <a href="https://scrobbler.bocono-labs.com" style="display: inline-block; background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Update My Credentials</a>
+                    </p>
+                    <p>If you need help, please contact our support team at <a href="mailto:me@luisignacio.cc">me@luisignacio.cc</a>.</p>
+                    <p>Thank you for using YTMusic Scrobbler!</p>
+                    <p>- The Bocono Labs Team</p>
+                  </div>
+                `,
+              });
 
-        //       // Update the lastNotificationSent timestamp
-        //       await this.prisma.user.update({
-        //         where: { id: user.id },
-        //         data: { lastNotificationSent: currentDate },
-        //       });
+              // Update the lastNotificationSent timestamp
+              await this.prisma.user.update({
+                where: { id: user.id },
+                data: { lastNotificationSent: currentDate },
+              });
 
-        //       job.log(`Notification email sent to PRO user ${recipientEmail}`);
-        //     } else if (!recipientEmail) {
-        //       job.log(`Cannot send email notification: No valid email address`);
-        //     } else if (!RESEND_API_KEY) {
-        //       job.log(`Cannot send email notification: Missing RESEND_API_KEY`);
-        //     } else if (user.subscriptionPlan !== "pro") {
-        //       job.log(
-        //         `Email notification skipped: User ${userId} is not a PRO subscriber`,
-        //       );
-        //     } else if (user.notificationsEnabled === false) {
-        //       job.log(
-        //         `Email notification skipped: User ${userId} has disabled notifications`,
-        //       );
-        //     } else if (
-        //       user.lastNotificationSent &&
-        //       currentDate.getTime() - user.lastNotificationSent.getTime() <=
-        //         24 * 60 * 60 * 1000
-        //     ) {
-        //       job.log(
-        //         `Email notification skipped: Already sent notification to ${userId} within the last 24 hours`,
-        //       );
-        //     }
-        //   } catch (emailError) {
-        //     job.log(`Failed to send email notification: ${emailError.message}`);
-        //     // Don't throw the error, just log it
-        //   }
+              job.log(`Notification email sent to PRO user ${recipientEmail}`);
+            } else if (!recipientEmail) {
+              job.log(`Cannot send email notification: No valid email address`);
+            } else if (!RESEND_API_KEY) {
+              job.log(`Cannot send email notification: Missing RESEND_API_KEY`);
+            } else if (user.subscriptionPlan !== "pro") {
+              job.log(
+                `Email notification skipped: User ${userId} is not a PRO subscriber`,
+              );
+            } else if (user.notificationsEnabled === false) {
+              job.log(
+                `Email notification skipped: User ${userId} has disabled notifications`,
+              );
+            } else if (
+              user.lastNotificationSent &&
+              currentDate.getTime() - user.lastNotificationSent.getTime() <=
+                24 * 60 * 60 * 1000
+            ) {
+              job.log(
+                `Email notification skipped: Already sent notification to ${userId} within the last 24 hours`,
+              );
+            }
+          } catch (emailError) {
+            job.log(`Failed to send email notification: ${emailError.message}`);
+            // Don't throw the error, just log it
+          }
 
-        //   // Mark the job as successful but with special status
-        //   await job.progress(100);
-        //   return {
-        //     status: "success",
-        //     authError: true,
-        //     message: "YouTube Music authentication credentials expired",
-        //   };
-        // }
+          // Mark the job as successful but with special status
+          await job.progress(100);
+          return {
+            status: "success",
+            authError: true,
+            message: "YouTube Music authentication credentials expired",
+          };
+        }
 
-        // // Check for invalid header value error
-        // if (
-        //   error.message?.includes("Headers.append") &&
-        //   error.message?.includes("is an invalid header value")
-        // ) {
-        //   job.log(
-        //     `Invalid header value error detected for user ${userId}: YouTube Music headers are malformed`,
-        //   );
+        // Check for invalid header value error
+        if (
+          error.message?.includes("Headers.append") &&
+          error.message?.includes("is an invalid header value")
+        ) {
+          job.log(
+            `Invalid header value error detected for user ${userId}: YouTube Music headers are malformed`,
+          );
 
-        //   // Send an email notification to the user about invalid headers
-        //   try {
-        //     const { RESEND_API_KEY } = process.env;
+          // Send an email notification to the user about invalid headers
+          try {
+            const { RESEND_API_KEY } = process.env;
 
-        //     const recipientEmail = user.notificationEmail || user.email;
+            const recipientEmail = user.notificationEmail || user.email;
 
-        //     if (RESEND_API_KEY && recipientEmail && canSendNotification) {
-        //       const { Resend } = await import("resend");
-        //       const resend = new Resend(RESEND_API_KEY);
+            if (RESEND_API_KEY && recipientEmail && canSendNotification) {
+              const { Resend } = await import("resend");
+              const resend = new Resend(RESEND_API_KEY);
 
-        //       await resend.emails.send({
-        //         from: "YTMusic Scrobbler <noreply@bocono-labs.com>",
-        //         to: recipientEmail,
-        //         subject: "Action Required: YouTube Music Headers Invalid",
-        //         html: `
-        //           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        //             <h2>YouTube Music Headers Invalid</h2>
-        //             <p>Hello ${user.name},</p>
-        //             <p>We noticed that your YouTube Music headers are invalid or malformed, which means we can no longer access your listening history to scrobble tracks to Last.fm.</p>
-        //             <p>You will receive this notification every 48 hours until you either:</p>
-        //             <ul>
-        //               <li>Update your authentication headers by visiting our website</li>
-        //               <li>Pause your scrobbling from your account settings</li>
-        //               <li>Reply to this email to stop receiving notifications</li>
-        //             </ul>
-        //             <p>If you want to continue using the YTMusic Scrobbler service, please visit our website and update your authentication headers:</p>
-        //             <p style="text-align: center;">
-        //               <a href="https://scrobbler.bocono-labs.com" style="display: inline-block; background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Update My Credentials</a>
-        //             </p>
-        //             <p>If you need help, please contact our support team at <a href="mailto:me@luisignacio.cc">me@luisignacio.cc</a>.</p>
-        //             <p>Thank you for using YTMusic Scrobbler!</p>
-        //             <p>- The Bocono Labs Team</p>
-        //           </div>
-        //         `,
-        //       });
+              await resend.emails.send({
+                from: "YTMusic Scrobbler <noreply@bocono-labs.com>",
+                to: recipientEmail,
+                subject: "Action Required: YouTube Music Headers Invalid",
+                html: `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2>YouTube Music Headers Invalid</h2>
+                    <p>Hello ${user.name},</p>
+                    <p>We noticed that your YouTube Music headers are invalid or malformed, which means we can no longer access your listening history to scrobble tracks to Last.fm.</p>
+                    <p>You will receive this notification every 48 hours until you either:</p>
+                    <ul>
+                      <li>Update your authentication headers by visiting our website</li>
+                      <li>Pause your scrobbling from your account settings</li>
+                      <li>Reply to this email to stop receiving notifications</li>
+                    </ul>
+                    <p>If you want to continue using the YTMusic Scrobbler service, please visit our website and update your authentication headers:</p>
+                    <p style="text-align: center;">
+                      <a href="https://scrobbler.bocono-labs.com" style="display: inline-block; background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Update My Credentials</a>
+                    </p>
+                    <p>If you need help, please contact our support team at <a href="mailto:me@luisignacio.cc">me@luisignacio.cc</a>.</p>
+                    <p>Thank you for using YTMusic Scrobbler!</p>
+                    <p>- The Bocono Labs Team</p>
+                  </div>
+                `,
+              });
 
-        //       // Update the lastNotificationSent timestamp
-        //       await this.prisma.user.update({
-        //         where: { id: user.id },
-        //         data: { lastNotificationSent: currentDate },
-        //       });
+              // Update the lastNotificationSent timestamp
+              await this.prisma.user.update({
+                where: { id: user.id },
+                data: { lastNotificationSent: currentDate },
+              });
 
-        //       job.log(
-        //         `Notification email sent to user ${recipientEmail} about invalid headers`,
-        //       );
-        //     }
-        //   } catch (emailError) {
-        //     job.log(`Failed to send email notification: ${emailError.message}`);
-        //   }
+              job.log(
+                `Notification email sent to user ${recipientEmail} about invalid headers`,
+              );
+            }
+          } catch (emailError) {
+            job.log(`Failed to send email notification: ${emailError.message}`);
+          }
 
-        //   // Mark the job as successful but with special status
-        //   await job.progress(100);
-        //   return {
-        //     status: "success",
-        //     authError: true,
-        //     message: "YouTube Music headers are invalid",
-        //   };
-        // }
+          // Mark the job as successful but with special status
+          await job.progress(100);
+          return {
+            status: "success",
+            authError: true,
+            message: "YouTube Music headers are invalid",
+          };
+        }
 
         // Re-throw other errors to be caught by the outer try-catch
-        if (error.headers) {
-          job.log(`Error scrobbling for user ${userId}`);
-          job.log(JSON.stringify(error, null, 2));
-          return job.moveToFailed(error);
-        }
         throw error;
       }
 
