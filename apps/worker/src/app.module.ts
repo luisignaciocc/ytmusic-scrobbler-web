@@ -25,6 +25,7 @@ import { PrismaService } from "./prisma.service";
       name: "scrobbler",
       defaultJobOptions: {
         timeout: 15000,
+        attempts: 1,
         removeOnComplete: {
           age: 3 * 60 * 60, // 3 hours
         },

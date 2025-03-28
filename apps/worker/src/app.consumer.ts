@@ -388,7 +388,6 @@ export class AppConsumer implements OnModuleInit {
     } catch (error) {
       job.log(`Error scrobbling for user ${userId}`);
       job.log(error);
-      await job.discard();
       return job.moveToFailed(error);
     }
   }
