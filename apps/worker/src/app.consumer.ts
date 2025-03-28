@@ -132,7 +132,7 @@ export class AppConsumer implements OnModuleInit {
                     <h2>YouTube Music Credentials Expired</h2>
                     <p>Hello ${user.name},</p>
                     <p>We noticed that your YouTube Music credentials have expired, which means we can no longer access your listening history to scrobble tracks to Last.fm.</p>
-                    <p>You will receive this notification every 48 hours until you either:</p>
+                    <p>You will receive this notification every 5 days until you either:</p>
                     <ul>
                       <li>Update your authentication headers by visiting our website</li>
                       <li>Pause your scrobbling from your account settings</li>
@@ -155,15 +155,11 @@ export class AppConsumer implements OnModuleInit {
                 data: { lastNotificationSent: currentDate },
               });
 
-              job.log(`Notification email sent to PRO user ${recipientEmail}`);
+              job.log(`Notification email sent to user ${recipientEmail}`);
             } else if (!recipientEmail) {
               job.log(`Cannot send email notification: No valid email address`);
             } else if (!RESEND_API_KEY) {
               job.log(`Cannot send email notification: Missing RESEND_API_KEY`);
-            } else if (user.subscriptionPlan !== "pro") {
-              job.log(
-                `Email notification skipped: User ${userId} is not a PRO subscriber`,
-              );
             } else if (user.notificationsEnabled === false) {
               job.log(
                 `Email notification skipped: User ${userId} has disabled notifications`,
@@ -219,7 +215,7 @@ export class AppConsumer implements OnModuleInit {
                     <h2>YouTube Music Headers Invalid</h2>
                     <p>Hello ${user.name},</p>
                     <p>We noticed that your YouTube Music headers are invalid or malformed, which means we can no longer access your listening history to scrobble tracks to Last.fm.</p>
-                    <p>You will receive this notification every 48 hours until you either:</p>
+                    <p>You will receive this notification every 5 days until you either:</p>
                     <ul>
                       <li>Update your authentication headers by visiting our website</li>
                       <li>Pause your scrobbling from your account settings</li>

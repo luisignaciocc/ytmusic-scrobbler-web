@@ -36,11 +36,10 @@ export default function PricingPage() {
               <li>Customer support and service reliability</li>
             </ul>
             <p className="mt-6 text-gray-600">
-              The free tier checks for new music every 30 minutes and provides
-              weekly notifications when your YouTube Music headers need
-              updating. The Pro tier checks every 5 minutes and sends immediate
-              notifications when headers need refreshing, ensuring minimal
-              interruption to your scrobbling service.
+              The free tier checks for new music every 30 minutes and the Pro
+              tier checks every 5 minutes. All users receive immediate
+              notifications when their YouTube Music headers need updating,
+              ensuring minimal interruption to the scrobbling service.
             </p>
           </div>
         </div>

@@ -100,10 +100,9 @@ const TermsOfService = () => (
       <p className="mb-6 text-justify">
         The Application offers different subscription plans (Free and Pro) with
         varying update intervals and features. The Free plan checks for new
-        music every 30 minutes and provides weekly notifications when YouTube
-        Music headers need updating. The Pro plan checks every 5 minutes and
-        sends immediate notifications when headers need refreshing. Details
-        about these plans can be found on our{" "}
+        music every 30 minutes and the Pro plan checks every 5 minutes. All
+        users receive immediate notifications when YouTube Music headers need
+        refreshing. Details about these plans can be found on our{" "}
         <Link href="/pricing" className="underline text-blue-500">
           Pricing page
         </Link>

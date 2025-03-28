@@ -53,9 +53,8 @@ const PrivacyPolicy = () => (
         </li>
         <li>Process your transactions and manage your orders.</li>
         <li>
-          Send service notifications according to your subscription plan (weekly
-          notifications for Free users, immediate notifications for Pro users)
-          when your YouTube Music headers need updating.
+          Send service notifications when your YouTube Music headers need
+          updating.
         </li>
       </ul>
 

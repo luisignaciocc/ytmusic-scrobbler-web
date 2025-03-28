@@ -420,7 +420,7 @@ export default function PricingClient() {
             </li>
             <li className="flex items-center">
               <CheckIcon />
-              Weekly notifications when headers need updating
+              Immediate notifications when headers need updating
             </li>
             <li className="flex items-center">
               <CheckIcon />

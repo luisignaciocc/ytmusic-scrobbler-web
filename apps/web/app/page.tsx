@@ -218,9 +218,8 @@ export default async function Home() {
                     are lost
                   </li>
                   <li>
-                    • Free plan users receive weekly notifications when YouTube
-                    Music headers need updating, while Pro users get immediate
-                    notifications for uninterrupted service
+                    • All users receive immediate notifications when YouTube
+                    Music headers need updating to ensure uninterrupted service
                   </li>
                 </ul>
                 <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
