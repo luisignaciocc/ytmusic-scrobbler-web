@@ -71,6 +71,7 @@ export class AppProducer implements OnModuleInit {
         },
         opts: {
           delay: index * equidistantInterval,
+          attempts: 1,
         },
       })),
     );
