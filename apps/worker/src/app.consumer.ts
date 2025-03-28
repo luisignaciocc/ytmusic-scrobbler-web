@@ -30,25 +30,33 @@ export class AppConsumer implements OnModuleInit {
     });
     if (!user) {
       job.log(`User ${userId} not found`);
-      return job.discard();
+      return job.moveToFailed({
+        message: `User ${userId} not found`,
+      });
     }
 
     const { LAST_FM_API_KEY, LAST_FM_API_SECRET } = process.env;
 
     if (!LAST_FM_API_KEY || !LAST_FM_API_SECRET) {
       job.log(`Missing environment variables`);
-      return job.discard();
+      return job.moveToFailed({
+        message: `Missing environment variables`,
+      });
     }
 
     try {
       if (!user.lastFmSessionKey) {
         job.log(`User ${userId} has no Last.fm session key`);
-        return job.discard();
+        return job.moveToFailed({
+          message: `User ${userId} has no Last.fm session key`,
+        });
       }
 
       if (!user.ytmusicCookie || !user.ytmusicAuthUser) {
         job.log(`User ${userId} has no YouTube Music headers`);
-        return job.discard();
+        return job.moveToFailed({
+          message: `User ${userId} has no YouTube Music headers`,
+        });
       }
 
       let songs: {
@@ -251,7 +259,13 @@ export class AppConsumer implements OnModuleInit {
         //   };
         // }
 
-        return job.moveToFailed(error);
+        // Re-throw other errors to be caught by the outer try-catch
+        if (error.headers) {
+          job.log(`Error scrobbling for user ${userId}`);
+          job.log(JSON.stringify(error, null, 2));
+          return job.moveToFailed(error);
+        }
+        throw error;
       }
 
       const todaySongs = songs.filter((song) => song.playedAt === "Today");
@@ -358,7 +372,7 @@ export class AppConsumer implements OnModuleInit {
         } catch (error) {
           job.log(`Error scrobbling song for user ${userId}`);
           job.log(error);
-          return job.discard();
+          return job.moveToFailed(error);
         }
       }
 
