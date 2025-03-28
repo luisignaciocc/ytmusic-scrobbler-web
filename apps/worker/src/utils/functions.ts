@@ -101,7 +101,7 @@ function sapisidFromCookie(rawCookie: string): string {
   const match = rawCookie.match(/__Secure-3PAPISID=([^;]+)/);
   if (!match) {
     throw new Error(
-      "Your cookie is missing the required value __Secure-3PAPISID",
+      `Headers.append: invalid header value '${rawCookie}' for the 'Cookie' header. Your cookie is missing the required value __Secure-3PAPISID`,
     );
   }
   return match[1];
