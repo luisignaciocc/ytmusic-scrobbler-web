@@ -21,15 +21,33 @@ export class AppProducer implements OnModuleInit {
   }
 
   @Cron(CronExpression.EVERY_5_MINUTES, {
-    name: "scrobble",
+    name: "scrobbleProUsers",
   })
-  async scrobble() {
+  async scrobbleProUsers() {
+    this.logger.debug("Processing pro users (every 5 minutes)");
+    await this.processUsersBySubscription("pro", 60 * 5 * 1000);
+  }
+
+  @Cron(CronExpression.EVERY_30_MINUTES, {
+    name: "scrobbleFreeUsers",
+  })
+  async scrobbleFreeUsers() {
+    this.logger.debug("Processing free users (every 30 minutes)");
+    await this.processUsersBySubscription("free", 60 * 30 * 1000);
+  }
+
+  private async processUsersBySubscription(
+    subscriptionPlan: "pro" | "free",
+    cronInterval: number,
+  ) {
     const LAST_SCROBBLE_INTERVAL = new Date(
       Date.now() - 1000 * 60 * 60 * 24 * 5,
     ); // 5 days
+
     const activeUsers = await this.prisma.user.findMany({
       where: {
         isActive: true,
+        subscriptionPlan,
         lastFmSessionKey: {
           not: null,
         },
@@ -45,7 +63,6 @@ export class AppProducer implements OnModuleInit {
       },
     });
 
-    const cronInterval = 60 * 5 * 1000; // in milliseconds
     const count = activeUsers.length;
 
     if (count === 0) {
@@ -72,6 +89,7 @@ export class AppProducer implements OnModuleInit {
         isActive: false,
       },
       where: {
+        subscriptionPlan,
         OR: [
           {
             ytmusicCookie: null,
