@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 // Esta variable controla si se muestra o no la alerta en todas las páginas
-export const SHOW_IMPLEMENTATION_NOTICE = true;
+export const SHOW_IMPLEMENTATION_NOTICE = false;
 
 const ImplementationNotice: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
