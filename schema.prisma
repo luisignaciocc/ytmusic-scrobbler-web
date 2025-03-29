@@ -20,7 +20,6 @@ model User {
   isActive                  Boolean   @default(false)
   picture                   String
   ytmusicCookie             String?   @db.Text
-  ytmusicAuthUser           String?
   lastFmSessionKey          String?
   lastFmUsername            String?
   Songs                     Song[]
