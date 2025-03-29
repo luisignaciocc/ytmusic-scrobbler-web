@@ -52,7 +52,7 @@ export class AppConsumer implements OnModuleInit {
         });
       }
 
-      if (!user.ytmusicCookie || !user.ytmusicAuthUser) {
+      if (!user.ytmusicCookie) {
         job.log(`User ${userId} has no YouTube Music headers`);
         return job.moveToFailed({
           message: `User ${userId} has no YouTube Music headers`,

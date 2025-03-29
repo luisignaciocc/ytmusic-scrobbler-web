@@ -22,7 +22,6 @@ export default function YouTubeHeadersForm({
   buttonClassName = "w-full inline-flex h-10 items-center justify-center rounded-md bg-gray-900 px-8 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300",
 }: YouTubeHeadersFormProps) {
   const [cookie, setCookie] = useState("");
-  const [authUser, setAuthUser] = useState("");
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -39,7 +38,6 @@ export default function YouTubeHeadersForm({
         },
         body: JSON.stringify({
           cookie,
-          authUser,
         }),
       });
 
@@ -102,7 +100,7 @@ export default function YouTubeHeadersForm({
     {
       title: "Copy Connection Details",
       description:
-        "Scroll down to 'Request Headers' section and copy these values: Cookie and X-Goog-AuthUser",
+        "Scroll down to 'Request Headers' section and copy the 'Cookie' value",
       image: "/tutorial/step9.png",
     },
     {
@@ -169,28 +167,6 @@ export default function YouTubeHeadersForm({
                   onChange={(e) => setCookie(e.target.value)}
                   className="flex min-h-[80px] w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
                   placeholder="Copy and paste the Cookie value here..."
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label
-                  htmlFor="authUser"
-                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  X-Goog-AuthUser
-                  <span className="text-xs text-gray-500 ml-2">
-                    (Find in the Connection Details under
-                    &quot;X-Goog-AuthUser&quot;)
-                  </span>
-                </label>
-                <input
-                  type="text"
-                  id="authUser"
-                  value={authUser}
-                  onChange={(e) => setAuthUser(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
-                  placeholder="Usually '0'"
                   required
                 />
               </div>

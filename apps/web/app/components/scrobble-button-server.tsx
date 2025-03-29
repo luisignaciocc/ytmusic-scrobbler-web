@@ -24,7 +24,7 @@ export default async function ScrobbleBtnServer() {
     return null;
   }
 
-  if (!user.ytmusicCookie || !user.ytmusicAuthUser) {
+  if (!user.ytmusicCookie) {
     return (
       <div className="text-center max-w-md">
         Please add your YouTube Music headers to start scrobbling. Follow the

@@ -23,7 +23,7 @@ async function getUserStatus() {
     return { step: 1 };
   }
 
-  if (!user.ytmusicCookie || !user.ytmusicAuthUser) {
+  if (!user.ytmusicCookie) {
     return { step: 2 };
   }
 

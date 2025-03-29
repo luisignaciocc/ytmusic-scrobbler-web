@@ -36,9 +36,6 @@ export class AppProducer implements OnModuleInit {
         ytmusicCookie: {
           not: null,
         },
-        ytmusicAuthUser: {
-          not: null,
-        },
       },
       orderBy: {
         createdAt: "asc",
@@ -78,9 +75,6 @@ export class AppProducer implements OnModuleInit {
         OR: [
           {
             ytmusicCookie: null,
-          },
-          {
-            ytmusicAuthUser: null,
           },
           {
             lastFmSessionKey: null,
