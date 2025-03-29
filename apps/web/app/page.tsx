@@ -221,6 +221,12 @@ export default async function Home() {
                     • All users receive immediate notifications when YouTube
                     Music headers need updating to ensure uninterrupted service
                   </li>
+                  <li>
+                    • We use your browser cookie to securely access your YouTube
+                    Music history - this cookie may occasionally expire, but
+                    we&apos;ll send you an email notification when you need to
+                    refresh it
+                  </li>
                 </ul>
                 <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
                   Just like your phone needs to stay logged in to your apps, our
