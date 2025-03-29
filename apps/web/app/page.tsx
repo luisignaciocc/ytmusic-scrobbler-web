@@ -227,6 +227,12 @@ export default async function Home() {
                     we&apos;ll send you an email notification when you need to
                     refresh it
                   </li>
+                  <li>
+                    • After initial setup, it may take up to an hour for your
+                    first songs to appear on Last.fm. After that, the scrobbling
+                    frequency will depend on your selected plan (30 minutes for
+                    free users, 5 minutes for Pro users)
+                  </li>
                 </ul>
                 <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
                   Just like your phone needs to stay logged in to your apps, our
