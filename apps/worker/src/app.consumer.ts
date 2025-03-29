@@ -79,7 +79,6 @@ export class AppConsumer implements OnModuleInit {
         [songs, songsOnDB] = await Promise.all([
           getYTMusicHistory({
             cookie: user.ytmusicCookie,
-            authUser: user.ytmusicAuthUser,
           }),
           this.prisma.song.findMany({
             where: {

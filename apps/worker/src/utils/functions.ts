@@ -134,13 +134,7 @@ function getAuthorization(auth: string): string {
   return "SAPISIDHASH " + unixTimestamp + "_" + hash;
 }
 
-export async function getYTMusicHistory({
-  cookie,
-  authUser,
-}: {
-  cookie: string;
-  authUser: string;
-}) {
+export async function getYTMusicHistory({ cookie }: { cookie: string }) {
   const sapisid = sapisidFromCookie(cookie);
   const context = initializeContext();
   const origin = "https://music.youtube.com";
@@ -157,7 +151,7 @@ export async function getYTMusicHistory({
     origin,
     "user-agent":
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0",
-    "x-goog-authuser": authUser,
+    "x-goog-authuser": "0",
     "x-origin": origin,
   };
 
