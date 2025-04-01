@@ -330,9 +330,9 @@ export async function scrobbleSong({
   const ignored = scrobbles?.ignored;
 
   if (accepted === "0" && ignored === "0") {
-    throw new Error("Error scrobbling song " + song.title);
+    return false;
   } else if (accepted === "0") {
-    throw new Error("Song scrobble was ignored " + song.title);
+    return false;
   } else {
     return true;
   }
