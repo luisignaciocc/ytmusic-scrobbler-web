@@ -98,7 +98,7 @@ export class AppConsumer implements OnModuleInit {
           user.notificationsEnabled !== false &&
           (!user.lastNotificationSent ||
             currentDate.getTime() - user.lastNotificationSent.getTime() >
-              5 * 24 * 60 * 60 * 1000);
+              2 * 24 * 60 * 60 * 1000);
         // Check if this is the specific 401 error we want to handle differently
         if (
           error.message?.includes("401") &&
@@ -131,7 +131,7 @@ export class AppConsumer implements OnModuleInit {
                     <h2>YouTube Music Credentials Expired</h2>
                     <p>Hello ${user.name},</p>
                     <p>We noticed that your YouTube Music credentials have expired, which means we can no longer access your listening history to scrobble tracks to Last.fm.</p>
-                    <p>You will receive this notification every 5 days until you either:</p>
+                    <p>You will receive this notification every 2 days until you either:</p>
                     <ul>
                       <li>Update your authentication headers by visiting our website</li>
                       <li>Pause your scrobbling from your account settings</li>
@@ -214,7 +214,7 @@ export class AppConsumer implements OnModuleInit {
                     <h2>YouTube Music Headers Invalid</h2>
                     <p>Hello ${user.name},</p>
                     <p>We noticed that your YouTube Music headers are invalid or malformed, which means we can no longer access your listening history to scrobble tracks to Last.fm.</p>
-                    <p>You will receive this notification every 5 days until you either:</p>
+                    <p>You will receive this notification every 2 days until you either:</p>
                     <ul>
                       <li>Update your authentication headers by visiting our website</li>
                       <li>Pause your scrobbling from your account settings</li>
