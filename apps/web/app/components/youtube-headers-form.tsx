@@ -57,7 +57,8 @@ export default function YouTubeHeadersForm({
   const steps: Step[] = [
     {
       title: "Open YouTube Music",
-      description: "Go to music.youtube.com in your Chrome or Firefox browser",
+      description:
+        'Go to <a href="https://music.youtube.com" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:underline">music.youtube.com</a> in your Chrome or Firefox browser',
       image: "/tutorial/step1.png",
     },
     {
@@ -196,9 +197,12 @@ export default function YouTubeHeadersForm({
                 <h5 className="font-medium text-lg mb-2">
                   {currentStepData.title}
                 </h5>
-                <p className="text-gray-600 dark:text-gray-400">
-                  {currentStepData.description}
-                </p>
+                <p
+                  className="text-gray-600 dark:text-gray-400"
+                  dangerouslySetInnerHTML={{
+                    __html: currentStepData.description,
+                  }}
+                />
               </div>
               <div className="relative h-[600px] w-full">
                 <Image
