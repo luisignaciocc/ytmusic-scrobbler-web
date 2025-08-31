@@ -442,7 +442,7 @@ export async function getYTMusicHistoryFromPage({
 }: {
   cookie: string;
 }) {
-  const html = await fetchYTMusicHistoryPage(cookie);
+  const html = await fetchYTMusicHistoryPage(cookie.trim());
   return parseYTMusicPageResponse(html);
 }
 
@@ -574,7 +574,7 @@ function parseYTMusicResponse(data: any): {
 }
 
 export async function getYTMusicHistory({ cookie }: { cookie: string }) {
-  const data = await fetchYTMusicHistory(cookie);
+  const data = await fetchYTMusicHistory(cookie.trim());
   return parseYTMusicResponse(data);
 }
 

@@ -10,7 +10,8 @@
     "type-check": "turbo run type-check",
     "generate": "prisma generate",
     "migrate": "prisma migrate dev",
-    "get-history": "tsx -r dotenv/config scripts/get-history.ts"
+    "get-history": "tsx -r dotenv/config scripts/get-history.ts",
+    "debug-consumer": "tsx -r dotenv/config scripts/debug-consumer.ts"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.13.1",
