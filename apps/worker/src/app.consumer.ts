@@ -3,7 +3,7 @@ import { Logger, OnModuleInit } from "@nestjs/common";
 import { Job } from "bull";
 
 import { PrismaService } from "./prisma.service";
-import { getYTMusicHistory, scrobbleSong } from "./utils/functions";
+import { getYTMusicHistoryFromPage, scrobbleSong } from "./utils/functions";
 @Processor("scrobbler")
 export class AppConsumer implements OnModuleInit {
   constructor(private readonly prisma: PrismaService) {}
@@ -77,7 +77,7 @@ export class AppConsumer implements OnModuleInit {
 
       try {
         [songs, songsOnDB] = await Promise.all([
-          getYTMusicHistory({
+          getYTMusicHistoryFromPage({
             cookie: user.ytmusicCookie,
           }),
           this.prisma.song.findMany({
