@@ -11,6 +11,7 @@ interface UserWithFailureInfo {
   lastFailureType: string | null;
   lastFailedAt: Date | null;
   lastSuccessfulScrobble: Date | null;
+  subscriptionPlan: string;
 }
 
 @Injectable()
@@ -90,6 +91,10 @@ export class AppProducer implements OnModuleInit {
 
   private calculateUserPriority(user: UserWithFailureInfo): number {
     // Higher numbers = higher priority (processed first)
+    
+    // Pro users get significant priority boost
+    const subscriptionBonus = user.subscriptionPlan === "pro" ? 200 : 0;
+    
     // Users with fewer failures get higher priority
     const failurePenalty = user.consecutiveFailures * 10;
 
@@ -102,8 +107,8 @@ export class AppProducer implements OnModuleInit {
       successBonus = Math.max(0, 20 - daysSinceSuccess); // Bonus decreases over time
     }
 
-    // Base priority is 100, then adjust
-    return Math.max(1, 100 - failurePenalty + successBonus);
+    // Base priority is 100 for free users, 300 for pro users, then adjust
+    return Math.max(1, 100 + subscriptionBonus - failurePenalty + successBonus);
   }
 
   private calculateExponentialBackoff(user: UserWithFailureInfo): number {
@@ -137,12 +142,12 @@ export class AppProducer implements OnModuleInit {
     await this.processUsersBySubscription("pro", 60 * 5 * 1000);
   }
 
-  @Cron(CronExpression.EVERY_30_MINUTES, {
+  @Cron(CronExpression.EVERY_HOUR, {
     name: "scrobbleFreeUsers",
   })
   async scrobbleFreeUsers() {
-    this.logger.debug("Processing free users (every 30 minutes)");
-    await this.processUsersBySubscription("free", 60 * 30 * 1000);
+    this.logger.debug("Processing free users (every hour)");
+    await this.processUsersBySubscription("free", 60 * 60 * 1000);
   }
 
   private async processUsersBySubscription(
@@ -175,6 +180,7 @@ export class AppProducer implements OnModuleInit {
         lastFailureType: true,
         lastFailedAt: true,
         lastSuccessfulScrobble: true,
+        subscriptionPlan: true,
       },
     });
 

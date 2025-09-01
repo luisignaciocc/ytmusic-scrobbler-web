@@ -202,7 +202,7 @@ export default async function Home() {
                 <ul className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400 space-y-2">
                   <li>
                     • We check your YouTube Music listening history for new
-                    songs at regular intervals - every 30 minutes with our free
+                    songs at regular intervals - every hour with our free
                     plan, or every 5 minutes with our Pro plan
                   </li>
                   <li>
@@ -230,7 +230,7 @@ export default async function Home() {
                   <li>
                     • After initial setup, it may take up to an hour for your
                     first songs to appear on Last.fm. After that, the scrobbling
-                    frequency will depend on your selected plan (30 minutes for
+                    frequency will depend on your selected plan (1 hour for
                     free users, 5 minutes for Pro users)
                   </li>
                 </ul>
