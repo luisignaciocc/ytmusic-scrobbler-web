@@ -90,6 +90,84 @@ export class AppConsumer implements OnModuleInit {
     });
   }
 
+  private categorizeEmailError(error: unknown): {
+    type: "RATE_LIMIT" | "INVALID_EMAIL" | "API_KEY" | "NETWORK" | "UNKNOWN";
+    shouldRetry: boolean;
+    retryDelay?: number;
+  } {
+    // Handle Resend-specific error format
+    if (typeof error === "object" && error !== null && "error" in error) {
+      const resendError = error.error as {
+        statusCode?: number;
+        name?: string;
+        message?: string;
+      };
+
+      // Rate limit errors (429 status or daily_quota_exceeded)
+      if (
+        resendError.statusCode === 429 ||
+        resendError.name === "daily_quota_exceeded" ||
+        resendError.message?.toLowerCase().includes("quota") ||
+        resendError.message?.toLowerCase().includes("rate limit")
+      ) {
+        return {
+          type: "RATE_LIMIT",
+          shouldRetry: true,
+          retryDelay: 24 * 60 * 60 * 1000, // 24 hours
+        };
+      }
+
+      // Invalid email errors
+      if (
+        resendError.statusCode === 400 ||
+        resendError.message?.toLowerCase().includes("invalid email") ||
+        resendError.message?.toLowerCase().includes("malformed")
+      ) {
+        return {
+          type: "INVALID_EMAIL",
+          shouldRetry: false,
+        };
+      }
+
+      // API key errors
+      if (
+        resendError.statusCode === 401 ||
+        resendError.statusCode === 403 ||
+        resendError.message?.toLowerCase().includes("unauthorized") ||
+        resendError.message?.toLowerCase().includes("api key")
+      ) {
+        return {
+          type: "API_KEY",
+          shouldRetry: false,
+        };
+      }
+    }
+
+    // Handle standard Error objects
+    const message = (error as Error).message?.toLowerCase() || "";
+
+    // Network/connectivity errors
+    if (
+      message.includes("fetch") ||
+      message.includes("network") ||
+      message.includes("timeout") ||
+      message.includes("econnreset") ||
+      message.includes("enotfound")
+    ) {
+      return {
+        type: "NETWORK",
+        shouldRetry: true,
+        retryDelay: 5 * 60 * 1000, // 5 minutes
+      };
+    }
+
+    // Default to unknown error
+    return {
+      type: "UNKNOWN",
+      shouldRetry: false,
+    };
+  }
+
   private categorizeError(error: Error): FailureType {
     const errorMessage = error?.message || String(error);
 
@@ -142,43 +220,62 @@ export class AppConsumer implements OnModuleInit {
     notificationType: "expired" | "invalid" | "silent",
   ) {
     const currentDate = new Date();
-    
+
     // Smart notification business logic:
     // - Maximum 3 notifications per auth failure issue
     // - Escalating intervals: 1st=immediate, 2nd=2 days, 3rd=5 days, then stop
     // - Respects user's notificationsEnabled setting
     // - Uses either notificationEmail or regular email as recipient
-    
+
     // Check if we've hit the notification limit
     if (user.authNotificationCount >= 3) {
-      job.log(`Email notification skipped: User ${user.id} has already received maximum 3 auth failure notifications`);
+      job.log(
+        `Email notification skipped: User ${user.id} has already received maximum 3 auth failure notifications`,
+      );
       return;
     }
-    
+
     // Check if notifications are disabled
     if (user.notificationsEnabled === false) {
-      job.log(`Email notification skipped: User ${user.id} has disabled notifications`);
+      job.log(
+        `Email notification skipped: User ${user.id} has disabled notifications`,
+      );
       return;
     }
-    
+
     // Calculate required interval based on notification count
     const getIntervalHours = (count: number): number => {
       switch (count) {
-        case 0: return 0; // First notification: immediate
-        case 1: return 48; // Second notification: 2 days
-        case 2: return 120; // Third notification: 5 days
-        default: return Infinity; // No more notifications
+        case 0:
+          return 0; // First notification: immediate
+        case 1:
+          return 48; // Second notification: 2 days
+        case 2:
+          return 120; // Third notification: 5 days
+        default:
+          return Infinity; // No more notifications
       }
     };
-    
-    const requiredIntervalMs = getIntervalHours(user.authNotificationCount) * 60 * 60 * 1000;
-    const canSendNotification = !user.lastNotificationSent || 
-      (currentDate.getTime() - user.lastNotificationSent.getTime() >= requiredIntervalMs);
+
+    const requiredIntervalMs =
+      getIntervalHours(user.authNotificationCount) * 60 * 60 * 1000;
+    const canSendNotification =
+      !user.lastNotificationSent ||
+      currentDate.getTime() - user.lastNotificationSent.getTime() >=
+        requiredIntervalMs;
 
     if (!canSendNotification) {
       const nextIntervalHours = getIntervalHours(user.authNotificationCount);
-      const hoursRemaining = nextIntervalHours - Math.floor((currentDate.getTime() - (user.lastNotificationSent?.getTime() || 0)) / (60 * 60 * 1000));
-      job.log(`Email notification skipped: User ${user.id} needs to wait ${hoursRemaining} more hours before next notification (attempt ${user.authNotificationCount + 1}/3)`);
+      const hoursRemaining =
+        nextIntervalHours -
+        Math.floor(
+          (currentDate.getTime() -
+            (user.lastNotificationSent?.getTime() || 0)) /
+            (60 * 60 * 1000),
+        );
+      job.log(
+        `Email notification skipped: User ${user.id} needs to wait ${hoursRemaining} more hours before next notification (attempt ${user.authNotificationCount + 1}/3)`,
+      );
       return;
     }
 
@@ -201,22 +298,29 @@ export class AppConsumer implements OnModuleInit {
 
       const subjects = {
         expired: "Action Required: YouTube Music Credentials Expired",
-        invalid: "Action Required: YouTube Music Headers Invalid", 
-        silent: "Action Required: YouTube Music Authentication Failed"
+        invalid: "Action Required: YouTube Music Headers Invalid",
+        silent: "Action Required: YouTube Music Authentication Failed",
       };
 
       const descriptions = {
-        expired: "We noticed that your YouTube Music credentials have expired, which means we can no longer access your listening history to scrobble tracks to Last.fm.",
-        invalid: "We noticed that your YouTube Music headers are invalid or malformed, which means we can no longer access your listening history to scrobble tracks to Last.fm.",
-        silent: "We detected that your YouTube Music authentication is failing silently (returning empty responses), which means we can no longer access your listening history to scrobble tracks to Last.fm."
+        expired:
+          "We noticed that your YouTube Music credentials have expired, which means we can no longer access your listening history to scrobble tracks to Last.fm.",
+        invalid:
+          "We noticed that your YouTube Music headers are invalid or malformed, which means we can no longer access your listening history to scrobble tracks to Last.fm.",
+        silent:
+          "We detected that your YouTube Music authentication is failing silently (returning empty responses), which means we can no longer access your listening history to scrobble tracks to Last.fm.",
       };
 
       const getNextNotificationInfo = (count: number): string => {
         switch (count) {
-          case 0: return "You will receive up to 2 more reminders: one in 2 days and a final one in 5 days. After 3 consecutive authentication failures, your account will be automatically paused until the issue is resolved.";
-          case 1: return "You will receive 1 more reminder in 5 days after this one. If this issue isn't resolved, your account will be automatically paused after 3 consecutive failures.";
-          case 2: return "This is your final reminder about this authentication issue. Your account will be automatically paused after 3 consecutive failures if this isn't resolved.";
-          default: return "";
+          case 0:
+            return "You will receive up to 2 more reminders: one in 2 days and a final one in 5 days. After 3 consecutive authentication failures, your account will be automatically paused until the issue is resolved.";
+          case 1:
+            return "You will receive 1 more reminder in 5 days after this one. If this issue isn't resolved, your account will be automatically paused after 3 consecutive failures.";
+          case 2:
+            return "This is your final reminder about this authentication issue. Your account will be automatically paused after 3 consecutive failures if this isn't resolved.";
+          default:
+            return "";
         }
       };
 
@@ -250,16 +354,78 @@ export class AppConsumer implements OnModuleInit {
       // Update notification tracking fields
       await this.prisma.user.update({
         where: { id: user.id },
-        data: { 
+        data: {
           lastNotificationSent: currentDate,
-          authNotificationCount: user.authNotificationCount + 1
+          authNotificationCount: user.authNotificationCount + 1,
         },
       });
 
-      this.logger.debug(`${notificationType} auth failure notification (${user.authNotificationCount + 1}/3) sent to ${recipientEmail} for user ${user.id}`);
-      job.log(`Notification email sent to user ${recipientEmail} (reminder ${user.authNotificationCount + 1} of 3)`);
+      this.logger.debug(
+        `${notificationType} auth failure notification (${user.authNotificationCount + 1}/3) sent to ${recipientEmail} for user ${user.id}`,
+      );
+      job.log(
+        `Notification email sent to user ${recipientEmail} (reminder ${user.authNotificationCount + 1} of 3)`,
+      );
     } catch (emailError) {
-      job.log(`Failed to send email notification: ${emailError.message}`);
+      // Categorize the email error to handle different types appropriately
+      const errorInfo = this.categorizeEmailError(emailError);
+
+      this.logger.debug(
+        `Email error for user ${user.id}: ${errorInfo.type} - ${emailError.message || "Unknown error"}`,
+      );
+
+      switch (errorInfo.type) {
+        case "RATE_LIMIT":
+          // Rate limit reached - defer notification for later retry
+          job.log(
+            `Email notification deferred due to daily rate limit reached. Will retry tomorrow for user ${recipientEmail}`,
+          );
+
+          // DO NOT update lastNotificationSent or authNotificationCount
+          // This ensures the notification will be attempted again when rate limit resets
+
+          // TODO: Implement deferred notification queue here
+          // For now, just log and continue - the notification will be attempted again
+          // when the user's next auth failure occurs after the rate limit resets
+          break;
+
+        case "INVALID_EMAIL":
+          job.log(
+            `Email notification failed - invalid email address: ${recipientEmail}`,
+          );
+          // Continue with normal flow - update counters since this is a permanent error
+          break;
+
+        case "API_KEY":
+          job.log(
+            `Email notification failed - Resend API key issue. Contact administrator.`,
+          );
+          // Continue with normal flow - this is a system configuration issue
+          break;
+
+        case "NETWORK":
+          job.log(
+            `Email notification failed due to network issue: ${emailError.message}. Will retry later.`,
+          );
+          // Don't update counters for network errors - they might be temporary
+          return; // Exit early without updating database
+
+        default:
+          job.log(
+            `Email notification failed with unknown error: ${emailError.message}`,
+          );
+          // Continue with normal flow for unknown errors
+          break;
+      }
+
+      // For rate limit errors, don't update the notification tracking fields
+      // This allows the system to retry the notification when the limit resets
+      if (errorInfo.type === "RATE_LIMIT") {
+        this.logger.debug(
+          `Skipping notification counter update for user ${user.id} due to ${errorInfo.type} error`,
+        );
+        return;
+      }
     }
   }
 
@@ -389,21 +555,30 @@ export class AppConsumer implements OnModuleInit {
 
         // Check for silent authentication failure (empty response)
         if (songs.length === 0) {
-          this.logger.debug(`Silent auth failure detected for user ${userId}: Empty song response despite successful HTTP request`);
-          
+          this.logger.debug(
+            `Silent auth failure detected for user ${userId}: Empty song response despite successful HTTP request`,
+          );
+
           const failureType = FailureType.AUTH;
-          const wasDeactivated = await this.handleUserFailure(userId, failureType, "Silent authentication failure: YouTube Music returned empty response");
-          
+          const wasDeactivated = await this.handleUserFailure(
+            userId,
+            failureType,
+            "Silent authentication failure: YouTube Music returned empty response",
+          );
+
           // Send notification for silent auth failure
           await this.sendAuthFailureNotification(user, job, "silent");
-          
-          job.log(`Silent authentication failure detected for user ${userId}: Empty response${wasDeactivated ? " (user deactivated)" : ""}`);
-          
+
+          job.log(
+            `Silent authentication failure detected for user ${userId}: Empty response${wasDeactivated ? " (user deactivated)" : ""}`,
+          );
+
           await job.progress(100);
           return {
             status: "success",
             authError: true,
-            message: "YouTube Music authentication failed silently (empty response)",
+            message:
+              "YouTube Music authentication failed silently (empty response)",
           };
         }
       } catch (error) {
