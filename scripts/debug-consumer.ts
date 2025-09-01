@@ -87,6 +87,14 @@ async function debugConsumerForUser(email: string) {
       songs = await getYTMusicHistoryFromPage({
         cookie: user.ytmusicCookie,
       });
+      
+      if (songs.length === 0) {
+        console.log(`⚠️  SILENT AUTH FAILURE: Request succeeded but returned 0 songs`);
+        console.log(`   🔍 This indicates invalid/expired credentials without HTTP error`);
+        console.log(`   🔍 User would be auto-deactivated after 3 consecutive failures`);
+        return;
+      }
+      
       console.log(
         `✅ Successfully fetched ${songs.length} songs from YouTube Music`,
       );

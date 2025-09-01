@@ -237,6 +237,23 @@ export class AppConsumer implements OnModuleInit {
         job.log(
           `Retrieved ${songs.length} songs from YouTube Music, ${songsOnDB.length} existing songs from database`,
         );
+
+        // Check for silent authentication failure (empty response)
+        if (songs.length === 0) {
+          this.logger.debug(`Silent auth failure detected for user ${userId}: Empty song response despite successful HTTP request`);
+          
+          const failureType = FailureType.AUTH;
+          const wasDeactivated = await this.handleUserFailure(userId, failureType, "Silent authentication failure: YouTube Music returned empty response");
+          
+          job.log(`Silent authentication failure detected for user ${userId}: Empty response${wasDeactivated ? " (user deactivated)" : ""}`);
+          
+          await job.progress(100);
+          return {
+            status: "success",
+            authError: true,
+            message: "YouTube Music authentication failed silently (empty response)",
+          };
+        }
       } catch (error) {
         // Only send if:
         // 1. User is pro (paused)
