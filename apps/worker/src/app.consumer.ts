@@ -21,6 +21,40 @@ export class AppConsumer implements OnModuleInit {
   constructor(private readonly prisma: PrismaService) {}
   private readonly logger = new Logger(AppConsumer.name);
 
+  private getValidNotificationEmail(user: { notificationEmail: string | null; email: string }): string | null {
+    // Priority 1: Use notificationEmail if it exists and is valid
+    if (user.notificationEmail && this.isValidEmailAddress(user.notificationEmail)) {
+      return user.notificationEmail;
+    }
+
+    // Priority 2: Use main email only if it's valid and not a Google Pages account
+    if (this.isValidEmailAddress(user.email) && !this.isGooglePagesEmail(user.email)) {
+      return user.email;
+    }
+
+    // No valid email found
+    return null;
+  }
+
+  private isValidEmailAddress(email: string): boolean {
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  private isGooglePagesEmail(email: string): boolean {
+    // Check for Google Pages or other non-personal Google accounts
+    const googlePagesPatterns = [
+      /pages\.google\.com$/i,
+      /googleusercontent\.com$/i,
+      /noreply.*google/i,
+      /donotreply.*google/i,
+      // Add more patterns as needed based on what you observe
+    ];
+
+    return googlePagesPatterns.some(pattern => pattern.test(email));
+  }
+
   private async handleUserFailure(
     userId: string,
     failureType: FailureType,
@@ -281,11 +315,16 @@ export class AppConsumer implements OnModuleInit {
     }
 
     const { RESEND_API_KEY } = process.env;
-    const recipientEmail = user.notificationEmail || user.email;
+    const recipientEmail = this.getValidNotificationEmail(user);
 
     if (!RESEND_API_KEY || !recipientEmail) {
       if (!recipientEmail) {
-        job.log(`Cannot send email notification: No valid email address`);
+        const isGooglePages = this.isGooglePagesEmail(user.email);
+        if (isGooglePages) {
+          job.log(`Skipping email notification: User has Google Pages/App account (${user.email}) and no valid notificationEmail set`);
+        } else {
+          job.log(`Cannot send email notification: No valid email address (checked notificationEmail: ${user.notificationEmail}, email: ${user.email})`);
+        }
       }
       if (!RESEND_API_KEY) {
         job.log(`Cannot send email notification: Missing RESEND_API_KEY`);
