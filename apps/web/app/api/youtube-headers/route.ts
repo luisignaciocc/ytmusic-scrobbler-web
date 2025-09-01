@@ -25,6 +25,12 @@ export async function POST(request: Request) {
       data: {
         ytmusicCookie: cookie,
         lastNotificationSent: null,
+        // Reset failure tracking and reactivate account when user updates credentials
+        consecutiveFailures: 0,
+        lastFailureType: null,
+        lastFailedAt: null,
+        authNotificationCount: 0,
+        isActive: true, // Reactivate the account
       },
     });
 

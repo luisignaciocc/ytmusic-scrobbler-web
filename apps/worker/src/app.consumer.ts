@@ -213,9 +213,9 @@ export class AppConsumer implements OnModuleInit {
 
       const getNextNotificationInfo = (count: number): string => {
         switch (count) {
-          case 0: return "You will receive up to 2 more reminders: one in 2 days and a final one in 5 days.";
-          case 1: return "You will receive 1 more reminder in 5 days after this one.";
-          case 2: return "This is your final reminder about this authentication issue.";
+          case 0: return "You will receive up to 2 more reminders: one in 2 days and a final one in 5 days. After 3 consecutive authentication failures, your account will be automatically paused until the issue is resolved.";
+          case 1: return "You will receive 1 more reminder in 5 days after this one. If this issue isn't resolved, your account will be automatically paused after 3 consecutive failures.";
+          case 2: return "This is your final reminder about this authentication issue. Your account will be automatically paused after 3 consecutive failures if this isn't resolved.";
           default: return "";
         }
       };
@@ -232,7 +232,7 @@ export class AppConsumer implements OnModuleInit {
             <p><strong>Reminder ${user.authNotificationCount + 1} of 3:</strong> ${getNextNotificationInfo(user.authNotificationCount)}</p>
             <p>To resolve this issue, you can:</p>
             <ul>
-              <li>Update your authentication headers by visiting our website</li>
+              <li><strong>Update your authentication headers by visiting our website</strong> - this will automatically reactivate your account if it was paused</li>
               <li>Disable notifications from your account settings if you no longer want to use the service</li>
               <li>Contact support if you need help</li>
             </ul>

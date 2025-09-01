@@ -114,6 +114,7 @@ export default function NotificationPreferences({
           We&apos;ll send you up to 3 email notifications when your scrobbler encounters
           authentication issues that require your attention (like expired YouTube Music
           headers). Notifications are sent immediately, then after 2 days, and finally after 5 days.
+          After 3 consecutive authentication failures, your account will be automatically paused until you update your credentials.
         </p>
       </div>
 
