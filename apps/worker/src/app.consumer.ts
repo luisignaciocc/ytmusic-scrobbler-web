@@ -4,10 +4,122 @@ import { Job } from "bull";
 
 import { PrismaService } from "./prisma.service";
 import { getYTMusicHistoryFromPage, scrobbleSong } from "./utils/functions";
+enum FailureType {
+  AUTH = "AUTH",
+  NETWORK = "NETWORK",
+  LASTFM = "LASTFM",
+  UNKNOWN = "UNKNOWN",
+}
+
 @Processor("scrobbler")
 export class AppConsumer implements OnModuleInit {
   constructor(private readonly prisma: PrismaService) {}
   private readonly logger = new Logger(AppConsumer.name);
+
+  private async handleUserFailure(
+    userId: string,
+    failureType: FailureType,
+    errorMessage: string,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { consecutiveFailures: true, lastFailureType: true },
+    });
+
+    if (!user) return;
+
+    const newFailureCount = user.consecutiveFailures + 1;
+    const shouldDeactivate = this.shouldDeactivateUser(
+      failureType,
+      newFailureCount,
+    );
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        consecutiveFailures: newFailureCount,
+        lastFailureType: failureType,
+        lastFailedAt: new Date(),
+        ...(shouldDeactivate && { isActive: false }),
+      },
+    });
+
+    this.logger.debug(
+      `User ${userId} failure #${newFailureCount} (${failureType}): ${errorMessage}${
+        shouldDeactivate ? " - USER DEACTIVATED" : ""
+      }`,
+    );
+
+    return shouldDeactivate;
+  }
+
+  private shouldDeactivateUser(
+    failureType: FailureType,
+    consecutiveFailures: number,
+  ): boolean {
+    switch (failureType) {
+      case FailureType.AUTH:
+        return consecutiveFailures >= 3; // Auth issues are persistent
+      case FailureType.NETWORK:
+        return consecutiveFailures >= 5; // Network issues might be temporary
+      case FailureType.LASTFM:
+        return consecutiveFailures >= 5; // Last.fm issues might be temporary
+      case FailureType.UNKNOWN:
+        return consecutiveFailures >= 7; // Give more chances for unknown errors
+      default:
+        return false;
+    }
+  }
+
+  private async handleUserSuccess(userId: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        consecutiveFailures: 0,
+        lastFailureType: null,
+        lastFailedAt: null,
+        lastSuccessfulScrobble: new Date(),
+      },
+    });
+  }
+
+  private categorizeError(error: Error): FailureType {
+    const errorMessage = error?.message || String(error);
+
+    // Authentication errors
+    if (
+      errorMessage.includes("401") ||
+      errorMessage.includes("UNAUTHENTICATED") ||
+      errorMessage.includes("authentication credential") ||
+      errorMessage.includes("Headers.append") ||
+      errorMessage.includes("invalid header value") ||
+      errorMessage.includes("__Secure-3PAPISID")
+    ) {
+      return FailureType.AUTH;
+    }
+
+    // Network/YouTube Music errors
+    if (
+      errorMessage.includes("Failed to fetch") ||
+      errorMessage.includes("network") ||
+      errorMessage.includes("timeout") ||
+      errorMessage.includes("ECONNRESET") ||
+      errorMessage.includes("ENOTFOUND")
+    ) {
+      return FailureType.NETWORK;
+    }
+
+    // Last.fm specific errors
+    if (
+      errorMessage.includes("audioscrobbler") ||
+      errorMessage.includes("last.fm") ||
+      errorMessage.includes("scrobble")
+    ) {
+      return FailureType.LASTFM;
+    }
+
+    return FailureType.UNKNOWN;
+  }
 
   async onModuleInit() {
     this.logger.debug(`connecting to prisma...`);
@@ -15,49 +127,71 @@ export class AppConsumer implements OnModuleInit {
     this.logger.debug(`connected`);
   }
 
-  @Process("scrobble")
+  @Process({ name: "scrobble", concurrency: 2 })
   async scrobble(
     job: Job<{
       userId: string;
     }>,
   ) {
     const { userId } = job.data;
-    this.logger.debug(`Scrobbling for user ${userId} at ${new Date()}`);
+    this.logger.debug(
+      `Starting scrobble job for user ${userId} at ${new Date()}`,
+    );
+    job.log(`Starting scrobble process for user ${userId}`);
+
+    this.logger.debug(`Fetching user data for ${userId}`);
     const user = await this.prisma.user.findUnique({
       where: {
         id: userId,
       },
     });
     if (!user) {
+      this.logger.debug(`User ${userId} not found in database`);
       job.log(`User ${userId} not found`);
       return job.moveToFailed({
         message: `User ${userId} not found`,
       });
     }
 
+    this.logger.debug(`User found: ${user.name} (${user.lastFmUsername})`);
+    job.log(`Processing user: ${user.name} (Last.fm: ${user.lastFmUsername})`);
+
+    this.logger.debug(`Checking environment variables`);
     const { LAST_FM_API_KEY, LAST_FM_API_SECRET } = process.env;
 
     if (!LAST_FM_API_KEY || !LAST_FM_API_SECRET) {
+      this.logger.debug(`Missing Last.fm API credentials in environment`);
       job.log(`Missing environment variables`);
       return job.moveToFailed({
         message: `Missing environment variables`,
       });
     }
 
+    this.logger.debug(`Environment variables validated successfully`);
+
     try {
       if (!user.lastFmSessionKey) {
+        this.logger.debug(`User ${userId} missing Last.fm session key`);
         job.log(`User ${userId} has no Last.fm session key`);
         return job.moveToFailed({
           message: `User ${userId} has no Last.fm session key`,
         });
       }
 
+      this.logger.debug(`Last.fm session key validated for user ${userId}`);
+
       if (!user.ytmusicCookie) {
+        this.logger.debug(`User ${userId} missing YouTube Music cookie`);
         job.log(`User ${userId} has no YouTube Music headers`);
         return job.moveToFailed({
           message: `User ${userId} has no YouTube Music headers`,
         });
       }
+
+      this.logger.debug(
+        `YouTube Music cookie validated for user ${userId} (length: ${user.ytmusicCookie.length} chars)`,
+      );
+      job.log(`Credentials validated - fetching music history`);
 
       let songs: {
         title: string;
@@ -76,6 +210,11 @@ export class AppConsumer implements OnModuleInit {
       }[] = [];
 
       try {
+        this.logger.debug(
+          `Fetching YouTube Music history and database songs for user ${userId}`,
+        );
+        job.log(`Fetching music history from YouTube Music and database`);
+
         [songs, songsOnDB] = await Promise.all([
           getYTMusicHistoryFromPage({
             cookie: user.ytmusicCookie,
@@ -86,6 +225,13 @@ export class AppConsumer implements OnModuleInit {
             },
           }),
         ]);
+
+        this.logger.debug(
+          `Fetched ${songs.length} songs from YT Music, ${songsOnDB.length} songs from database for user ${userId}`,
+        );
+        job.log(
+          `Retrieved ${songs.length} songs from YouTube Music, ${songsOnDB.length} existing songs from database`,
+        );
       } catch (error) {
         // Only send if:
         // 1. User is pro (paused)
@@ -99,6 +245,13 @@ export class AppConsumer implements OnModuleInit {
           (!user.lastNotificationSent ||
             currentDate.getTime() - user.lastNotificationSent.getTime() >
               2 * 24 * 60 * 60 * 1000);
+        const failureType = this.categorizeError(error);
+        const wasDeactivated = await this.handleUserFailure(
+          userId,
+          failureType,
+          error.message,
+        );
+
         // Check if this is the specific 401 error we want to handle differently
         if (
           error.message?.includes("401") &&
@@ -107,8 +260,11 @@ export class AppConsumer implements OnModuleInit {
             "Request is missing required authentication credential",
           )
         ) {
+          this.logger.debug(
+            `Authentication error (401 UNAUTHENTICATED) for user ${userId}${wasDeactivated ? " - USER DEACTIVATED" : ""}`,
+          );
           job.log(
-            `Authentication error detected for user ${userId}: YouTube Music credentials expired`,
+            `Authentication error detected for user ${userId}: YouTube Music credentials expired${wasDeactivated ? " (user deactivated)" : ""}`,
           );
 
           // Send an email notification to the user about expired credentials
@@ -154,6 +310,9 @@ export class AppConsumer implements OnModuleInit {
                 data: { lastNotificationSent: currentDate },
               });
 
+              this.logger.debug(
+                `Notification email sent successfully to ${recipientEmail} for user ${userId}`,
+              );
               job.log(`Notification email sent to user ${recipientEmail}`);
             } else if (!recipientEmail) {
               job.log(`Cannot send email notification: No valid email address`);
@@ -191,8 +350,11 @@ export class AppConsumer implements OnModuleInit {
           error.message?.includes("Headers.append") &&
           error.message?.includes("is an invalid header value")
         ) {
+          this.logger.debug(
+            `Invalid header value error for user ${userId}: malformed YouTube Music headers${wasDeactivated ? " - USER DEACTIVATED" : ""}`,
+          );
           job.log(
-            `Invalid header value error detected for user ${userId}: YouTube Music headers are malformed`,
+            `Invalid header value error detected for user ${userId}: YouTube Music headers are malformed${wasDeactivated ? " (user deactivated)" : ""}`,
           );
 
           // Send an email notification to the user about invalid headers
@@ -237,6 +399,9 @@ export class AppConsumer implements OnModuleInit {
                 data: { lastNotificationSent: currentDate },
               });
 
+              this.logger.debug(
+                `Invalid headers notification email sent to ${recipientEmail} for user ${userId}`,
+              );
               job.log(
                 `Notification email sent to user ${recipientEmail} about invalid headers`,
               );
@@ -254,11 +419,16 @@ export class AppConsumer implements OnModuleInit {
           };
         }
 
-        // Re-throw other errors to be caught by the outer try-catch
+        // Re-throw other errors to be caught by the outer try-catch - they will be handled by the outer catch
         throw error;
       }
 
       const todaySongs = songs.filter((song) => song.playedAt === "Today");
+
+      this.logger.debug(
+        `Filtered ${todaySongs.length} songs played today for user ${userId}`,
+      );
+      job.log(`Found ${todaySongs.length} songs played today`);
 
       if (songsOnDB.length > 0) {
         const songsToDelete = songsOnDB.filter(
@@ -272,6 +442,13 @@ export class AppConsumer implements OnModuleInit {
         );
 
         if (songsToDelete.length > 0) {
+          this.logger.debug(
+            `Deleting ${songsToDelete.length} old songs from database for user ${userId}`,
+          );
+          job.log(
+            `Removing ${songsToDelete.length} songs no longer in today's history`,
+          );
+
           await this.prisma.song.deleteMany({
             where: {
               id: {
@@ -284,11 +461,21 @@ export class AppConsumer implements OnModuleInit {
 
       let songsReproducedToday = 0;
       let songsScrobbled = 0;
+
+      this.logger.debug(
+        `Starting to process ${todaySongs.length} songs for user ${userId}`,
+      );
+      job.log(`Processing ${todaySongs.length} songs for scrobbling`);
+
       for (const song of todaySongs) {
         songsReproducedToday++;
         try {
           if (songsOnDB.length === 0) {
             // First time scrobbling, don't send all the previous songs to Last.fm
+            this.logger.debug(
+              `First-time user ${userId}: Adding song "${song.title}" to database without scrobbling`,
+            );
+
             await this.prisma.song.create({
               data: {
                 title: song.title,
@@ -310,6 +497,10 @@ export class AppConsumer implements OnModuleInit {
             },
           });
           if (!savedSong) {
+            this.logger.debug(
+              `New song detected for user ${userId}: "${song.title}" by ${song.artist}`,
+            );
+
             await Promise.all([
               scrobbleSong({
                 song,
@@ -334,10 +525,17 @@ export class AppConsumer implements OnModuleInit {
             ]);
 
             songsScrobbled++;
+            this.logger.debug(
+              `Successfully scrobbled new song for user ${userId}: "${song.title}" by ${song.artist}`,
+            );
             job.log(
               `Scrobbled song ${song.title} by ${song.artist} - user ${userId}`,
             );
           } else if (savedSong.arrayPosition > songsReproducedToday) {
+            this.logger.debug(
+              `Repositioned song for user ${userId}: "${song.title}" moved from position ${savedSong.arrayPosition} to ${songsReproducedToday}`,
+            );
+
             await Promise.all([
               scrobbleSong({
                 song,
@@ -358,33 +556,70 @@ export class AppConsumer implements OnModuleInit {
                 },
               }),
             ]);
+
+            songsScrobbled++;
+            this.logger.debug(
+              `Successfully scrobbled repositioned song for user ${userId}: "${song.title}" by ${song.artist}`,
+            );
+            job.log(
+              `Scrobbled repositioned song: ${song.title} by ${song.artist}`,
+            );
           }
         } catch (error) {
-          job.log(`Error scrobbling song for user ${userId}`);
+          this.logger.debug(
+            `Error processing song "${song.title}" for user ${userId}: ${error.message}`,
+          );
+
+          const failureType = this.categorizeError(error);
+          const wasDeactivated = await this.handleUserFailure(
+            userId,
+            failureType,
+            error.message,
+          );
+
+          job.log(
+            `Error scrobbling song for user ${userId}${wasDeactivated ? " (user deactivated)" : ""}`,
+          );
           job.log(error);
           return job.moveToFailed(error);
         }
       }
 
-      this.logger.debug(`Scrobbling for user ${userId} done at ${new Date()}`);
+      this.logger.debug(
+        `Scrobbling completed for user ${userId}: ${songsScrobbled} songs scrobbled out of ${songsReproducedToday} songs played today`,
+      );
+      job.log(
+        `Scrobbling completed: ${songsScrobbled} songs scrobbled out of ${songsReproducedToday} total`,
+      );
+
       await Promise.all([
         job.progress(100),
-        this.prisma.user.update({
-          where: {
-            id: userId,
-          },
-          data: {
-            lastSuccessfulScrobble: new Date(),
-          },
-        }),
+        this.handleUserSuccess(userId), // Reset failure counter and update last successful scrobble
       ]);
+
+      this.logger.debug(
+        `Database updated with successful scrobble data for user ${userId}`,
+      );
 
       return {
         songsReproducedToday,
         songsScrobbled,
       };
     } catch (error) {
-      job.log(`Error scrobbling for user ${userId} (${user.lastFmUsername})`);
+      this.logger.debug(
+        `Critical error in scrobble process for user ${userId}: ${error.message}`,
+      );
+
+      const failureType = this.categorizeError(error);
+      const wasDeactivated = await this.handleUserFailure(
+        userId,
+        failureType,
+        error.message,
+      );
+
+      job.log(
+        `Error scrobbling for user ${userId} (${user.lastFmUsername})${wasDeactivated ? " (user deactivated)" : ""}`,
+      );
       job.log(error);
       return job.moveToFailed(error);
     }

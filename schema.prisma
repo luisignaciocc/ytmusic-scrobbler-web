@@ -35,6 +35,9 @@ model User {
   lastNotificationSent      DateTime?
   notificationsEnabled      Boolean   @default(true)
   notificationEmail         String?
+  consecutiveFailures       Int       @default(0)
+  lastFailureType           String?   // AUTH, NETWORK, LASTFM, UNKNOWN
+  lastFailedAt              DateTime?
 }
 
 model Song {
