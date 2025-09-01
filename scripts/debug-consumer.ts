@@ -3,6 +3,14 @@ import {
   getYTMusicHistoryFromPage,
   scrobbleSong,
 } from "../apps/worker/src/utils/functions";
+import { 
+  isTodaySong, 
+  isYesterdaySong,
+  getUnknownDateValues, 
+  detectDateValue,
+  getAllTodayVariants,
+  getAllYesterdayVariants 
+} from "../apps/worker/src/utils/date-detection";
 
 const prisma = new PrismaClient();
 
@@ -137,27 +145,45 @@ async function debugConsumerForUser(email: string) {
       });
     }
 
-    // 6. Analyze all playedAt values
-    console.log("\n6. Analyzing playedAt values...");
+    // 6. Comprehensive date analysis with multilingual support
+    console.log("\n6. Advanced multilingual date analysis...");
+    
+    // Show all unique values found
     const playedAtValues = new Set(songs.map(song => song.playedAt).filter(Boolean));
     console.log(`📊 Unique playedAt values found: ${Array.from(playedAtValues).join(', ')}`);
     
-    // Filter today's songs
-    console.log("\n7. Analyzing today's songs...");
-    // Support multiple languages for "Today"
-    const todayVariants = ["Today", "Hoy", "Aujourd'hui", "Heute", "Oggi", "Hoje"];
-    const todaySongs = songs.filter((song) => 
-      song.playedAt && todayVariants.includes(song.playedAt)
-    );
-    console.log(`✅ Found ${todaySongs.length} songs played today`);
+    // Detect and categorize all songs
+    const todaySongs = songs.filter(song => isTodaySong(song.playedAt));
+    const yesterdaySongs = songs.filter(song => isYesterdaySong(song.playedAt));
+    const unknownValues = getUnknownDateValues(songs);
     
-    // TEST: Also check yesterday's songs to verify the system works
-    console.log("\n7b. Testing with yesterday's songs (for demo purposes)...");
-    const yesterdayVariants = ["Yesterday", "Ayer", "Hier", "Ontem", "Ieri"];
-    const yesterdaySongs = songs.filter((song) => 
-      song.playedAt && yesterdayVariants.includes(song.playedAt)
-    );
-    console.log(`✅ Found ${yesterdaySongs.length} songs played yesterday`);
+    console.log(`✅ Found ${todaySongs.length} songs played TODAY`);
+    console.log(`📅 Found ${yesterdaySongs.length} songs played YESTERDAY`);
+    
+    if (unknownValues.length > 0) {
+      console.log(`❓ Unknown date formats found: ${unknownValues.join(', ')}`);
+      console.log(`   Please report these to admin for future updates!`);
+    }
+    
+    // Show language detection for today's songs
+    if (todaySongs.length > 0) {
+      const detectedLanguages = new Set<string>();
+      todaySongs.forEach(song => {
+        const detection = detectDateValue(song.playedAt);
+        if (detection.detectedLanguage) {
+          detectedLanguages.add(`${detection.originalValue} (${detection.detectedLanguage})`);
+        }
+      });
+      
+      if (detectedLanguages.size > 0) {
+        console.log(`🌍 Language detection for today: ${Array.from(detectedLanguages).join(', ')}`);
+      }
+    }
+    
+    console.log(`\n📚 System supports ${getAllTodayVariants().length} "Today" translations and ${getAllYesterdayVariants().length} "Yesterday" translations`);
+    
+    // Filter today's songs for scrobbling analysis
+    console.log("\n7. Analyzing today's songs for scrobbling...");
 
     if (todaySongs.length > 0) {
       console.log("\n   🎵 Today's songs:");

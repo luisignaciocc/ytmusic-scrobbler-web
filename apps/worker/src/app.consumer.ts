@@ -3,6 +3,11 @@ import { Logger, OnModuleInit } from "@nestjs/common";
 import { Job } from "bull";
 
 import { PrismaService } from "./prisma.service";
+import {
+  detectDateValue,
+  getUnknownDateValues,
+  isTodaySong,
+} from "./utils/date-detection";
 import { getYTMusicHistoryFromPage, scrobbleSong } from "./utils/functions";
 enum FailureType {
   AUTH = "AUTH",
@@ -423,11 +428,34 @@ export class AppConsumer implements OnModuleInit {
         throw error;
       }
 
-      // Support multiple languages for "Today"
-      const todayVariants = ["Today", "Hoy", "Aujourd'hui", "Heute", "Oggi", "Hoje"];
-      const todaySongs = songs.filter((song) => 
-        song.playedAt && todayVariants.includes(song.playedAt)
-      );
+      // Filter songs played today using comprehensive multilingual detection
+      const todaySongs = songs.filter((song) => isTodaySong(song.playedAt));
+
+      // Log unknown playedAt values for future expansion
+      const unknownValues = getUnknownDateValues(songs);
+      if (unknownValues.length > 0) {
+        this.logger.debug(
+          `Unknown playedAt values found for user ${userId}: ${unknownValues.join(", ")}`,
+        );
+        job.log(
+          `Unknown date formats detected: ${unknownValues.join(", ")} - please report to admin`,
+        );
+      }
+
+      // Log detected languages for monitoring
+      const detectedLanguages = new Set<string>();
+      songs.forEach((song) => {
+        const detection = detectDateValue(song.playedAt);
+        if (detection.detectedLanguage && detection.isToday) {
+          detectedLanguages.add(detection.detectedLanguage);
+        }
+      });
+
+      if (detectedLanguages.size > 0) {
+        this.logger.debug(
+          `Today's songs detected in languages: ${Array.from(detectedLanguages).join(", ")} for user ${userId}`,
+        );
+      }
 
       this.logger.debug(
         `Filtered ${todaySongs.length} songs played today for user ${userId}`,
