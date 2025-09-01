@@ -39,7 +39,6 @@ export async function getNewGoogleToken({
 
   if (!response.ok) {
     const error = await response.json();
-    console.error(error);
     throw new Error(error);
   }
 
@@ -315,40 +314,29 @@ function sanitizeJsonString(jsonStr: string): string {
 }
 
 function extractInitialDataFromPage(html: string): unknown | null {
-  console.log("Searching for initialData in HTML...");
 
   // Buscar todos los initialData.push de una forma más flexible
   const allPushRegex = /initialData\.push\(\{[^}]*data:\s*'([^']+)'/g;
   const matches = [...html.matchAll(allPushRegex)];
 
-  console.log(`Found ${matches.length} initialData.push entries`);
 
   for (let i = 0; i < matches.length; i++) {
     const match = matches[i];
     const hexData = match[1];
 
-    console.log(`Trying to parse entry ${i + 1}...`);
-    console.log(`Hex data length: ${hexData.length} characters`);
-    console.log(`First 100 chars: ${hexData.substring(0, 100)}`);
 
     try {
       // Decodificar de hex a string
       const decodedData = decodeHexString(hexData);
-      console.log(`Decoded data length: ${decodedData.length} characters`);
-      console.log(`First 100 decoded chars: ${decodedData.substring(0, 100)}`);
 
       // Verificar si es JSON válido antes de parsear
       if (!decodedData.startsWith("{") && !decodedData.startsWith("[")) {
-        console.log(
-          `Entry ${i + 1}: Not valid JSON (doesn't start with { or [)`,
-        );
         continue;
       }
 
       // Sanitizar y parsear el JSON
       const sanitizedData = sanitizeJsonString(decodedData);
       const parsed = JSON.parse(sanitizedData);
-      console.log(`Entry ${i + 1}: Successfully parsed JSON`);
 
       // Verificar si contiene datos del historial
       const hasHistoryData =
@@ -357,15 +345,10 @@ function extractInitialDataFromPage(html: string): unknown | null {
         JSON.stringify(parsed).includes("FEmusic_history");
 
       if (hasHistoryData) {
-        console.log(`Entry ${i + 1}: Contains history data! Using this entry.`);
         return parsed;
       } else {
-        console.log(
-          `Entry ${i + 1}: Doesn't contain history data, continuing...`,
-        );
       }
     } catch (error) {
-      console.log(`Entry ${i + 1}: Error parsing -`, error.message);
 
       // Intentar limpiar el JSON
       try {
@@ -392,7 +375,6 @@ function extractInitialDataFromPage(html: string): unknown | null {
         }
 
         const cleaned = JSON.parse(cleanedData);
-        console.log(`Entry ${i + 1}: Successfully cleaned and parsed!`);
 
         const hasHistoryData =
           JSON.stringify(cleaned).includes(
@@ -402,22 +384,14 @@ function extractInitialDataFromPage(html: string): unknown | null {
           JSON.stringify(cleaned).includes("FEmusic_history");
 
         if (hasHistoryData) {
-          console.log(
-            `Entry ${i + 1}: Cleaned version contains history data! Using this entry.`,
-          );
           return cleaned;
         }
       } catch (cleanError) {
-        console.log(
-          `Entry ${i + 1}: Cleaning also failed -`,
-          cleanError.message,
-        );
         continue;
       }
     }
   }
 
-  console.log("No valid history data found in any entry");
   return null;
 }
 
