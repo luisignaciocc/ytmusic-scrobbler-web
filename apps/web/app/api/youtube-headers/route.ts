@@ -24,12 +24,12 @@ export async function POST(request: Request) {
       },
       data: {
         ytmusicCookie: cookie,
-        lastNotificationSent: null,
         // Reset failure tracking and reactivate account when user updates credentials
         consecutiveFailures: 0,
         lastFailureType: null,
         lastFailedAt: null,
         authNotificationCount: 0,
+        lastNotificationSent: null, // Reset to quickly detect if new credentials have issues
         isActive: true, // Reactivate the account
       },
     });

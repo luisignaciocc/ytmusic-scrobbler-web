@@ -84,8 +84,9 @@ export class AppConsumer implements OnModuleInit {
         lastFailureType: null,
         lastFailedAt: null,
         lastSuccessfulScrobble: new Date(),
-        // Reset auth notification counter on successful scrobble
+        // Reset auth notification counter and timestamp on successful scrobble
         authNotificationCount: 0,
+        lastNotificationSent: null, // Reset only after proven successful scrobble
       },
     });
   }
@@ -314,11 +315,11 @@ export class AppConsumer implements OnModuleInit {
       const getNextNotificationInfo = (count: number): string => {
         switch (count) {
           case 0:
-            return "You will receive up to 2 more reminders: one in 2 days and a final one in 5 days. After 3 consecutive authentication failures, your account will be automatically paused until the issue is resolved.";
+            return "You will receive up to 2 more reminders if this issue continues: one in 2 days and a final one in 5 days.";
           case 1:
-            return "You will receive 1 more reminder in 5 days after this one. If this issue isn't resolved, your account will be automatically paused after 3 consecutive failures.";
+            return "You will receive 1 more reminder in 5 days if this issue isn't resolved.";
           case 2:
-            return "This is your final reminder about this authentication issue. Your account will be automatically paused after 3 consecutive failures if this isn't resolved.";
+            return "This is your final reminder about this authentication issue.";
           default:
             return "";
         }
@@ -333,10 +334,11 @@ export class AppConsumer implements OnModuleInit {
             <h2>${subjects[notificationType].replace("Action Required: ", "")}</h2>
             <p>Hello ${user.name},</p>
             <p>${descriptions[notificationType]}</p>
+            <p><strong>⚠️ Your account has been automatically paused</strong> to prevent repeated failures. Scrobbling will resume once you update your credentials.</p>
             <p><strong>Reminder ${user.authNotificationCount + 1} of 3:</strong> ${getNextNotificationInfo(user.authNotificationCount)}</p>
-            <p>To resolve this issue, you can:</p>
+            <p>To resolve this issue and reactivate your account, you can:</p>
             <ul>
-              <li><strong>Update your authentication headers by visiting our website</strong> - this will automatically reactivate your account if it was paused</li>
+              <li><strong>Update your authentication headers by visiting our website</strong> - this will automatically reactivate your account</li>
               <li>Disable notifications from your account settings if you no longer want to use the service</li>
               <li>Contact support if you need help</li>
             </ul>
@@ -351,20 +353,21 @@ export class AppConsumer implements OnModuleInit {
         `,
       });
 
-      // Update notification tracking fields
+      // Update notification tracking fields and deactivate user
       await this.prisma.user.update({
         where: { id: user.id },
         data: {
           lastNotificationSent: currentDate,
           authNotificationCount: user.authNotificationCount + 1,
+          isActive: false, // Deactivate user when notification email is sent (may already be false from handleUserFailure)
         },
       });
 
       this.logger.debug(
-        `${notificationType} auth failure notification (${user.authNotificationCount + 1}/3) sent to ${recipientEmail} for user ${user.id}`,
+        `${notificationType} auth failure notification (${user.authNotificationCount + 1}/3) sent to ${recipientEmail} for user ${user.id} - USER DEACTIVATED`,
       );
       job.log(
-        `Notification email sent to user ${recipientEmail} (reminder ${user.authNotificationCount + 1} of 3)`,
+        `Notification email sent to user ${recipientEmail} (reminder ${user.authNotificationCount + 1} of 3) - User deactivated until credentials are updated`,
       );
     } catch (emailError) {
       // Categorize the email error to handle different types appropriately
@@ -376,17 +379,19 @@ export class AppConsumer implements OnModuleInit {
 
       switch (errorInfo.type) {
         case "RATE_LIMIT":
-          // Rate limit reached - defer notification for later retry
+          // Rate limit reached - skip email notification for now
+          // It will be attempted again on the next authentication failure
           job.log(
-            `Email notification deferred due to daily rate limit reached. Will retry tomorrow for user ${recipientEmail}`,
+            `Email notification skipped due to daily rate limit reached. Will retry on next auth failure for user ${recipientEmail}`,
+          );
+
+          this.logger.debug(
+            `Email notification skipped for user ${user.id} due to rate limit - will retry on next failure`,
           );
 
           // DO NOT update lastNotificationSent or authNotificationCount
-          // This ensures the notification will be attempted again when rate limit resets
-
-          // TODO: Implement deferred notification queue here
-          // For now, just log and continue - the notification will be attempted again
-          // when the user's next auth failure occurs after the rate limit resets
+          // This ensures the notification will be attempted again on the next auth failure
+          return; // Exit early without updating database
           break;
 
         case "INVALID_EMAIL":
@@ -418,22 +423,18 @@ export class AppConsumer implements OnModuleInit {
           break;
       }
 
-      // For rate limit errors, don't update the notification tracking fields
-      // This allows the system to retry the notification when the limit resets
-      if (errorInfo.type === "RATE_LIMIT") {
-        this.logger.debug(
-          `Skipping notification counter update for user ${user.id} due to ${errorInfo.type} error`,
-        );
-        return;
-      }
+      // For rate limit and network errors, we already returned early above
+      // No need to check again here since those cases are handled in the switch
     }
   }
+
 
   async onModuleInit() {
     this.logger.debug(`connecting to prisma...`);
     await this.prisma.$connect();
     this.logger.debug(`connected`);
   }
+
 
   @Process({ name: "scrobble", concurrency: 2 })
   async scrobble(

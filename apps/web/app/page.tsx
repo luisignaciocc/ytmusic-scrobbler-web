@@ -218,14 +218,10 @@ export default async function Home() {
                     are lost
                   </li>
                   <li>
-                    • All users receive up to 3 email notifications when YouTube
-                    Music authentication issues occur to ensure uninterrupted service
-                  </li>
-                  <li>
                     • We use your browser cookie to securely access your YouTube
                     Music history - this cookie may occasionally expire, but
                     we&apos;ll send you up to 3 email reminders (immediately, after 2 days, and after 5 days) when you need to
-                    refresh it
+                    refresh it. After the third notification, your account will be automatically paused until you update your credentials
                   </li>
                   <li>
                     • After initial setup, it may take up to an hour for your
