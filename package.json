@@ -14,6 +14,7 @@
     "debug-consumer": "tsx -r dotenv/config scripts/debug-consumer.ts"
   },
   "devDependencies": {
+    "@types/node": "^24.3.0",
     "@typescript-eslint/eslint-plugin": "^7.13.1",
     "@typescript-eslint/parser": "^7.13.1",
     "dotenv-cli": "^7.4.2",
