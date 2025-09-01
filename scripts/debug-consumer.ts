@@ -137,10 +137,27 @@ async function debugConsumerForUser(email: string) {
       });
     }
 
-    // 6. Filter today's songs
-    console.log("\n6. Analyzing today's songs...");
-    const todaySongs = songs.filter((song) => song.playedAt === "Today");
+    // 6. Analyze all playedAt values
+    console.log("\n6. Analyzing playedAt values...");
+    const playedAtValues = new Set(songs.map(song => song.playedAt).filter(Boolean));
+    console.log(`📊 Unique playedAt values found: ${Array.from(playedAtValues).join(', ')}`);
+    
+    // Filter today's songs
+    console.log("\n7. Analyzing today's songs...");
+    // Support multiple languages for "Today"
+    const todayVariants = ["Today", "Hoy", "Aujourd'hui", "Heute", "Oggi", "Hoje"];
+    const todaySongs = songs.filter((song) => 
+      song.playedAt && todayVariants.includes(song.playedAt)
+    );
     console.log(`✅ Found ${todaySongs.length} songs played today`);
+    
+    // TEST: Also check yesterday's songs to verify the system works
+    console.log("\n7b. Testing with yesterday's songs (for demo purposes)...");
+    const yesterdayVariants = ["Yesterday", "Ayer", "Hier", "Ontem", "Ieri"];
+    const yesterdaySongs = songs.filter((song) => 
+      song.playedAt && yesterdayVariants.includes(song.playedAt)
+    );
+    console.log(`✅ Found ${yesterdaySongs.length} songs played yesterday`);
 
     if (todaySongs.length > 0) {
       console.log("\n   🎵 Today's songs:");
@@ -149,8 +166,8 @@ async function debugConsumerForUser(email: string) {
       });
     }
 
-    // 7. Check which songs would be scrobbled
-    console.log("\n7. Analyzing which songs would be scrobbled...");
+    // 8. Check which songs would be scrobbled
+    console.log("\n8. Analyzing which songs would be scrobbled...");
     let songsToScrobble = 0;
     let newSongs = 0;
     let repositionedSongs = 0;
@@ -200,9 +217,9 @@ async function debugConsumerForUser(email: string) {
       );
     }
 
-    // 8. Test Last.fm scrobbling (optional - just test one song)
+    // 9. Test Last.fm scrobbling (optional - just test one song)
     if (songsToScrobble > 0 && todaySongs.length > 0) {
-      console.log("\n8. Testing Last.fm scrobbling with one song...");
+      console.log("\n9. Testing Last.fm scrobbling with one song...");
       const testSong = todaySongs[0];
 
       try {

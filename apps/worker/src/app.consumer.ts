@@ -423,7 +423,11 @@ export class AppConsumer implements OnModuleInit {
         throw error;
       }
 
-      const todaySongs = songs.filter((song) => song.playedAt === "Today");
+      // Support multiple languages for "Today"
+      const todayVariants = ["Today", "Hoy", "Aujourd'hui", "Heute", "Oggi", "Hoje"];
+      const todaySongs = songs.filter((song) => 
+        song.playedAt && todayVariants.includes(song.playedAt)
+      );
 
       this.logger.debug(
         `Filtered ${todaySongs.length} songs played today for user ${userId}`,
