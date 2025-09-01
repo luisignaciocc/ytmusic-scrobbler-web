@@ -218,13 +218,13 @@ export default async function Home() {
                     are lost
                   </li>
                   <li>
-                    • All users receive immediate notifications when YouTube
-                    Music headers need updating to ensure uninterrupted service
+                    • All users receive up to 3 email notifications when YouTube
+                    Music authentication issues occur to ensure uninterrupted service
                   </li>
                   <li>
                     • We use your browser cookie to securely access your YouTube
                     Music history - this cookie may occasionally expire, but
-                    we&apos;ll send you an email notification when you need to
+                    we&apos;ll send you up to 3 email reminders (immediately, after 2 days, and after 5 days) when you need to
                     refresh it
                   </li>
                   <li>

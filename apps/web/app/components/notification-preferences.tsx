@@ -111,9 +111,9 @@ export default function NotificationPreferences({
       <div className="text-sm text-gray-600 mb-3">
         <strong>Email Notifications</strong>
         <p className="mt-1">
-          We&apos;ll send you email notifications when your scrobbler encounters
-          issues that require your attention, like when your YouTube Music
-          headers need updating.
+          We&apos;ll send you up to 3 email notifications when your scrobbler encounters
+          authentication issues that require your attention (like expired YouTube Music
+          headers). Notifications are sent immediately, then after 2 days, and finally after 5 days.
         </p>
       </div>
 
@@ -184,8 +184,8 @@ export default function NotificationPreferences({
             </button>
           </div>
           <p className="mt-1 text-xs text-gray-500">
-            Make sure your email is up to date to receive important
-            notifications about your scrobbling service.
+            This email will receive authentication failure notifications (up to 3 per issue).
+            If left blank, we&apos;ll use your account email ({userEmail}).
           </p>
         </div>
 

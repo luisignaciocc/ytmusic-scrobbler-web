@@ -38,6 +38,7 @@ model User {
   consecutiveFailures       Int       @default(0)
   lastFailureType           String?   // AUTH, NETWORK, LASTFM, UNKNOWN
   lastFailedAt              DateTime?
+  authNotificationCount     Int       @default(0)  // Count of auth failure notifications sent (max 3)
 }
 
 model Song {
