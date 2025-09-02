@@ -12,6 +12,7 @@ import { getYTMusicHistoryFromPage, scrobbleSong } from "./utils/functions";
 enum FailureType {
   AUTH = "AUTH",
   NETWORK = "NETWORK",
+  TEMPORARY = "TEMPORARY", // For 503, rate limits, and other temporary issues
   LASTFM = "LASTFM",
   UNKNOWN = "UNKNOWN",
 }
@@ -100,7 +101,9 @@ export class AppConsumer implements OnModuleInit {
       case FailureType.AUTH:
         return consecutiveFailures >= 3; // Auth issues are persistent
       case FailureType.NETWORK:
-        return consecutiveFailures >= 5; // Network issues might be temporary
+        return consecutiveFailures >= 8; // Network issues might be temporary
+      case FailureType.TEMPORARY:
+        return consecutiveFailures >= 15; // Temporary issues should rarely deactivate users
       case FailureType.LASTFM:
         return consecutiveFailures >= 5; // Last.fm issues might be temporary
       case FailureType.UNKNOWN:
@@ -216,6 +219,21 @@ export class AppConsumer implements OnModuleInit {
       errorMessage.includes("__Secure-3PAPISID")
     ) {
       return FailureType.AUTH;
+    }
+
+    // Temporary service errors (503, 502, 429, rate limits)
+    if (
+      errorMessage.includes("503") ||
+      errorMessage.includes("Service Unavailable") ||
+      errorMessage.includes("502") ||
+      errorMessage.includes("Bad Gateway") ||
+      errorMessage.includes("429") ||
+      errorMessage.includes("Too Many Requests") ||
+      errorMessage.includes("rate limit") ||
+      errorMessage.includes("temporarily unavailable") ||
+      errorMessage.includes("try again later")
+    ) {
+      return FailureType.TEMPORARY;
     }
 
     // Network/YouTube Music errors
