@@ -158,8 +158,23 @@ export default async function Home() {
                       automatically
                     </p>
                     {step === 4 && (
-                      <div className="mt-2">
+                      <div className="mt-2 space-y-3">
                         <ScrobbleBtnServer />
+                        {isActive && (
+                          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <h4 className="font-semibold text-green-900 mb-2 flex items-center">
+                              <span className="mr-2">ℹ️</span>
+                              First Time Setup Notice
+                            </h4>
+                            <p className="text-sm text-green-800">
+                              When you first activate your account, you&apos;ll
+                              start seeing your songs on Last.fm after the
+                              second scrobble cycle (~2 hours). The first cycle
+                              fills your history to prevent duplicates, and the
+                              second begins sending new songs to Last.fm.
+                            </p>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
