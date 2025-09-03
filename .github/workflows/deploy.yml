@@ -9,18 +9,50 @@ on:
       - "packages/**"
       - "pnpm-lock.yaml"
       - "package.json"
+      - "schema.prisma"
+      - "migrations/**"
       - ".github/workflows/deploy.yml"
 
 jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      should-deploy: ${{ steps.changes.outputs.should-deploy }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check for relevant changes
+        id: changes
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
+            echo "Changed files: $CHANGED_FILES"
+            
+            if echo "$CHANGED_FILES" | grep -E "(^apps/worker/|^packages/|^pnpm-lock\.yaml$|^package\.json$|^schema\.prisma$|^migrations/|^\.github/workflows/deploy\.yml$)"; then
+              echo "should-deploy=true" >> $GITHUB_OUTPUT
+              echo "Relevant changes detected, deployment will proceed"
+            else
+              echo "should-deploy=false" >> $GITHUB_OUTPUT
+              echo "No relevant changes detected, skipping deployment"
+            fi
+          else
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+          fi
+
   deploy:
+    needs: check-changes
+    if: needs.check-changes.outputs.should-deploy == 'true'
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: "20"
 
