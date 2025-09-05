@@ -138,7 +138,7 @@ function getAuthorization(auth: string): string {
   return "SAPISIDHASH " + unixTimestamp + "_" + hash;
 }
 
-function sanitizeCookieForHTTP(cookie: string): string {
+export function sanitizeCookieForHTTP(cookie: string): string {
   // Remove or replace characters that can't be used in HTTP headers
   // Character 8230 is "…" (ellipsis), and other Unicode characters > 255
   return cookie

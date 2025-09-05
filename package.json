@@ -8,6 +8,7 @@
     "format": "prettier --write . && prisma format",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
+    "test": "vitest",
     "generate": "prisma generate",
     "migrate": "prisma migrate dev",
     "get-history": "tsx -r dotenv/config scripts/get-history.ts",
@@ -31,7 +32,8 @@
     "prisma": "^5.15.0",
     "tsx": "^4.20.5",
     "turbo": "^2.0.4",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vitest": "^3.2.4"
   },
   "packageManager": "pnpm@9.3.0",
   "dependencies": {

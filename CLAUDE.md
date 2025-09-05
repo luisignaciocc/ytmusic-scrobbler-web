@@ -21,6 +21,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Utility Scripts
 - `pnpm get-history`: Run the YouTube Music history fetching script (requires .env.local)
 
+### Troubleshooting
+- **User Issues**: Always use `pnpm tsx -r dotenv/config scripts/get-history.ts <user-email>` for troubleshooting user-specific problems
+  - Tests YouTube Music cookie validity and page parsing
+  - Saves raw HTML and parsed data to files for inspection
+  - Useful for diagnosing scrobbling issues or API changes
+
 ## Architecture Overview
 
 This is a monorepo with three main applications:
