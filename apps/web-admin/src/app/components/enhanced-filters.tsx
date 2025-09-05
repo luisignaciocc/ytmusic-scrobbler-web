@@ -122,19 +122,19 @@ function EnhancedFilters() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <h3 className="text-lg font-semibold text-gray-900">🔍 Filtros y Búsqueda</h3>
+          <h3 className="text-lg font-semibold text-gray-900">🔍 Filters and Search</h3>
           {hasActiveFilters() && (
             <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
               {[
-                searchQuery && "Búsqueda",
-                filterByActive !== "all" && "Estado",
-                subscriptionFilter !== "all" && "Suscripción",
-                setupFilter !== "all" && "Configuración",
-                healthFilter !== "all" && "Salud",
-                activityFilter !== "all" && "Actividad",
-                dateRangeFilter !== "all" && "Fecha",
-                notificationsFilter !== "all" && "Notificaciones"
-              ].filter(Boolean).join(", ")} activos
+                searchQuery && "Search",
+                filterByActive !== "all" && "Status",
+                subscriptionFilter !== "all" && "Subscription",
+                setupFilter !== "all" && "Setup",
+                healthFilter !== "all" && "Health",
+                activityFilter !== "all" && "Activity",
+                dateRangeFilter !== "all" && "Date",
+                notificationsFilter !== "all" && "Notifications"
+              ].filter(Boolean).join(", ")} active
             </span>
           )}
         </div>
@@ -143,14 +143,14 @@ function EnhancedFilters() {
             onClick={() => setShowAdvanced(!showAdvanced)}
             className="text-sm text-gray-600 hover:text-gray-900 flex items-center space-x-1"
           >
-            <span>{showAdvanced ? "🔼 Ocultar avanzados" : "🔽 Filtros avanzados"}</span>
+            <span>{showAdvanced ? "🔼 Hide advanced" : "🔽 Advanced filters"}</span>
           </button>
           {hasActiveFilters() && (
             <button
               onClick={clearAllFilters}
               className="text-sm text-red-600 hover:text-red-800 flex items-center space-x-1"
             >
-              <span>✖️ Limpiar todo</span>
+              <span>✖️ Clear all</span>
             </button>
           )}
         </div>
@@ -164,7 +164,7 @@ function EnhancedFilters() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="🔍 Buscar por email, Last.fm username, o nombre..."
+            placeholder="🔍 Search by email, Last.fm username, or name..."
             className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           {searchQuery && (
@@ -209,7 +209,7 @@ function EnhancedFilters() {
       {/* Advanced Filters Section */}
       {showAdvanced && (
         <div className="border-t pt-4 space-y-4">
-          <h4 className="text-sm font-medium text-gray-700 mb-3">⚙️ Filtros Avanzados</h4>
+          <h4 className="text-sm font-medium text-gray-700 mb-3">⚙️ Advanced Filters</h4>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {/* Subscription Filter */}
@@ -304,13 +304,13 @@ function EnhancedFilters() {
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
           <div className="flex items-center justify-between">
             <span className="text-blue-800">
-              <strong>Filtros aplicados:</strong> Mostrando usuarios que coinciden con los criterios seleccionados
+              <strong>Filters applied:</strong> Showing users that match the selected criteria
             </span>
             <button
               onClick={clearAllFilters}
               className="text-blue-600 hover:text-blue-800 font-medium"
             >
-              Limpiar filtros
+              Clear filters
             </button>
           </div>
         </div>

@@ -180,10 +180,10 @@ export default function EnhancedUsersTable({
           <thead className="bg-gray-50">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Usuario
+                User
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Estado
+                Status
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Setup
@@ -208,7 +208,7 @@ export default function EnhancedUsersTable({
           <tbody className="bg-white divide-y divide-gray-200">
             {users.map((user) => (
               <tr key={user.id} className="hover:bg-gray-50">
-                {/* Usuario */}
+                {/* User */}
                 <td className="px-4 py-4 whitespace-nowrap">
                   <div className="flex items-center space-x-3">
                     <Image
@@ -382,12 +382,12 @@ export default function EnhancedUsersTable({
       <div className="bg-gray-50 px-4 py-3 border-t">
         <div className="flex items-center justify-between text-sm text-gray-600">
           <div>
-            Mostrando {users.length} usuarios
+            Showing {users.length} users
             {searchText && (
-              <span> • Filtrado por: &quot;{searchText}&quot;</span>
+              <span> • Filtered by: &quot;{searchText}&quot;</span>
             )}
             {typeof status === "boolean" && (
-              <span> • Estado: {status ? "Activos" : "Inactivos"}</span>
+              <span> • Status: {status ? "Active" : "Inactive"}</span>
             )}
           </div>
 

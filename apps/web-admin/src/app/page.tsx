@@ -20,12 +20,12 @@ export default async function HomePage({
             🎵 YTMusic Scrobbler Admin
           </h2>
           <p className="text-gray-600 mt-1">
-            Panel de administración y monitoreo del sistema
+            System administration and monitoring panel
           </p>
         </div>
         <div className="flex items-center space-x-2 text-sm text-gray-500">
-          <span>🔄 Actualizado:</span>
-          <span>{new Date().toLocaleTimeString('es-ES')}</span>
+          <span>🔄 Updated:</span>
+          <span>{new Date().toLocaleTimeString('en-US')}</span>
         </div>
       </div>
       
@@ -35,10 +35,10 @@ export default async function HomePage({
       
       <div className="flex items-center justify-between border-t pt-6">
         <h3 className="text-2xl font-bold tracking-tight text-gray-900">
-          👥 Gestión de Usuarios
+          👥 User Management
         </h3>
         <div className="text-sm text-gray-500">
-          Administra y monitorea el estado de todos los usuarios
+          Manage and monitor the status of all users
         </div>
       </div>
       

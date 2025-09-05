@@ -86,51 +86,51 @@ export default function StatsCards() {
 
   const cards = [
     {
-      title: 'Total Usuarios',
+      title: 'Total Users',
       value: stats.totalUsers.toLocaleString(),
-      description: 'Usuarios registrados',
+      description: 'Registered users',
       color: 'bg-blue-50 border-blue-200',
       textColor: 'text-blue-600'
     },
     {
-      title: 'Usuarios Activos',
+      title: 'Active Users',
       value: stats.activeUsers.toLocaleString(),
-      description: 'Con configuración completa',
+      description: 'With complete setup',
       color: 'bg-green-50 border-green-200',
       textColor: 'text-green-600'
     },
     {
-      title: 'Con Scrobbles Recientes',
+      title: 'Recent Scrobbles',
       value: stats.usersWithRecentScrobbles30d.toLocaleString(),
-      description: 'Últimos 30 días',
+      description: 'Last 30 days',
       color: 'bg-purple-50 border-purple-200',
       textColor: 'text-purple-600'
     },
     {
-      title: 'Usuarios Inactivos',
+      title: 'Inactive Users',
       value: stats.inactiveUsers.toLocaleString(),
-      description: 'Sin configuración completa',
+      description: 'Without complete setup',
       color: 'bg-yellow-50 border-yellow-200',
       textColor: 'text-yellow-600'
     },
     {
       title: 'Total Scrobbles',
       value: stats.totalScrobbles.toLocaleString(),
-      description: 'Todas las canciones',
+      description: 'All songs',
       color: 'bg-indigo-50 border-indigo-200',
       textColor: 'text-indigo-600'
     },
     {
-      title: 'Scrobbles Recientes',
+      title: 'Recent Scrobbles',
       value: stats.recentScrobbles30d.toLocaleString(),
-      description: 'Últimos 30 días',
+      description: 'Last 30 days',
       color: 'bg-pink-50 border-pink-200',
       textColor: 'text-pink-600'
     },
     {
-      title: 'Sin Scrobbles Recientes',
+      title: 'No Recent Scrobbles',
       value: stats.usersWithoutRecentScrobbles24h.toLocaleString(),
-      description: 'Sin actividad en 24h',
+      description: 'No activity in 24h',
       color: 'bg-gray-50 border-gray-200',
       textColor: 'text-gray-600'
     }

@@ -109,9 +109,9 @@ export default function EnhancedStats() {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Usuarios</p>
+                <p className="text-sm font-medium text-gray-600">Total Users</p>
                 <p className="text-2xl font-bold text-blue-600">{stats.totalUsers.toLocaleString()}</p>
-                <p className="text-xs text-gray-500 mt-1">Todos los registrados</p>
+                <p className="text-xs text-gray-500 mt-1">All registered</p>
               </div>
               <div className="text-2xl">👥</div>
             </div>
@@ -120,9 +120,9 @@ export default function EnhancedStats() {
           <div className="bg-green-50 border border-green-200 rounded-lg p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Usuarios Activos</p>
+                <p className="text-sm font-medium text-gray-600">Active Users</p>
                 <p className="text-2xl font-bold text-green-600">{stats.activeUsers.toLocaleString()}</p>
-                <p className="text-xs text-gray-500 mt-1">{stats.activeUserRate}% del total</p>
+                <p className="text-xs text-gray-500 mt-1">{stats.activeUserRate}% of total</p>
               </div>
               <div className="text-2xl">✅</div>
             </div>
@@ -144,7 +144,7 @@ export default function EnhancedStats() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Scrobbles</p>
                 <p className="text-2xl font-bold text-indigo-600">{stats.totalScrobbles.toLocaleString()}</p>
-                <p className="text-xs text-gray-500 mt-1">Todas las canciones</p>
+                <p className="text-xs text-gray-500 mt-1">All songs</p>
               </div>
               <div className="text-2xl">🎵</div>
             </div>
@@ -172,7 +172,7 @@ export default function EnhancedStats() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Scrobbles 7d</p>
                 <p className="text-2xl font-bold text-teal-600">{stats.recentScrobbles7d.toLocaleString()}</p>
-                <p className="text-xs text-gray-500 mt-1">Última semana</p>
+                <p className="text-xs text-gray-500 mt-1">Last week</p>
               </div>
               <div className="text-2xl">📊</div>
             </div>
@@ -245,23 +245,23 @@ export default function EnhancedStats() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Growth Metrics */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">📈 Crecimiento</h3>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">📈 Growth</h3>
           <div className="bg-white border rounded-lg p-6">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-600">Usuarios nuevos hoy</span>
+                <span className="text-sm font-medium text-gray-600">New users today</span>
                 <span className="text-lg font-bold text-blue-600">{stats.usersCreatedToday}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-600">Usuarios nuevos esta semana</span>
+                <span className="text-sm font-medium text-gray-600">New users this week</span>
                 <span className="text-lg font-bold text-green-600">{stats.usersCreatedThisWeek}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-600">Tasa de crecimiento semanal</span>
+                <span className="text-sm font-medium text-gray-600">Weekly growth rate</span>
                 <span className="text-sm font-medium text-purple-600">{getGrowthIndicator(stats.usersCreatedThisWeek)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-600">Promedio scrobbles/usuario activo</span>
+                <span className="text-sm font-medium text-gray-600">Avg scrobbles/active user</span>
                 <span className="text-lg font-bold text-orange-600">{Math.round(stats.avgScrobblesPerActiveUser || 0)}</span>
               </div>
             </div>

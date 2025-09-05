@@ -319,7 +319,7 @@ function sanitizeJsonString(jsonStr: string): string {
 
 function extractInitialDataFromPage(html: string): unknown | null {
 
-  // Buscar todos los initialData.push de una forma más flexible
+  // Search for all initialData.push in a more flexible way
   const allPushRegex = /initialData\.push\(\{[^}]*data:\s*'([^']+)'/g;
   const matches = [...html.matchAll(allPushRegex)];
 
@@ -338,11 +338,11 @@ function extractInitialDataFromPage(html: string): unknown | null {
         continue;
       }
 
-      // Sanitizar y parsear el JSON
+      // Sanitize and parse the JSON
       const sanitizedData = sanitizeJsonString(decodedData);
       const parsed = JSON.parse(sanitizedData);
 
-      // Verificar si contiene datos del historial
+      // Check if it contains history data
       const hasHistoryData =
         JSON.stringify(parsed).includes("singleColumnBrowseResultsRenderer") ||
         JSON.stringify(parsed).includes("musicShelfRenderer") ||
@@ -354,18 +354,18 @@ function extractInitialDataFromPage(html: string): unknown | null {
       }
     } catch (error) {
 
-      // Intentar limpiar el JSON
+      // Try to clean the JSON
       try {
         const decodedData = decodeHexString(hexData);
-        // Intentar arreglar JSON malformado quitando caracteres al final
+        // Try to fix malformed JSON by removing characters at the end
         let cleanedData = decodedData.trim();
 
-        // Si termina con coma, quitarla
+        // If it ends with a comma, remove it
         if (cleanedData.endsWith(",")) {
           cleanedData = cleanedData.slice(0, -1);
         }
 
-        // Si no tiene cierre de bracket/brace, intentar cerrarlos
+        // If it doesn't have closing bracket/brace, try to close them
         const openBraces = (cleanedData.match(/\{/g) || []).length;
         const closeBraces = (cleanedData.match(/\}/g) || []).length;
         const openBrackets = (cleanedData.match(/\[/g) || []).length;
@@ -411,7 +411,7 @@ export function parseYTMusicPageResponse(html: string): {
     throw new Error("No initial data found in page");
   }
 
-  // Usar la función parseYTMusicResponse existente
+  // Use the existing parseYTMusicResponse function
   return parseYTMusicResponse(initialData);
 }
 
