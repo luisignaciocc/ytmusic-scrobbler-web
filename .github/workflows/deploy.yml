@@ -55,11 +55,89 @@ jobs:
             echo "should-deploy-web=true" >> $GITHUB_OUTPUT
           fi
 
-  stop-worker:
+  validate-vercel-deploy:
     needs: check-changes
     if: |
       needs.check-changes.outputs.should-deploy-worker == 'true' ||
       needs.check-changes.outputs.should-deploy-web == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Vercel deployment to complete
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          echo "⏳ Waiting for Vercel deployment to complete..."
+          
+          # Get the current commit SHA
+          COMMIT_SHA="${{ github.sha }}"
+          echo "Looking for deployment of commit: $COMMIT_SHA"
+          
+          # Wait up to 10 minutes for deployment
+          MAX_ATTEMPTS=60
+          ATTEMPT=0
+          
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            echo "Attempt $((ATTEMPT + 1))/$MAX_ATTEMPTS: Checking Vercel deployments..."
+            
+            # Get deployments for this commit
+            DEPLOYMENTS=$(curl -s \
+              -H "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&gitSource.sha=$COMMIT_SHA")
+            
+            if [ $? -ne 0 ]; then
+              echo "❌ Failed to fetch deployments from Vercel API"
+              exit 1
+            fi
+            
+            # Check if any deployment exists for this commit
+            DEPLOYMENT_COUNT=$(echo "$DEPLOYMENTS" | jq -r '.deployments | length')
+            
+            if [ "$DEPLOYMENT_COUNT" -gt 0 ]; then
+              # Get the latest deployment
+              LATEST_DEPLOYMENT=$(echo "$DEPLOYMENTS" | jq -r '.deployments[0]')
+              DEPLOYMENT_STATE=$(echo "$LATEST_DEPLOYMENT" | jq -r '.state')
+              DEPLOYMENT_URL=$(echo "$LATEST_DEPLOYMENT" | jq -r '.url')
+              
+              echo "Found deployment with state: $DEPLOYMENT_STATE"
+              echo "Deployment URL: https://$DEPLOYMENT_URL"
+              
+              case "$DEPLOYMENT_STATE" in
+                "READY")
+                  echo "✅ Vercel deployment completed successfully!"
+                  exit 0
+                  ;;
+                "ERROR"|"CANCELED")
+                  echo "❌ Vercel deployment failed with state: $DEPLOYMENT_STATE"
+                  echo "🚫 Cancelling VPS deployment to prevent potential issues"
+                  exit 1
+                  ;;
+                "BUILDING"|"QUEUED"|"INITIALIZING")
+                  echo "⏳ Deployment still in progress (state: $DEPLOYMENT_STATE)..."
+                  ;;
+                *)
+                  echo "🔍 Unknown deployment state: $DEPLOYMENT_STATE"
+                  ;;
+              esac
+            else
+              echo "📡 No deployment found yet for this commit..."
+            fi
+            
+            sleep 10
+            ATTEMPT=$((ATTEMPT + 1))
+          done
+          
+          echo "⏰ Timeout: Vercel deployment took longer than expected"
+          echo "🚫 Cancelling VPS deployment for safety"
+          exit 1
+
+  stop-worker:
+    needs: [check-changes, validate-vercel-deploy]
+    if: |
+      always() &&
+      (needs.check-changes.outputs.should-deploy-worker == 'true' ||
+       needs.check-changes.outputs.should-deploy-web == 'true') &&
+      needs.validate-vercel-deploy.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Copy SSH key
@@ -98,11 +176,12 @@ jobs:
           EOF
 
   build-and-deploy:
-    needs: [check-changes, stop-worker]
+    needs: [check-changes, validate-vercel-deploy, stop-worker]
     if: |
       always() &&
       (needs.check-changes.outputs.should-deploy-worker == 'true' || 
        needs.check-changes.outputs.should-deploy-web == 'true') &&
+      needs.validate-vercel-deploy.result == 'success' &&
       (needs.stop-worker.result == 'success' || needs.stop-worker.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
