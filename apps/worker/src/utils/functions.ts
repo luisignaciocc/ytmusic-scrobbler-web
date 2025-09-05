@@ -94,7 +94,8 @@ function sanitizeString(str: string): string {
     .replace(/[\u2013\u2014]/g, "-") // Replace en/em dashes
     .replace(/[\u2018\u2019]/g, "'") // Replace smart single quotes
     .replace(/[\u201C\u201D]/g, '"') // Replace smart double quotes
-    .replace(/[^\x00-\x7F]/g, ""); // Remove any other non-ASCII characters
+    // Remove problematic characters but preserve Spanish accented characters and common symbols
+    .replace(/[^\x00-\x7F\u00C0-\u00FF\u0100-\u017F\u1E00-\u1EFF]/g, "");
 }
 
 function sapisidFromCookie(rawCookie: string): string {
@@ -179,7 +180,7 @@ async function buildYTMusicRequestHeaders(
 }
 
 export async function fetchYTMusicHistoryPage(cookie: string): Promise<string> {
-  const processedCookie = processCookieForRequest(cookie);
+  const processedCookie = processCookieForRequest(cookie.trim());
 
   const response = await fetch("https://music.youtube.com/history", {
     method: "GET",

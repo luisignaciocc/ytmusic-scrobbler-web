@@ -3,14 +3,44 @@ import {
   parseYTMusicPageResponse,
   getYTMusicHistoryFromPage,
 } from "../apps/worker/src/utils/functions";
+import { PrismaClient } from "@prisma/client";
 import * as fs from "fs";
 
-// Define your YouTube Music cookie here
-const cookie = ``;
+const prisma = new PrismaClient();
+
+async function getCookieFromDB(email: string): Promise<string> {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { ytmusicCookie: true }
+    });
+    
+    if (user?.ytmusicCookie) {
+      return user.ytmusicCookie;
+    } else {
+      throw new Error(`No cookie found for user: ${email}`);
+    }
+  } catch (error) {
+    console.error("Error fetching cookie from database:", error);
+    throw error;
+  }
+}
 
 async function main() {
   try {
+    // Get email from command line argument
+    const email = process.argv[2];
+    if (!email) {
+      console.error("❌ Please provide an email as argument");
+      console.error("Usage: pnpm tsx -r dotenv/config scripts/get-history.ts user@example.com");
+      process.exit(1);
+    }
+
     console.log("=== Testing YouTube Music Page Parsing Functions ===");
+    console.log(`Getting cookie for user: ${email}`);
+    
+    // Get cookie from database
+    const cookie = await getCookieFromDB(email);
     console.log(`Cookie length: ${cookie.length} characters\n`);
 
     // Test 1: Fetch the HTML page
@@ -87,6 +117,8 @@ async function main() {
     console.error("❌ Error testing YouTube Music page parsing:");
     console.error(error);
     process.exit(1);
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
