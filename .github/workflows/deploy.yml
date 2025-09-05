@@ -72,20 +72,29 @@ jobs:
         run: |
           ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Stop Worker Only
+      - name: Stop Worker for Build
         env:
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_DIR: ~/ytmusic-scrobbler-web
+          SHOULD_DEPLOY_WORKER: ${{ needs.check-changes.outputs.should-deploy-worker }}
+          SHOULD_DEPLOY_WEB: ${{ needs.check-changes.outputs.should-deploy-web }}
         run: |
           ssh $REMOTE_USER@$REMOTE_HOST << EOF
             export PATH=$PATH:/home/$REMOTE_USER/.nvm/versions/node/v22.3.0/bin:/home/$REMOTE_USER/.local/share/pnpm
             cd $REMOTE_DIR
             git pull
-            echo "🔄 Stopping worker (web stays running)..."
+            echo "🔄 Stopping worker to free resources for build..."
+            if [ "$SHOULD_DEPLOY_WORKER" = "true" ] && [ "$SHOULD_DEPLOY_WEB" = "true" ]; then
+              echo "   (Both worker and web will be built)"
+            elif [ "$SHOULD_DEPLOY_WORKER" = "true" ]; then
+              echo "   (Worker will be built)"  
+            else
+              echo "   (Web will be built - worker needs to be stopped to free resources)"
+            fi
             pm2 stop yt-music-scrobbler-worker || true
             pkill turbo || true
-            echo "✅ Worker stopped, web remains online"
+            echo "✅ Worker stopped, web remains online during builds"
           EOF
 
   build-and-deploy:
@@ -138,14 +147,18 @@ jobs:
               echo "✅ Web build completed"
             fi
             
-            # Start worker if it was built
+            # Start worker back up (it was stopped for builds)
             if [ "$SHOULD_DEPLOY_WORKER" = "true" ]; then
               echo "🗑️ Clearing Redis..."
               redis-cli flushall
               pm2 flush
-              echo "▶️ Starting worker..."
+              echo "▶️ Starting worker (with new build)..."
               pm2 start yt-music-scrobbler-worker
-              echo "✅ Worker started"
+              echo "✅ Worker started with updates"
+            else
+              echo "▶️ Starting worker (no changes, just stopped for web build)..."
+              pm2 start yt-music-scrobbler-worker
+              echo "✅ Worker restarted"
             fi
             
             # Restart web app if it was built (quick restart, minimal downtime)
