@@ -90,6 +90,8 @@ export async function getGoogleVisitorId() {
 
 function sanitizeString(str: string): string {
   return str
+    // First decode Unicode escape sequences like \u0026
+    .replace(/\\u([0-9A-Fa-f]{4})/g, (match, hex) => String.fromCharCode(parseInt(hex, 16)))
     .replace(/[\u2026]/g, "...") // Replace ellipsis
     .replace(/[\u2013\u2014]/g, "-") // Replace en/em dashes
     .replace(/[\u2018\u2019]/g, "'") // Replace smart single quotes
