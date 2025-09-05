@@ -5,10 +5,20 @@ import { Resend } from "resend";
 // This implementation uses available endpoints and webhook data patterns
 // For comprehensive analytics, you'd need to store webhook events in your database
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function GET(request: NextRequest) {
   try {
+    // Check if API key is available
+    if (!process.env.RESEND_API_KEY) {
+      return NextResponse.json({
+        error: "RESEND_API_KEY not configured",
+        account: { domains: { total: 0, verified: 0, pending: 0 }, apiKeys: { total: 0, active: 0 } },
+        emails: { sent: "N/A - API key not configured" },
+        lastUpdated: new Date().toISOString()
+      });
+    }
+
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    
     // Get domains (to show active domains)
     const domainsResponse = await resend.domains.list();
     const domains = (domainsResponse.data as any)?.data || [];

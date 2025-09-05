@@ -12,6 +12,17 @@ function getPaddleInstance() {
 
 export async function GET(request: NextRequest) {
   try {
+    // Check if API key is available
+    if (!process.env.PADDLE_API_KEY) {
+      return NextResponse.json({
+        error: "PADDLE_API_KEY not configured",
+        subscriptions: { active: 0, trialing: 0, total: 0 },
+        customers: { total: 0 },
+        revenue: { mrr: "0", arr: "0", totalRevenue: "0", monthlyRevenue: "0" },
+        lastUpdated: new Date().toISOString()
+      });
+    }
+
     const paddle = getPaddleInstance();
     
     // Get subscriptions for revenue calculations
