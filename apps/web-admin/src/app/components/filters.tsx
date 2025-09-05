@@ -42,7 +42,7 @@ function Filters() {
         `${queryParams}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`,
       );
     },
-    [router, sortColumn, sortDirection],
+    [router, sortColumn, sortDirection, currentPage],
   );
 
   const handleClearSearch = () => {

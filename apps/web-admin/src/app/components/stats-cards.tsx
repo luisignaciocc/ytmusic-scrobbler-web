@@ -101,7 +101,7 @@ export default function StatsCards() {
     },
     {
       title: 'Con Scrobbles Recientes',
-      value: stats.usersWithRecentScrobbles.toLocaleString(),
+      value: stats.usersWithRecentScrobbles30d.toLocaleString(),
       description: 'Últimos 30 días',
       color: 'bg-purple-50 border-purple-200',
       textColor: 'text-purple-600'
@@ -122,15 +122,15 @@ export default function StatsCards() {
     },
     {
       title: 'Scrobbles Recientes',
-      value: stats.recentScrobbles.toLocaleString(),
+      value: stats.recentScrobbles30d.toLocaleString(),
       description: 'Últimos 30 días',
       color: 'bg-pink-50 border-pink-200',
       textColor: 'text-pink-600'
     },
     {
       title: 'Sin Scrobbles Recientes',
-      value: stats.usersWithoutRecentScrobbles.toLocaleString(),
-      description: 'Sin actividad en 30 días',
+      value: stats.usersWithoutRecentScrobbles24h.toLocaleString(),
+      description: 'Sin actividad en 24h',
       color: 'bg-gray-50 border-gray-200',
       textColor: 'text-gray-600'
     }
