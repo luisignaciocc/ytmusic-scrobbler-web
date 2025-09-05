@@ -11,11 +11,11 @@ export async function GET(request: NextRequest) {
   try {
     // Get domains (to show active domains)
     const domainsResponse = await resend.domains.list();
-    const domains = domainsResponse.data || [];
+    const domains = domainsResponse.data?.data || [];
     
     // Get API keys info (for usage tracking)
     const apiKeysResponse = await resend.apiKeys.list();
-    const apiKeys = apiKeysResponse.data || [];
+    const apiKeys = apiKeysResponse.data?.data || [];
     
     // Since Resend doesn't have direct analytics endpoints yet,
     // we'll provide basic account information and suggest webhook implementation
