@@ -12,10 +12,10 @@ interface PaddleStats {
     total: number;
   };
   revenue: {
-    mrr: string;
-    arr: string;
-    totalRevenue: string;
-    monthlyRevenue: string;
+    mrr: number;
+    arr: number;
+    totalRevenue: number;
+    monthlyRevenue: number;
   };
   lastUpdated: string;
 }
@@ -96,11 +96,11 @@ export default function ExternalStats() {
     fetchResendStats();
   }, []);
 
-  const formatCurrency = (amount: string) => {
+  const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-    }).format(parseFloat(amount));
+    }).format(amount);
   };
 
   const formatDate = (dateString: string) => {
