@@ -1,0 +1,99 @@
+name: Claude Issue Investigation
+
+on:
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  investigate-issue:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          track_progress: true
+          prompt: |
+            REPO: ${{ github.repository }}
+            ISSUE NUMBER: ${{ github.event.issue.number }}
+            TITLE: ${{ github.event.issue.title }}
+            BODY: ${{ github.event.issue.body }}
+            AUTHOR: ${{ github.event.issue.user.login }}
+            LABELS: ${{ join(github.event.issue.labels.*.name, ', ') }}
+
+            You are investigating a user-reported issue for the YouTube Music Scrobbler application.
+
+            ## Application Context
+            This is a TypeScript monorepo that:
+            - Fetches music history from YouTube Music using cookies
+            - Scrobbles tracks to Last.fm API
+            - Runs on a scheduled worker (5 min for Pro, 1 hour for Free users)
+            - Uses PostgreSQL + Prisma for data storage
+            - Has 3 apps: web frontend, worker backend, admin dashboard
+
+            ## Investigation Process
+            
+            1. **Analyze the Issue**:
+               - Classify issue type (bug, feature request, user error, etc.)
+               - Identify affected components (web, worker, database, etc.)
+               - Assess severity and priority
+               
+            2. **Code Investigation**:
+               - Search for relevant code files using Grep and Read tools
+               - Check recent commits that might relate to the issue
+               - Look for similar patterns in existing codebase
+               
+            3. **Common Problem Areas to Check**:
+               - YouTube Music parsing logic (apps/worker/src/utils/functions.ts)
+               - Timestamp calculation (recently fixed - check apps/worker/src/app.consumer.ts)
+               - Authentication and cookies (check cookie validation)
+               - Last.fm API integration (check error handling)
+               - Job scheduling and processing (check BullMQ configuration)
+               - Database schema and queries (check Prisma operations)
+
+            4. **User-Specific Troubleshooting**:
+               - If user mentions email, suggest using: `pnpm tsx -r dotenv/config scripts/get-history.ts <user-email>`
+               - Check for common user setup issues (cookies, Last.fm auth, etc.)
+               - Look for environment-specific problems
+               
+            5. **Provide Solution**:
+               - Give step-by-step troubleshooting instructions for the user
+               - Suggest code fixes if it's a bug (include file paths and line numbers)
+               - Recommend workarounds if available
+               - Create labels for categorization using: `gh issue edit ${{ github.event.issue.number }} --add-label "label1,label2"`
+
+            ## Output Format
+            
+            Post a comprehensive comment that includes:
+            
+            ### 🔍 Issue Analysis
+            - **Type**: [Bug/Feature Request/User Support/etc.]
+            - **Component**: [Web/Worker/Database/etc.]  
+            - **Severity**: [Critical/High/Medium/Low]
+            
+            ### 🕵️ Investigation Results
+            [Detailed findings from code analysis]
+            
+            ### 💡 Recommended Solution
+            [Step-by-step solution or fix]
+            
+            ### 🛠️ For the User
+            [Direct instructions for the user to try]
+            
+            ### 👨‍💻 For Developers
+            [Any code changes needed, with specific file paths and line numbers]
+            
+            Be thorough but practical. Focus on actionable solutions.
+
+          claude_args: |
+            --allowedTools "Read,Grep,Bash(gh issue:*),Bash(gh search:*),Bash(git:*)"
+            --max-turns 20
+            --timeout 900
