@@ -142,6 +142,9 @@ importers:
 
   apps/web-admin:
     dependencies:
+      '@paddle/paddle-node-sdk':
+        specifier: ^2.5.1
+        version: 2.5.1
       '@prisma/client':
         specifier: '*'
         version: 5.15.0(prisma@5.15.0)
@@ -160,6 +163,9 @@ importers:
       react-loading-skeleton:
         specifier: ^3.4.0
         version: 3.4.0(react@18.3.1)
+      resend:
+        specifier: ^4.2.0
+        version: 4.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       use-debounce:
         specifier: ^10.0.2
         version: 10.0.2(react@18.3.1)

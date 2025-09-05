@@ -2,6 +2,7 @@ import Filters from "./components/filters";
 import UsersTable from "./components/users-table";
 import PaginationButtonsServer from "./components/pagination-buttons.server";
 import EnhancedStats from "./components/enhanced-stats";
+import ExternalStats from "./components/external-stats";
 import { Suspense } from "react";
 import FiltersLoading from "./components/filters.loading";
 import PaginationButtonsLoading from "./components/pagination-buttons.loading";
@@ -29,6 +30,8 @@ export default async function HomePage({
       </div>
       
       <EnhancedStats />
+      
+      <ExternalStats />
       
       <div className="flex items-center justify-between border-t pt-6">
         <h3 className="text-2xl font-bold tracking-tight text-gray-900">
