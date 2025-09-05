@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - "apps/worker/**"
+      - "apps/web/**"
       - "packages/**"
       - "pnpm-lock.yaml"
       - "package.json"
@@ -17,7 +18,8 @@ jobs:
   check-changes:
     runs-on: ubuntu-latest
     outputs:
-      should-deploy: ${{ steps.changes.outputs.should-deploy }}
+      should-deploy-worker: ${{ steps.changes.outputs.should-deploy-worker }}
+      should-deploy-web: ${{ steps.changes.outputs.should-deploy-web }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -31,34 +33,35 @@ jobs:
             CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
             echo "Changed files: $CHANGED_FILES"
             
+            # Check worker changes
             if echo "$CHANGED_FILES" | grep -E "(^apps/worker/|^packages/|^pnpm-lock\.yaml$|^package\.json$|^schema\.prisma$|^migrations/|^\.github/workflows/deploy\.yml$)"; then
-              echo "should-deploy=true" >> $GITHUB_OUTPUT
-              echo "Relevant changes detected, deployment will proceed"
+              echo "should-deploy-worker=true" >> $GITHUB_OUTPUT
+              echo "Worker changes detected"
             else
-              echo "should-deploy=false" >> $GITHUB_OUTPUT
-              echo "No relevant changes detected, skipping deployment"
+              echo "should-deploy-worker=false" >> $GITHUB_OUTPUT
+              echo "No worker changes detected"
+            fi
+            
+            # Check web changes
+            if echo "$CHANGED_FILES" | grep -E "(^apps/web/|^packages/|^pnpm-lock\.yaml$|^package\.json$|^\.github/workflows/deploy\.yml$)"; then
+              echo "should-deploy-web=true" >> $GITHUB_OUTPUT
+              echo "Web changes detected"
+            else
+              echo "should-deploy-web=false" >> $GITHUB_OUTPUT
+              echo "No web changes detected"
             fi
           else
-            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "should-deploy-worker=true" >> $GITHUB_OUTPUT
+            echo "should-deploy-web=true" >> $GITHUB_OUTPUT
           fi
 
-  deploy:
+  stop-services:
     needs: check-changes
-    if: needs.check-changes.outputs.should-deploy == 'true'
+    if: |
+      needs.check-changes.outputs.should-deploy-worker == 'true' || 
+      needs.check-changes.outputs.should-deploy-web == 'true'
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install pnpm
-        run: npm install -g pnpm
-
       - name: Copy SSH key
         run: |
           mkdir -p ~/.ssh
@@ -69,22 +72,97 @@ jobs:
         run: |
           ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy application
+      - name: Stop Services
         env:
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_DIR: ~/ytmusic-scrobbler-web
+          SHOULD_DEPLOY_WORKER: ${{ needs.check-changes.outputs.should-deploy-worker }}
+          SHOULD_DEPLOY_WEB: ${{ needs.check-changes.outputs.should-deploy-web }}
         run: |
           ssh $REMOTE_USER@$REMOTE_HOST << EOF
             export PATH=$PATH:/home/$REMOTE_USER/.nvm/versions/node/v22.3.0/bin:/home/$REMOTE_USER/.local/share/pnpm
             cd $REMOTE_DIR
             git pull
-            pm2 stop yt-music-scrobbler-worker
-            pkill turbo
+            
+            if [ "$SHOULD_DEPLOY_WORKER" = "true" ]; then
+              echo "🔄 Stopping worker..."
+              pm2 stop yt-music-scrobbler-worker || true
+            fi
+            
+            if [ "$SHOULD_DEPLOY_WEB" = "true" ]; then
+              echo "🔄 Stopping web app..."
+              pm2 stop yt-music-scrobbler-web || true
+            fi
+            
+            pkill turbo || true
+            echo "✅ Services stopped"
+          EOF
+
+  build-and-start:
+    needs: [check-changes, stop-services]
+    if: |
+      needs.check-changes.outputs.should-deploy-worker == 'true' || 
+      needs.check-changes.outputs.should-deploy-web == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Copy SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Add SSH known hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Build and Start Services
+        env:
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_DIR: ~/ytmusic-scrobbler-web
+          SHOULD_DEPLOY_WORKER: ${{ needs.check-changes.outputs.should-deploy-worker }}
+          SHOULD_DEPLOY_WEB: ${{ needs.check-changes.outputs.should-deploy-web }}
+        run: |
+          ssh $REMOTE_USER@$REMOTE_HOST << EOF
+            export PATH=$PATH:/home/$REMOTE_USER/.nvm/versions/node/v22.3.0/bin:/home/$REMOTE_USER/.local/share/pnpm
+            cd $REMOTE_DIR
+            
+            echo "📦 Installing dependencies..."
             pnpm install
-            pnpm build --filter worker
-            pkill turbo
-            redis-cli flushall
-            pm2 flush
-            pm2 start yt-music-scrobbler-worker
+            
+            # Build worker first if needed
+            if [ "$SHOULD_DEPLOY_WORKER" = "true" ]; then
+              echo "🏗️ Building worker..."
+              pnpm build --filter worker
+              pkill turbo || true
+              echo "✅ Worker build completed"
+            fi
+            
+            # Build web if needed  
+            if [ "$SHOULD_DEPLOY_WEB" = "true" ]; then
+              echo "🏗️ Building web app..."
+              pnpm build --filter web
+              pkill turbo || true
+              echo "✅ Web build completed"
+            fi
+            
+            # Start worker first if it was built
+            if [ "$SHOULD_DEPLOY_WORKER" = "true" ]; then
+              echo "🗑️ Clearing Redis..."
+              redis-cli flushall
+              pm2 flush
+              echo "▶️ Starting worker..."
+              pm2 start yt-music-scrobbler-worker
+              echo "✅ Worker started"
+            fi
+            
+            # Start web app if it was built
+            if [ "$SHOULD_DEPLOY_WEB" = "true" ]; then
+              echo "▶️ Starting web app..."
+              pm2 start yt-music-scrobbler-web
+              echo "✅ Web app started"
+            fi
+            
+            echo "🎉 Deployment completed successfully"
           EOF
