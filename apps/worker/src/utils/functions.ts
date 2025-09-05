@@ -138,18 +138,35 @@ function getAuthorization(auth: string): string {
   return "SAPISIDHASH " + unixTimestamp + "_" + hash;
 }
 
+function sanitizeCookieForHTTP(cookie: string): string {
+  // Remove or replace characters that can't be used in HTTP headers
+  // Character 8230 is "…" (ellipsis), and other Unicode characters > 255
+  return cookie
+    .replace(/[\u0100-\uFFFF]/g, '') // Remove all Unicode characters > 255
+    .replace(/\s+/g, ' ')            // Normalize whitespace
+    .trim();
+}
+
 function processCookieForRequest(cookie: string): string {
+  // First sanitize the cookie to remove invalid HTTP header characters
+  const sanitizedCookie = sanitizeCookieForHTTP(cookie);
+  
   const cookies = new Map();
-  cookie.split(";").forEach((pair) => {
+  sanitizedCookie.split(";").forEach((pair) => {
     const [name, ...rest] = pair.trim().split("=");
-    cookies.set(name, rest.join("="));
+    if (name) { // Only process valid cookie names
+      cookies.set(name, rest.join("="));
+    }
   });
 
   if (!cookies.has("SOCS")) {
-    return cookie + "; SOCS=CAI";
+    cookies.set("SOCS", "CAI");
   }
 
-  return cookie;
+  // Reconstruct cookie string from the map
+  return Array.from(cookies.entries())
+    .map(([name, value]) => `${name}=${value}`)
+    .join("; ");
 }
 
 async function buildYTMusicRequestHeaders(
