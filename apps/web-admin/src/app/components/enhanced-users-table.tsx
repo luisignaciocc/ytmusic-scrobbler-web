@@ -34,7 +34,11 @@ interface EnhancedUserTableProps {
   status: boolean | string;
 }
 
-export default function EnhancedUsersTable({ users, searchText, status }: EnhancedUserTableProps) {
+export default function EnhancedUsersTable({
+  users,
+  searchText,
+  status,
+}: EnhancedUserTableProps) {
   const router = useRouter();
   const [sortColumn, setSortColumn] = useState<string>("createdAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
@@ -59,7 +63,7 @@ export default function EnhancedUsersTable({ users, searchText, status }: Enhanc
 
   const getStatusBadge = (user: User) => {
     const hasSetup = user.ytmusicCookie && user.lastFmSessionKey;
-    
+
     if (!hasSetup) {
       return (
         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
@@ -67,7 +71,7 @@ export default function EnhancedUsersTable({ users, searchText, status }: Enhanc
         </span>
       );
     }
-    
+
     if (!user.isActive) {
       return (
         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -75,18 +79,23 @@ export default function EnhancedUsersTable({ users, searchText, status }: Enhanc
         </span>
       );
     }
-    
+
     if (user.consecutiveFailures > 0) {
-      const failureEmoji = user.lastFailureType === 'AUTH' ? '🔐' : 
-                           user.lastFailureType === 'NETWORK' ? '🌐' : 
-                           user.lastFailureType === 'TEMPORARY' ? '⏱️' : '❌';
+      const failureEmoji =
+        user.lastFailureType === "AUTH"
+          ? "🔐"
+          : user.lastFailureType === "NETWORK"
+            ? "🌐"
+            : user.lastFailureType === "TEMPORARY"
+              ? "⏱️"
+              : "❌";
       return (
         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
           {failureEmoji} {user.consecutiveFailures} fallos
         </span>
       );
     }
-    
+
     return (
       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
         ✅ Activo
@@ -96,14 +105,17 @@ export default function EnhancedUsersTable({ users, searchText, status }: Enhanc
 
   const getHealthIndicator = (user: User) => {
     const now = new Date();
-    const daysSinceLastScrobble = user.lastSuccessfulScrobble 
-      ? Math.floor((now.getTime() - user.lastSuccessfulScrobble.getTime()) / (1000 * 60 * 60 * 24))
+    const daysSinceLastScrobble = user.lastSuccessfulScrobble
+      ? Math.floor(
+          (now.getTime() - user.lastSuccessfulScrobble.getTime()) /
+            (1000 * 60 * 60 * 24),
+        )
       : null;
 
     if (!user.lastSuccessfulScrobble) {
       return <span className="text-gray-400">🔘 Nunca</span>;
     }
-    
+
     if (daysSinceLastScrobble! <= 1) {
       return <span className="text-green-600">🟢 Muy activo</span>;
     } else if (daysSinceLastScrobble! <= 7) {
@@ -117,13 +129,13 @@ export default function EnhancedUsersTable({ users, searchText, status }: Enhanc
 
   const formatTimeAgo = (date: Date | null) => {
     if (!date) return "-";
-    
+
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor(diff / (1000 * 60));
-    
+
     if (days > 0) return `${days}d`;
     if (hours > 0) return `${hours}h`;
     if (minutes > 0) return `${minutes}m`;
@@ -133,21 +145,30 @@ export default function EnhancedUsersTable({ users, searchText, status }: Enhanc
   const getSetupProgress = (user: User) => {
     let progress = 0;
     let total = 3;
-    
+
     if (user.ytmusicCookie) progress++;
     if (user.lastFmSessionKey) progress++;
     if (user.isActive) progress++;
-    
+
     const percentage = (progress / total) * 100;
-    const color = percentage === 100 ? 'bg-green-500' : 
-                  percentage >= 66 ? 'bg-yellow-500' : 'bg-red-500';
-    
+    const color =
+      percentage === 100
+        ? "bg-green-500"
+        : percentage >= 66
+          ? "bg-yellow-500"
+          : "bg-red-500";
+
     return (
       <div className="flex items-center space-x-2">
         <div className="w-16 bg-gray-200 rounded-full h-2">
-          <div className={`h-2 rounded-full ${color}`} style={{ width: `${percentage}%` }}></div>
+          <div
+            className={`h-2 rounded-full ${color}`}
+            style={{ width: `${percentage}%` }}
+          ></div>
         </div>
-        <span className="text-xs text-gray-500">{progress}/{total}</span>
+        <span className="text-xs text-gray-500">
+          {progress}/{total}
+        </span>
       </div>
     );
   };
@@ -201,7 +222,10 @@ export default function EnhancedUsersTable({ users, searchText, status }: Enhanc
                       <p className="text-sm font-medium text-gray-900 truncate">
                         {user.name}
                       </p>
-                      <p className="text-xs text-gray-500 truncate" title={user.email}>
+                      <p
+                        className="text-xs text-gray-500 truncate"
+                        title={user.email}
+                      >
                         {user.email}
                       </p>
                       {user.lastFmUsername && (
@@ -228,12 +252,16 @@ export default function EnhancedUsersTable({ users, searchText, status }: Enhanc
                   <div className="flex flex-col space-y-2">
                     {getSetupProgress(user)}
                     <div className="text-xs space-y-1">
-                      <div className={`flex items-center space-x-1 ${user.ytmusicCookie ? 'text-green-600' : 'text-red-600'}`}>
-                        <span>{user.ytmusicCookie ? '✅' : '❌'}</span>
+                      <div
+                        className={`flex items-center space-x-1 ${user.ytmusicCookie ? "text-green-600" : "text-red-600"}`}
+                      >
+                        <span>{user.ytmusicCookie ? "✅" : "❌"}</span>
                         <span>YTMusic</span>
                       </div>
-                      <div className={`flex items-center space-x-1 ${user.lastFmSessionKey ? 'text-green-600' : 'text-red-600'}`}>
-                        <span>{user.lastFmSessionKey ? '✅' : '❌'}</span>
+                      <div
+                        className={`flex items-center space-x-1 ${user.lastFmSessionKey ? "text-green-600" : "text-red-600"}`}
+                      >
+                        <span>{user.lastFmSessionKey ? "✅" : "❌"}</span>
                         <span>Last.fm</span>
                       </div>
                     </div>
@@ -274,12 +302,14 @@ export default function EnhancedUsersTable({ users, searchText, status }: Enhanc
                 {/* Plan */}
                 <td className="px-4 py-4 whitespace-nowrap">
                   <div className="flex flex-col space-y-1">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      user.subscriptionPlan === 'pro' 
-                        ? 'bg-purple-100 text-purple-800' 
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {user.subscriptionPlan === 'pro' ? '👑 Pro' : '🆓 Free'}
+                    <span
+                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        user.subscriptionPlan === "pro"
+                          ? "bg-purple-100 text-purple-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {user.subscriptionPlan === "pro" ? "👑 Pro" : "🆓 Free"}
                     </span>
                     {user.subscriptionStatus && (
                       <span className="text-xs text-gray-500">
@@ -298,7 +328,8 @@ export default function EnhancedUsersTable({ users, searchText, status }: Enhanc
                           {user.consecutiveFailures} consecutivos
                         </div>
                         <div className="text-xs text-gray-500">
-                          {user.lastFailureType} • {formatTimeAgo(user.lastFailedAt)}
+                          {user.lastFailureType} •{" "}
+                          {formatTimeAgo(user.lastFailedAt)}
                         </div>
                         {user.authNotificationCount > 0 && (
                           <div className="text-xs text-orange-600">
@@ -307,7 +338,9 @@ export default function EnhancedUsersTable({ users, searchText, status }: Enhanc
                         )}
                       </div>
                     ) : (
-                      <span className="text-green-600 text-sm">✅ Sin fallos</span>
+                      <span className="text-green-600 text-sm">
+                        ✅ Sin fallos
+                      </span>
                     )}
                   </div>
                 </td>
@@ -316,16 +349,18 @@ export default function EnhancedUsersTable({ users, searchText, status }: Enhanc
                 <td className="px-4 py-4 whitespace-nowrap">
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => handleUserStatusChange(user.id, user.isActive)}
+                      onClick={() =>
+                        handleUserStatusChange(user.id, user.isActive)
+                      }
                       className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
                         user.isActive
-                          ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                          : 'bg-green-100 text-green-700 hover:bg-green-200'
+                          ? "bg-red-100 text-red-700 hover:bg-red-200"
+                          : "bg-green-100 text-green-700 hover:bg-green-200"
                       }`}
                     >
-                      {user.isActive ? '⏸️ Pausar' : '▶️ Activar'}
+                      {user.isActive ? "⏸️ Pausar" : "▶️ Activar"}
                     </button>
-                    
+
                     {user.consecutiveFailures > 0 && (
                       <button
                         onClick={() => handleResetFailures(user.id)}
@@ -349,13 +384,13 @@ export default function EnhancedUsersTable({ users, searchText, status }: Enhanc
           <div>
             Mostrando {users.length} usuarios
             {searchText && (
-              <span> • Filtrado por: "{searchText}"</span>
+              <span> • Filtrado por: &quot;{searchText}&quot;</span>
             )}
-            {typeof status === 'boolean' && (
-              <span> • Estado: {status ? 'Activos' : 'Inactivos'}</span>
+            {typeof status === "boolean" && (
+              <span> • Estado: {status ? "Activos" : "Inactivos"}</span>
             )}
           </div>
-          
+
           <div className="flex items-center space-x-4 text-xs">
             <div className="flex items-center space-x-1">
               <span className="w-2 h-2 bg-green-500 rounded-full"></span>
