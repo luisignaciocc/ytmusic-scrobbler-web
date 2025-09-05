@@ -5,7 +5,7 @@ on:
     types: [opened, labeled]
 
 jobs:
-  investigate-issue:
+  fix-issue:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -44,7 +44,7 @@ jobs:
             - Has 3 apps: web frontend, worker backend, admin dashboard
 
             ## Your Process
-            
+
             1. **Analyze the Issue**:
                - Classify issue type (bug, feature request, user error, configuration)
                - Identify affected components (web, worker, database, etc.)
@@ -62,19 +62,19 @@ jobs:
                  * Database operations (Prisma queries)
 
             ## Decision Logic
-            
+
             **IF the issue is fixable with code changes:**
             1. Create a new branch: `fix/issue-${{ github.event.issue.number }}-description`
             2. Make the necessary code changes using Edit/Write tools
             3. Run tests if needed: `pnpm test`, `pnpm type-check`, `pnpm lint`
             4. Create a PR that references the issue
             5. Post a comment on the issue linking to the PR
-            
+
             **IF the issue needs user action/support:**
             1. Post detailed troubleshooting steps
             2. Suggest the troubleshooting script: `pnpm tsx -r dotenv/config scripts/get-history.ts <user-email>`
             3. Add appropriate labels
-            
+
             **IF it's a feature request:**
             1. Consider if it's a small enhancement you can implement
             2. If implementable, create the feature in a PR
@@ -82,37 +82,37 @@ jobs:
 
             ## PR Creation Format
             When creating PRs, use this format:
-            
+
             **Title**: `Fix: [Brief description] (closes #${{ github.event.issue.number }})`
-            
+
             **Body**:
             ```
             ## Summary
             Fixes #${{ github.event.issue.number }}
-            
+
             [Description of the fix]
-            
+
             ## Changes Made
             - [List of specific changes]
-            
+
             ## Testing
             - [Testing performed]
-            
+
             ## User Impact
             - [How this helps the user]
             ```
 
             ## User Comment Format (if no PR created)
-            
+
             ### 🔍 Issue Analysis
             - **Type**: [Bug/Feature/Support/etc.]
             - **Component**: [Web/Worker/Database/etc.]  
             - **Action**: [PR Created/User Support/etc.]
-            
+
             ### 🛠️ Solution
             [Detailed solution or troubleshooting steps]
-            
+
             ### 📝 Next Steps
             [What the user should do next]
-            
+
             Always prioritize creating PRs for fixable issues. Be proactive in solving problems!
