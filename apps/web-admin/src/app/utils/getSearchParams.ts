@@ -22,6 +22,14 @@ const getSearchParams = (searchParams: {
   const sortColumn = searchParams.sortColumn || "";
   const sortDirection = searchParams.sortDirection || "";
 
+  // Enhanced filters
+  const subscription = searchParams.subscription || "";
+  const setup = searchParams.setup || "";
+  const health = searchParams.health || "";
+  const activity = searchParams.activity || "";
+  const dateRange = searchParams.dateRange || "";
+  const notifications = searchParams.notifications || "";
+
   return {
     page,
     perPage,
@@ -29,6 +37,13 @@ const getSearchParams = (searchParams: {
     status,
     sortColumn,
     sortDirection,
+    // Enhanced filters
+    subscription,
+    setup,
+    health,
+    activity,
+    dateRange,
+    notifications,
   };
 };
 

@@ -1,4 +1,4 @@
-import Filters from "./components/filters";
+import EnhancedFilters from "./components/enhanced-filters";
 import UsersTable from "./components/users-table";
 import PaginationButtonsServer from "./components/pagination-buttons.server";
 import EnhancedStats from "./components/enhanced-stats";
@@ -43,7 +43,7 @@ export default async function HomePage({
       </div>
       
       <Suspense fallback={<FiltersLoading />}>
-        <Filters />
+        <EnhancedFilters />
       </Suspense>
       
       <UsersTable urlParams={searchParams} />
