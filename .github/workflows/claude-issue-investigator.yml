@@ -21,6 +21,9 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           track_progress: true
+          claude_args: |
+            --allowedTools "Read,Write,Edit,Grep,Bash(gh issue:*),Bash(gh pr:*),Bash(git:*),Bash(pnpm test:*),Bash(pnpm type-check:*),Bash(pnpm lint:*)"
+            --max-turns 25
           prompt: |
             REPO: ${{ github.repository }}
             ISSUE NUMBER: ${{ github.event.issue.number }}
@@ -113,8 +116,3 @@ jobs:
             [What the user should do next]
             
             Always prioritize creating PRs for fixable issues. Be proactive in solving problems!
-
-          claude_args: |
-            --allowedTools "Read,Write,Edit,Grep,Bash(gh issue:*),Bash(gh pr:*),Bash(git:*),Bash(pnpm test:*),Bash(pnpm type-check:*),Bash(pnpm lint:*)"
-            --max-turns 25
-            --timeout 1200
