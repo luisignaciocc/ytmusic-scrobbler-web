@@ -812,11 +812,14 @@ export class AppConsumer implements OnModuleInit {
       let songsReproducedToday = 0;
       let songsScrobbled = 0;
 
+      const isProUser = user.subscriptionPlan === "pro";
+
       // Pre-calculate how many songs will be scrobbled for better timestamp distribution
       let totalSongsToScrobble = 0;
       if (songsOnDB.length === 0) {
-        // First time users don't scrobble
-        totalSongsToScrobble = 0;
+        // First time users: scrobble recent songs with temporal limit
+        const maxFirstTimeSongs = isProUser ? 20 : 10;
+        totalSongsToScrobble = Math.min(todaySongs.length, maxFirstTimeSongs);
       } else {
         // Count new songs and re-reproductions
         for (let i = 0; i < todaySongs.length; i++) {
@@ -835,8 +838,6 @@ export class AppConsumer implements OnModuleInit {
         }
       }
 
-      const isProUser = user.subscriptionPlan === "pro";
-
       this.logger.debug(
         `Starting to process ${todaySongs.length} songs for user ${userId} (${totalSongsToScrobble} will be scrobbled)`,
       );
@@ -846,22 +847,65 @@ export class AppConsumer implements OnModuleInit {
         songsReproducedToday++;
         try {
           if (songsOnDB.length === 0) {
-            // First time scrobbling, don't send all the previous songs to Last.fm
-            this.logger.debug(
-              `First-time user ${userId}: Adding song "${song.title}" to database without scrobbling`,
-            );
+            // First time scrobbling: scrobble limited number of recent songs
+            const maxFirstTimeSongs = isProUser ? 20 : 10;
+            
+            if (songsReproducedToday <= maxFirstTimeSongs) {
+              // Scrobble this song (within the limit)
+              this.logger.debug(
+                `First-time user ${userId}: Scrobbling song "${song.title}" by ${song.artist} (${songsReproducedToday}/${maxFirstTimeSongs})`,
+              );
 
-            await this.prisma.song.create({
-              data: {
-                title: song.title,
-                artist: song.artist,
-                album: song.album,
-                addedAt: new Date(),
-                userId: user.id,
-                arrayPosition: songsReproducedToday,
-                maxArrayPosition: songsReproducedToday,
-              },
-            });
+              await Promise.all([
+                scrobbleSong({
+                  song,
+                  lastFmApiKey: LAST_FM_API_KEY,
+                  lastFmApiSecret: LAST_FM_API_SECRET,
+                  lastFmSessionKey: user.lastFmSessionKey!,
+                  timestamp: this.calculateScrobbleTimestamp(
+                    songsScrobbled,
+                    totalSongsToScrobble,
+                    isProUser
+                  ),
+                }),
+                this.prisma.song.create({
+                  data: {
+                    title: song.title,
+                    artist: song.artist,
+                    album: song.album,
+                    addedAt: new Date(),
+                    userId: user.id,
+                    arrayPosition: songsReproducedToday,
+                    maxArrayPosition: songsReproducedToday,
+                  },
+                }),
+              ]);
+
+              songsScrobbled++;
+              this.logger.debug(
+                `Successfully scrobbled first-time song for user ${userId}: "${song.title}" by ${song.artist}`,
+              );
+              job.log(
+                `First-time scrobble: ${song.title} by ${song.artist} (${songsScrobbled}/${totalSongsToScrobble})`,
+              );
+            } else {
+              // Just add to database (beyond the scrobbling limit)
+              this.logger.debug(
+                `First-time user ${userId}: Adding song "${song.title}" to database without scrobbling (beyond limit)`,
+              );
+
+              await this.prisma.song.create({
+                data: {
+                  title: song.title,
+                  artist: song.artist,
+                  album: song.album,
+                  addedAt: new Date(),
+                  userId: user.id,
+                  arrayPosition: songsReproducedToday,
+                  maxArrayPosition: songsReproducedToday,
+                },
+              });
+            }
             continue;
           }
           const savedSong = await this.prisma.song.findFirst({
