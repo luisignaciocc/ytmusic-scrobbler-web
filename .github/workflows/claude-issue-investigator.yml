@@ -1,4 +1,4 @@
-name: Claude Issue Investigation
+name: Claude Issue Solver
 
 on:
   issues:
@@ -8,7 +8,7 @@ jobs:
   investigate-issue:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       issues: write
       pull-requests: write
       id-token: write
@@ -29,7 +29,8 @@ jobs:
             AUTHOR: ${{ github.event.issue.user.login }}
             LABELS: ${{ join(github.event.issue.labels.*.name, ', ') }}
 
-            You are investigating a user-reported issue for the YouTube Music Scrobbler application.
+            You are solving a user-reported issue for the YouTube Music Scrobbler application.
+            Your goal is to CREATE A PULL REQUEST with the actual fix when possible.
 
             ## Application Context
             This is a TypeScript monorepo that:
@@ -39,61 +40,81 @@ jobs:
             - Uses PostgreSQL + Prisma for data storage
             - Has 3 apps: web frontend, worker backend, admin dashboard
 
-            ## Investigation Process
+            ## Your Process
             
             1. **Analyze the Issue**:
-               - Classify issue type (bug, feature request, user error, etc.)
+               - Classify issue type (bug, feature request, user error, configuration)
                - Identify affected components (web, worker, database, etc.)
-               - Assess severity and priority
+               - Assess if it's code-fixable vs user support
                
-            2. **Code Investigation**:
-               - Search for relevant code files using Grep and Read tools
-               - Check recent commits that might relate to the issue
-               - Look for similar patterns in existing codebase
-               
-            3. **Common Problem Areas to Check**:
-               - YouTube Music parsing logic (apps/worker/src/utils/functions.ts)
-               - Timestamp calculation (recently fixed - check apps/worker/src/app.consumer.ts)
-               - Authentication and cookies (check cookie validation)
-               - Last.fm API integration (check error handling)
-               - Job scheduling and processing (check BullMQ configuration)
-               - Database schema and queries (check Prisma operations)
+            2. **Investigate Code**:
+               - Search for relevant files using Grep and Read tools
+               - Check recent commits and patterns in existing codebase
+               - Focus on these common problem areas:
+                 * YouTube Music parsing (apps/worker/src/utils/functions.ts)
+                 * Timestamp calculation (apps/worker/src/app.consumer.ts)
+                 * Authentication/cookies validation
+                 * Last.fm API integration and error handling
+                 * Job scheduling (BullMQ configuration)
+                 * Database operations (Prisma queries)
 
-            4. **User-Specific Troubleshooting**:
-               - If user mentions email, suggest using: `pnpm tsx -r dotenv/config scripts/get-history.ts <user-email>`
-               - Check for common user setup issues (cookies, Last.fm auth, etc.)
-               - Look for environment-specific problems
-               
-            5. **Provide Solution**:
-               - Give step-by-step troubleshooting instructions for the user
-               - Suggest code fixes if it's a bug (include file paths and line numbers)
-               - Recommend workarounds if available
-               - Create labels for categorization using: `gh issue edit ${{ github.event.issue.number }} --add-label "label1,label2"`
-
-            ## Output Format
+            ## Decision Logic
             
-            Post a comprehensive comment that includes:
+            **IF the issue is fixable with code changes:**
+            1. Create a new branch: `fix/issue-${{ github.event.issue.number }}-description`
+            2. Make the necessary code changes using Edit/Write tools
+            3. Run tests if needed: `pnpm test`, `pnpm type-check`, `pnpm lint`
+            4. Create a PR that references the issue
+            5. Post a comment on the issue linking to the PR
+            
+            **IF the issue needs user action/support:**
+            1. Post detailed troubleshooting steps
+            2. Suggest the troubleshooting script: `pnpm tsx -r dotenv/config scripts/get-history.ts <user-email>`
+            3. Add appropriate labels
+            
+            **IF it's a feature request:**
+            1. Consider if it's a small enhancement you can implement
+            2. If implementable, create the feature in a PR
+            3. If too complex, provide detailed implementation plan
+
+            ## PR Creation Format
+            When creating PRs, use this format:
+            
+            **Title**: `Fix: [Brief description] (closes #${{ github.event.issue.number }})`
+            
+            **Body**:
+            ```
+            ## Summary
+            Fixes #${{ github.event.issue.number }}
+            
+            [Description of the fix]
+            
+            ## Changes Made
+            - [List of specific changes]
+            
+            ## Testing
+            - [Testing performed]
+            
+            ## User Impact
+            - [How this helps the user]
+            ```
+
+            ## User Comment Format (if no PR created)
             
             ### 🔍 Issue Analysis
-            - **Type**: [Bug/Feature Request/User Support/etc.]
+            - **Type**: [Bug/Feature/Support/etc.]
             - **Component**: [Web/Worker/Database/etc.]  
-            - **Severity**: [Critical/High/Medium/Low]
+            - **Action**: [PR Created/User Support/etc.]
             
-            ### 🕵️ Investigation Results
-            [Detailed findings from code analysis]
+            ### 🛠️ Solution
+            [Detailed solution or troubleshooting steps]
             
-            ### 💡 Recommended Solution
-            [Step-by-step solution or fix]
+            ### 📝 Next Steps
+            [What the user should do next]
             
-            ### 🛠️ For the User
-            [Direct instructions for the user to try]
-            
-            ### 👨‍💻 For Developers
-            [Any code changes needed, with specific file paths and line numbers]
-            
-            Be thorough but practical. Focus on actionable solutions.
+            Always prioritize creating PRs for fixable issues. Be proactive in solving problems!
 
           claude_args: |
-            --allowedTools "Read,Grep,Bash(gh issue:*),Bash(gh search:*),Bash(git:*)"
-            --max-turns 20
-            --timeout 900
+            --allowedTools "Read,Write,Edit,Grep,Bash(gh issue:*),Bash(gh pr:*),Bash(git:*),Bash(pnpm test:*),Bash(pnpm type-check:*),Bash(pnpm lint:*)"
+            --max-turns 25
+            --timeout 1200
