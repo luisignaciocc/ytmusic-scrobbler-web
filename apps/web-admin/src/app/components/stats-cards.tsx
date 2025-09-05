@@ -3,13 +3,38 @@
 import { useState, useEffect } from 'react';
 
 interface Stats {
+  // Basic metrics
   totalUsers: number;
   activeUsers: number;
-  usersWithRecentScrobbles: number;
+  usersWithRecentScrobbles24h: number;
+  usersWithRecentScrobbles7d: number;
+  usersWithRecentScrobbles30d: number;
   totalScrobbles: number;
-  recentScrobbles: number;
+  recentScrobbles24h: number;
+  recentScrobbles7d: number;
+  recentScrobbles30d: number;
+
+  // Health metrics
+  usersWithAuthFailures: number;
+  usersWithNetworkFailures: number;
+  usersWithoutCookie: number;
+  usersWithoutLastFm: number;
+
+  // Growth metrics
+  usersCreatedToday: number;
+  usersCreatedThisWeek: number;
+
+  // Calculated metrics
   inactiveUsers: number;
-  usersWithoutRecentScrobbles: number;
+  usersWithoutRecentScrobbles24h: number;
+  activeUserRate: number;
+  recentActivityRate24h: number;
+  setupCompletionRate: number;
+
+  // Insights
+  avgScrobblesPerActiveUser: number;
+  topArtists: { artist: string; count: number }[];
+  failureStats: Record<string, number>;
 }
 
 export default function StatsCards() {

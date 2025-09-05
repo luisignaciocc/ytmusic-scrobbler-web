@@ -49,6 +49,37 @@ export async function getUsers(
           isActive: true,
           lastSuccessfulScrobble: true,
           createdAt: true,
+          updatedAt: true,
+          // Health indicators
+          consecutiveFailures: true,
+          lastFailureType: true,
+          lastFailedAt: true,
+          // Setup completion
+          ytmusicCookie: true,
+          lastFmSessionKey: true,
+          // Subscription info
+          subscriptionPlan: true,
+          subscriptionStatus: true,
+          // Notification settings
+          notificationsEnabled: true,
+          authNotificationCount: true,
+          lastNotificationSent: true,
+          // Song count
+          Songs: {
+            select: {
+              id: true,
+              addedAt: true,
+            },
+            take: 1,
+            orderBy: {
+              addedAt: 'desc'
+            }
+          },
+          _count: {
+            select: {
+              Songs: true
+            }
+          }
         },
         where: whereConditions,
         orderBy: orderBy,
@@ -82,6 +113,29 @@ export async function updateUserStatus(userId: string, isActive: boolean) {
     return updatedUser.isActive;
   } catch (error) {
     console.error("Error updating user status:", error);
+    throw error;
+  }
+}
+
+export async function resetUserFailures(userId: string) {
+  try {
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        consecutiveFailures: 0,
+        lastFailureType: null,
+        lastFailedAt: null,
+        authNotificationCount: 0,
+        lastNotificationSent: null,
+        isActive: true, // Reactivate user when failures are reset
+      },
+    });
+
+    return updatedUser;
+  } catch (error) {
+    console.error("Error resetting user failures:", error);
     throw error;
   }
 }
