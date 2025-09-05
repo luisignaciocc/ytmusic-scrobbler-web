@@ -55,11 +55,9 @@ jobs:
             echo "should-deploy-web=true" >> $GITHUB_OUTPUT
           fi
 
-  stop-services:
+  stop-worker:
     needs: check-changes
-    if: |
-      needs.check-changes.outputs.should-deploy-worker == 'true' || 
-      needs.check-changes.outputs.should-deploy-web == 'true'
+    if: needs.check-changes.outputs.should-deploy-worker == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Copy SSH key
@@ -72,38 +70,29 @@ jobs:
         run: |
           ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Stop Services
+      - name: Stop Worker Only
         env:
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_DIR: ~/ytmusic-scrobbler-web
-          SHOULD_DEPLOY_WORKER: ${{ needs.check-changes.outputs.should-deploy-worker }}
-          SHOULD_DEPLOY_WEB: ${{ needs.check-changes.outputs.should-deploy-web }}
         run: |
           ssh $REMOTE_USER@$REMOTE_HOST << EOF
             export PATH=$PATH:/home/$REMOTE_USER/.nvm/versions/node/v22.3.0/bin:/home/$REMOTE_USER/.local/share/pnpm
             cd $REMOTE_DIR
             git pull
-            
-            if [ "$SHOULD_DEPLOY_WORKER" = "true" ]; then
-              echo "🔄 Stopping worker..."
-              pm2 stop yt-music-scrobbler-worker || true
-            fi
-            
-            if [ "$SHOULD_DEPLOY_WEB" = "true" ]; then
-              echo "🔄 Stopping web app..."
-              pm2 stop yt-music-scrobbler-web || true
-            fi
-            
+            echo "🔄 Stopping worker (web stays running)..."
+            pm2 stop yt-music-scrobbler-worker || true
             pkill turbo || true
-            echo "✅ Services stopped"
+            echo "✅ Worker stopped, web remains online"
           EOF
 
-  build-and-start:
-    needs: [check-changes, stop-services]
+  build-and-deploy:
+    needs: [check-changes, stop-worker]
     if: |
-      needs.check-changes.outputs.should-deploy-worker == 'true' || 
-      needs.check-changes.outputs.should-deploy-web == 'true'
+      always() &&
+      (needs.check-changes.outputs.should-deploy-worker == 'true' || 
+       needs.check-changes.outputs.should-deploy-web == 'true') &&
+      (needs.stop-worker.result == 'success' || needs.stop-worker.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - name: Copy SSH key
@@ -116,7 +105,7 @@ jobs:
         run: |
           ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Build and Start Services
+      - name: Build and Deploy Services
         env:
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
@@ -131,23 +120,23 @@ jobs:
             echo "📦 Installing dependencies..."
             pnpm install
             
-            # Build worker first if needed
+            # Build worker first if needed (worker is already stopped)
             if [ "$SHOULD_DEPLOY_WORKER" = "true" ]; then
-              echo "🏗️ Building worker..."
+              echo "🏗️ Building worker (offline)..."
               pnpm build --filter worker
               pkill turbo || true
               echo "✅ Worker build completed"
             fi
             
-            # Build web if needed  
+            # Build web if needed (web stays online during build)
             if [ "$SHOULD_DEPLOY_WEB" = "true" ]; then
-              echo "🏗️ Building web app..."
+              echo "🏗️ Building web app (online)..."
               pnpm build --filter web
               pkill turbo || true
               echo "✅ Web build completed"
             fi
             
-            # Start worker first if it was built
+            # Start worker if it was built
             if [ "$SHOULD_DEPLOY_WORKER" = "true" ]; then
               echo "🗑️ Clearing Redis..."
               redis-cli flushall
@@ -157,11 +146,11 @@ jobs:
               echo "✅ Worker started"
             fi
             
-            # Start web app if it was built
+            # Restart web app if it was built (quick restart, minimal downtime)
             if [ "$SHOULD_DEPLOY_WEB" = "true" ]; then
-              echo "▶️ Starting web app..."
-              pm2 start yt-music-scrobbler-web
-              echo "✅ Web app started"
+              echo "🔄 Restarting web app (quick restart)..."
+              pm2 restart yt-music-scrobbler-web
+              echo "✅ Web app restarted"
             fi
             
             echo "🎉 Deployment completed successfully"
