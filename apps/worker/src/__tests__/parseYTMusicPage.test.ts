@@ -1,6 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'fs'
-import { join } from 'path'
+import { describe, expect,it } from 'vitest'
+
 import { parseYTMusicPageResponse } from '../utils/functions'
 
 // Helper function to test regex directly
@@ -20,12 +19,13 @@ describe('parseYTMusicPageResponse', () => {
       `initialData.push({type:'test',data: 'test123'});`
     ];
     
-    variations.forEach((html, index) => {
+    variations.forEach((html, _index) => {
       const matches = testInitialDataRegex(html);
-      console.log(`Variation ${index + 1}:`, html);
-      console.log(`Matches:`, matches.length);
+      // Debug variations for regex testing
+      expect(typeof html).toBe('string');
+      expect(Array.isArray(matches)).toBe(true);
       if (matches.length > 0) {
-        console.log(`Data:`, matches[0][1]);
+        expect(matches[0][1]).toBeDefined();
       }
     });
 

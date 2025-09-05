@@ -27,10 +27,12 @@ export class AppConsumer implements OnModuleInit {
     totalSongsToScrobble: number,
     isProUser: boolean = false
   ): string {
-    // For pro users (5 min intervals), distribute over last 4 hours
-    // For free users (1 hour intervals), distribute over last 16 hours
-    const distributionHours = isProUser ? 4 : 16;
-    const distributionSeconds = distributionHours * 60 * 60;
+    // Fixed: Use much shorter distribution windows to prevent incorrect timestamps
+    // Pro users (5 min intervals): distribute over last 30 minutes max
+    // Free users (1 hour intervals): distribute over last 90 minutes max
+    // This ensures scrobbles appear recent and in correct chronological order
+    const distributionMinutes = isProUser ? 30 : 90;
+    const distributionSeconds = distributionMinutes * 60;
     
     const now = Math.floor(new Date().getTime() / 1000);
     
@@ -39,7 +41,7 @@ export class AppConsumer implements OnModuleInit {
       return (now - 30).toString();
     }
     
-    // Distribute songs evenly across the time window
+    // Distribute songs across a much smaller, more recent time window
     // Most recent song gets smallest offset (30 seconds)
     // Oldest song gets largest offset (up to distributionSeconds)
     const minOffset = 30;
@@ -48,8 +50,9 @@ export class AppConsumer implements OnModuleInit {
     // Calculate position ratio (0 = most recent, 1 = oldest)
     const positionRatio = songsScrobbledSoFar / (totalSongsToScrobble - 1);
     
-    // Calculate offset with exponential distribution (more songs recent, fewer old)
-    const offset = minOffset + (maxOffset - minOffset) * Math.pow(positionRatio, 0.7);
+    // Use linear distribution for more predictable timing
+    // This maintains chronological order from YouTube Music history
+    const offset = minOffset + (maxOffset - minOffset) * positionRatio;
     
     return Math.floor(now - offset).toString();
   }
