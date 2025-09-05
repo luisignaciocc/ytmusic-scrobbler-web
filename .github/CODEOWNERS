@@ -1,0 +1,20 @@
+# Global code owners - these users will be automatically requested as reviewers for all PRs
+
+# Root level and all files
+* @luisignaciocc
+
+# Specific patterns for important files
+*.md @luisignaciocc
+*.json @luisignaciocc
+*.yml @luisignaciocc
+*.yaml @luisignaciocc
+
+# Source code
+/apps/ @luisignaciocc
+/packages/ @luisignaciocc
+schema.prisma @luisignaciocc
+
+# Configuration files
+/.github/ @luisignaciocc
+/docker-compose.yml @luisignaciocc
+/turbo.json @luisignaciocc
