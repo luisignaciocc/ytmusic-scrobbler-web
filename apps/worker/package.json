@@ -13,6 +13,7 @@
     "start:prod": "node dist/main",
     "type-check": "tsc --pretty --noEmit",
     "lint": "eslint 'src/**/*.{ts,tsx,js,jsx}' --fix",
+    "test": "vitest",
     "prebuild": "pnpm --workspace-root run generate && pnpm --workspace-root run migrate deploy"
   },
   "dependencies": {

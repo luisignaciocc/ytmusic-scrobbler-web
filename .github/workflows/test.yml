@@ -1,0 +1,79 @@
+name: Run Tests
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "tests/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/test.yml"
+  push:
+    branches: [master]
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "tests/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/test.yml"
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.3.0
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm generate
+
+      - name: Run tests
+        run: |
+          echo "🧪 Running root workspace tests..."
+          pnpm test --run
+          
+          echo "🧪 Running worker tests..."
+          pnpm --filter worker test --run
+        env:
+          # Disable file watching since we're in CI
+          CI: true
+
+      - name: Test Summary
+        if: always()
+        run: |
+          echo "✅ Test execution completed"
+          echo "📊 Check the logs above for detailed results"
