@@ -257,10 +257,10 @@ export default async function Home() {
                 <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
                   Need help? We&apos;re here for you! Contact us at{" "}
                   <a
-                    href="mailto:me@luisignacio.cc"
+                    href="mailto:hi@bocono-labs.com"
                     className="underline text-blue-500"
                   >
-                    me@luisignacio.cc
+                    hi@bocono-labs.com
                   </a>
                 </p>
               </div>

@@ -191,8 +191,8 @@ const PrivacyPolicy = () => (
       <p className="mb-6 text-justify">
         If you have any questions about this Privacy Policy, please contact us
         at{" "}
-        <a href="mailto:me@luisignacio.cc" className="underline text-blue-500">
-          me@luisignacio.cc
+        <a href="mailto:hi@bocono-labs.com" className="underline text-blue-500">
+          hi@bocono-labs.com
         </a>
         .
       </p>

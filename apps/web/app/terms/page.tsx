@@ -113,8 +113,8 @@ const TermsOfService = () => (
         subscriptions. If you are not satisfied with our service, you may
         request a refund within 30 days of your purchase. To request a refund,
         please contact us at{" "}
-        <a href="mailto:me@luisignacio.cc" className="underline text-blue-500">
-          me@luisignacio.cc
+        <a href="mailto:hi@bocono-labs.com" className="underline text-blue-500">
+          hi@bocono-labs.com
         </a>
         . Refunds will be processed within 5-10 business days of approval. Once
         approved, the refund will be credited back to your original payment
@@ -131,8 +131,8 @@ const TermsOfService = () => (
       <h2 className="text-2xl font-semibold mb-4">11. Contact</h2>
       <p className="mb-6 text-justify">
         If you have any questions about these Terms, please contact us at{" "}
-        <a href="mailto:me@luisignacio.cc" className="underline text-blue-500">
-          me@luisignacio.cc
+        <a href="mailto:hi@bocono-labs.com" className="underline text-blue-500">
+          hi@bocono-labs.com
         </a>
         .
       </p>

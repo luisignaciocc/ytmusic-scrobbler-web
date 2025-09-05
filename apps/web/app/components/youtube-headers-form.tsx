@@ -183,7 +183,7 @@ export default function YouTubeHeadersForm({
               <p className="text-sm text-gray-500 mt-4">
                 Need help?{" "}
                 <a
-                  href="mailto:me@luisignacio.cc"
+                  href="mailto:hi@bocono-labs.com"
                   className="text-blue-500 hover:underline"
                 >
                   Contact us
