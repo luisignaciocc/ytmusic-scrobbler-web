@@ -42,12 +42,13 @@ model User {
 }
 
 model Song {
-  id            String   @id @default(cuid())
-  title         String
-  artist        String
-  album         String?
-  arrayPosition Int      @default(0)
-  addedAt       DateTime
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId        String
+  id               String   @id @default(cuid())
+  title            String
+  artist           String
+  album            String?
+  arrayPosition    Int      @default(0)
+  maxArrayPosition Int      @default(0)
+  addedAt          DateTime
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId           String
 }

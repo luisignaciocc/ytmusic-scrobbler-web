@@ -22,6 +22,38 @@ export class AppConsumer implements OnModuleInit {
   constructor(private readonly prisma: PrismaService) {}
   private readonly logger = new Logger(AppConsumer.name);
 
+  private calculateScrobbleTimestamp(
+    songsScrobbledSoFar: number,
+    totalSongsToScrobble: number,
+    isProUser: boolean = false
+  ): string {
+    // For pro users (5 min intervals), distribute over last 4 hours
+    // For free users (1 hour intervals), distribute over last 16 hours
+    const distributionHours = isProUser ? 4 : 16;
+    const distributionSeconds = distributionHours * 60 * 60;
+    
+    const now = Math.floor(new Date().getTime() / 1000);
+    
+    // If only one song, place it 30 seconds ago
+    if (totalSongsToScrobble === 1) {
+      return (now - 30).toString();
+    }
+    
+    // Distribute songs evenly across the time window
+    // Most recent song gets smallest offset (30 seconds)
+    // Oldest song gets largest offset (up to distributionSeconds)
+    const minOffset = 30;
+    const maxOffset = distributionSeconds;
+    
+    // Calculate position ratio (0 = most recent, 1 = oldest)
+    const positionRatio = songsScrobbledSoFar / (totalSongsToScrobble - 1);
+    
+    // Calculate offset with exponential distribution (more songs recent, fewer old)
+    const offset = minOffset + (maxOffset - minOffset) * Math.pow(positionRatio, 0.7);
+    
+    return Math.floor(now - offset).toString();
+  }
+
   private getValidNotificationEmail(user: { notificationEmail: string | null; email: string }): string | null {
     // Priority 1: Use notificationEmail if it exists and is valid
     if (user.notificationEmail && this.isValidEmailAddress(user.notificationEmail)) {
@@ -521,6 +553,7 @@ export class AppConsumer implements OnModuleInit {
         lastFmSessionKey: true,
         lastFmUsername: true,
         ytmusicCookie: true,
+        subscriptionPlan: true,
       },
     });
     if (!user) {
@@ -583,6 +616,7 @@ export class AppConsumer implements OnModuleInit {
         artist: string;
         album: string;
         arrayPosition: number;
+        maxArrayPosition: number;
         addedAt: Date;
         userId: string;
       }[] = [];
@@ -600,6 +634,16 @@ export class AppConsumer implements OnModuleInit {
           this.prisma.song.findMany({
             where: {
               userId: user.id,
+            },
+            select: {
+              id: true,
+              title: true,
+              artist: true,
+              album: true,
+              arrayPosition: true,
+              maxArrayPosition: true,
+              addedAt: true,
+              userId: true,
             },
           }),
         ]);
@@ -768,10 +812,35 @@ export class AppConsumer implements OnModuleInit {
       let songsReproducedToday = 0;
       let songsScrobbled = 0;
 
+      // Pre-calculate how many songs will be scrobbled for better timestamp distribution
+      let totalSongsToScrobble = 0;
+      if (songsOnDB.length === 0) {
+        // First time users don't scrobble
+        totalSongsToScrobble = 0;
+      } else {
+        // Count new songs and re-reproductions
+        for (let i = 0; i < todaySongs.length; i++) {
+          const song = todaySongs[i];
+          const currentPosition = i + 1;
+          
+          const savedSong = songsOnDB.find(s => 
+            s.title === song.title && 
+            s.artist === song.artist && 
+            s.album === song.album
+          );
+          
+          if (!savedSong || currentPosition < savedSong.maxArrayPosition) {
+            totalSongsToScrobble++;
+          }
+        }
+      }
+
+      const isProUser = user.subscriptionPlan === "pro";
+
       this.logger.debug(
-        `Starting to process ${todaySongs.length} songs for user ${userId}`,
+        `Starting to process ${todaySongs.length} songs for user ${userId} (${totalSongsToScrobble} will be scrobbled)`,
       );
-      job.log(`Processing ${todaySongs.length} songs for scrobbling`);
+      job.log(`Processing ${todaySongs.length} songs for scrobbling (${totalSongsToScrobble} new/re-reproductions)`);
 
       for (const song of todaySongs) {
         songsReproducedToday++;
@@ -790,6 +859,7 @@ export class AppConsumer implements OnModuleInit {
                 addedAt: new Date(),
                 userId: user.id,
                 arrayPosition: songsReproducedToday,
+                maxArrayPosition: songsReproducedToday,
               },
             });
             continue;
@@ -813,10 +883,11 @@ export class AppConsumer implements OnModuleInit {
                 lastFmApiKey: LAST_FM_API_KEY,
                 lastFmApiSecret: LAST_FM_API_SECRET,
                 lastFmSessionKey: user.lastFmSessionKey!,
-                timestamp: (
-                  Math.floor(new Date().getTime() / 1000) -
-                  30 * (songsScrobbled + 1)
-                ).toString(),
+                timestamp: this.calculateScrobbleTimestamp(
+                  songsScrobbled,
+                  totalSongsToScrobble,
+                  isProUser
+                ),
               }),
               this.prisma.song.create({
                 data: {
@@ -826,6 +897,7 @@ export class AppConsumer implements OnModuleInit {
                   addedAt: new Date(),
                   userId: user.id,
                   arrayPosition: songsReproducedToday,
+                  maxArrayPosition: songsReproducedToday,
                 },
               }),
             ]);
@@ -837,9 +909,10 @@ export class AppConsumer implements OnModuleInit {
             job.log(
               `Scrobbled song ${song.title} by ${song.artist} - user ${userId}`,
             );
-          } else if (savedSong.arrayPosition > songsReproducedToday) {
+          } else if (songsReproducedToday < savedSong.maxArrayPosition) {
+            // This is a re-reproduction - song appears higher in the list than before
             this.logger.debug(
-              `Repositioned song for user ${userId}: "${song.title}" moved from position ${savedSong.arrayPosition} to ${songsReproducedToday}`,
+              `Re-reproduction detected for user ${userId}: "${song.title}" at position ${songsReproducedToday}, previous max was ${savedSong.maxArrayPosition}`,
             );
 
             await Promise.all([
@@ -848,10 +921,11 @@ export class AppConsumer implements OnModuleInit {
                 lastFmApiKey: LAST_FM_API_KEY,
                 lastFmApiSecret: LAST_FM_API_SECRET,
                 lastFmSessionKey: user.lastFmSessionKey!,
-                timestamp: (
-                  Math.floor(new Date().getTime() / 1000) -
-                  30 * (songsScrobbled + 1)
-                ).toString(),
+                timestamp: this.calculateScrobbleTimestamp(
+                  songsScrobbled,
+                  totalSongsToScrobble,
+                  isProUser
+                ),
               }),
               this.prisma.song.update({
                 where: {
@@ -859,17 +933,29 @@ export class AppConsumer implements OnModuleInit {
                 },
                 data: {
                   arrayPosition: songsReproducedToday,
+                  maxArrayPosition: savedSong.maxArrayPosition, // Keep the previous max
                 },
               }),
             ]);
 
             songsScrobbled++;
             this.logger.debug(
-              `Successfully scrobbled repositioned song for user ${userId}: "${song.title}" by ${song.artist}`,
+              `Successfully scrobbled re-reproduction for user ${userId}: "${song.title}" by ${song.artist}`,
             );
             job.log(
-              `Scrobbled repositioned song: ${song.title} by ${song.artist}`,
+              `Scrobbled re-reproduction: ${song.title} by ${song.artist}`,
             );
+          } else {
+            // Update position but don't scrobble (song moved down or stayed same)
+            await this.prisma.song.update({
+              where: {
+                id: savedSong.id,
+              },
+              data: {
+                arrayPosition: songsReproducedToday,
+                maxArrayPosition: Math.max(savedSong.maxArrayPosition, songsReproducedToday),
+              },
+            });
           }
         } catch (error) {
           this.logger.debug(
