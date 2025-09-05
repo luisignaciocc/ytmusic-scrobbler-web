@@ -96,8 +96,9 @@ function sanitizeString(str: string): string {
     .replace(/[\u2013\u2014]/g, "-") // Replace en/em dashes
     .replace(/[\u2018\u2019]/g, "'") // Replace smart single quotes
     .replace(/[\u201C\u201D]/g, '"') // Replace smart double quotes
-    // Remove problematic characters but preserve Spanish accented characters and common symbols
-    .replace(/[^\x00-\x7F\u00C0-\u00FF\u0100-\u017F\u1E00-\u1EFF]/g, "");
+    // Only remove truly problematic characters (control chars, private use, etc.)
+    // but preserve all valid Unicode characters including Japanese, Russian, Chinese, etc.
+    .replace(/[\u0000-\u001F\u007F-\u009F\uFDD0-\uFDEF\uFFFE\uFFFF]/g, ""); // Remove control chars and invalid Unicode
 }
 
 function sapisidFromCookie(rawCookie: string): string {
