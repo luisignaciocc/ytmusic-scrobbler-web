@@ -57,7 +57,9 @@ jobs:
 
   stop-worker:
     needs: check-changes
-    if: needs.check-changes.outputs.should-deploy-worker == 'true'
+    if: |
+      needs.check-changes.outputs.should-deploy-worker == 'true' ||
+      needs.check-changes.outputs.should-deploy-web == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Copy SSH key
