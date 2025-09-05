@@ -39,6 +39,7 @@ model User {
   lastFailureType           String?   // AUTH, NETWORK, LASTFM, UNKNOWN
   lastFailedAt              DateTime?
   authNotificationCount     Int       @default(0)  // Count of auth failure notifications sent (max 3)
+  isFirstTimeReady          Boolean   @default(false) // Include in next Pro cycle for immediate first scrobble
 }
 
 model Song {

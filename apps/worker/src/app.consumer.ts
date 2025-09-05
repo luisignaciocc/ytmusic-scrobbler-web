@@ -156,6 +156,8 @@ export class AppConsumer implements OnModuleInit {
         // Reset auth notification counter and timestamp on successful scrobble
         authNotificationCount: 0,
         lastNotificationSent: null, // Reset only after proven successful scrobble
+        // Reset first-time ready flag after successful first scrobble
+        isFirstTimeReady: false,
       },
     });
   }

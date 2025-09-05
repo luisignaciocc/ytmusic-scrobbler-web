@@ -12,6 +12,7 @@ interface UserWithFailureInfo {
   lastFailedAt: Date | null;
   lastSuccessfulScrobble: Date | null;
   subscriptionPlan: string;
+  isFirstTimeReady: boolean;
 }
 
 @Injectable()
@@ -158,17 +159,34 @@ export class AppProducer implements OnModuleInit {
       Date.now() - 1000 * 60 * 60 * 24 * 5,
     ); // 5 days
 
-    const activeUsers = await this.prisma.user.findMany({
-      where: {
-        isActive: true,
-        subscriptionPlan,
-        lastFmSessionKey: {
-          not: null,
-        },
-        ytmusicCookie: {
-          not: null,
-        },
+    // For Pro cycle: include Pro users + Free users ready for first-time processing
+    // For Free cycle: only Free users (excluding those with isFirstTimeReady to avoid double processing)
+    const whereCondition = subscriptionPlan === "pro" ? {
+      isActive: true,
+      OR: [
+        { subscriptionPlan: "pro" },
+        { subscriptionPlan: "free", isFirstTimeReady: true }
+      ],
+      lastFmSessionKey: {
+        not: null,
       },
+      ytmusicCookie: {
+        not: null,
+      },
+    } : {
+      isActive: true,
+      subscriptionPlan: "free",
+      isFirstTimeReady: false, // Exclude first-time ready users (they get processed in Pro cycle)
+      lastFmSessionKey: {
+        not: null,
+      },
+      ytmusicCookie: {
+        not: null,
+      },
+    };
+
+    const activeUsers = await this.prisma.user.findMany({
+      where: whereCondition,
       orderBy: [
         { consecutiveFailures: "asc" }, // Process users with fewer failures first
         { lastSuccessfulScrobble: "desc" }, // Then by most recent successful scrobbles
@@ -181,6 +199,7 @@ export class AppProducer implements OnModuleInit {
         lastFailedAt: true,
         lastSuccessfulScrobble: true,
         subscriptionPlan: true,
+        isFirstTimeReady: true,
       },
     });
 
@@ -200,9 +219,19 @@ export class AppProducer implements OnModuleInit {
       return;
     }
 
-    this.logger.debug(
-      `Processing ${count}/${activeUsers.length} ${subscriptionPlan} users (${activeUsers.length - count} skipped due to circuit breaker)`,
-    );
+    // For Pro cycle, show breakdown of Pro vs first-time Free users
+    if (subscriptionPlan === "pro") {
+      const proUsers = usersToProcess.filter(u => u.subscriptionPlan === "pro").length;
+      const firstTimeFreeUsers = usersToProcess.filter(u => u.subscriptionPlan === "free" && u.isFirstTimeReady).length;
+      
+      this.logger.debug(
+        `Processing ${count} users: ${proUsers} pro + ${firstTimeFreeUsers} first-time free (${activeUsers.length - count} skipped due to circuit breaker)`,
+      );
+    } else {
+      this.logger.debug(
+        `Processing ${count}/${activeUsers.length} ${subscriptionPlan} users (${activeUsers.length - count} skipped due to circuit breaker)`,
+      );
+    }
 
     const equidistantInterval = cronInterval / count;
 

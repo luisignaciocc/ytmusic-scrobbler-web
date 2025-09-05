@@ -1,5 +1,5 @@
 // https://www.last.fm/api/accounts
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 import crypto from "crypto";
 import { redirect } from "next/navigation";
 import { parseStringPromise } from "xml2js";
@@ -61,14 +61,36 @@ export async function GET(request: Request) {
     const lastFmSessionKey = lfm.session[0].key[0];
     const lastFmUsername = lfm.session[0].name[0];
 
+    // Get current user info to determine if we should set first-time ready flag
+    const currentUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { 
+        subscriptionPlan: true,
+        isActive: true,
+        ytmusicCookie: true
+      }
+    });
+
+    const updateData: Prisma.UserUpdateInput = {
+      lastFmSessionKey,
+      lastFmUsername,
+    };
+
+    // Set first-time ready flag if:
+    // 1. User is Free (Pro users don't need this)
+    // 2. User is active and has YouTube Music headers (ready to scrobble)
+    if (currentUser && 
+        currentUser.subscriptionPlan !== "pro" && 
+        currentUser.isActive && 
+        currentUser.ytmusicCookie) {
+      updateData.isFirstTimeReady = true;
+    }
+
     await prisma.user.update({
       where: {
         email: session.user.email,
       },
-      data: {
-        lastFmSessionKey,
-        lastFmUsername,
-      },
+      data: updateData,
     });
 
     return redirect("/");
