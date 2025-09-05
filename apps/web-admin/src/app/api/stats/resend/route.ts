@@ -11,11 +11,11 @@ export async function GET(request: NextRequest) {
   try {
     // Get domains (to show active domains)
     const domainsResponse = await resend.domains.list();
-    const domains = domainsResponse.data?.data || [];
+    const domains = (domainsResponse.data as any)?.data || [];
     
-    // Get API keys info (for usage tracking)
+    // Get API keys info (for usage tracking) 
     const apiKeysResponse = await resend.apiKeys.list();
-    const apiKeys = apiKeysResponse.data?.data || [];
+    const apiKeys = (apiKeysResponse.data as any)?.data || [];
     
     // Since Resend doesn't have direct analytics endpoints yet,
     // we'll provide basic account information and suggest webhook implementation
@@ -23,12 +23,12 @@ export async function GET(request: NextRequest) {
       account: {
         domains: {
           total: domains.length,
-          verified: domains.filter(d => d.status === "verified").length,
-          pending: domains.filter(d => d.status === "pending").length,
+          verified: domains.filter((d: any) => d.status === "verified").length,
+          pending: domains.filter((d: any) => d.status === "pending").length,
         },
         apiKeys: {
           total: apiKeys.length,
-          active: apiKeys.filter(k => !k.createdAt || new Date(k.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length, // Active in last 30 days
+          active: apiKeys.filter((k: any) => !k.createdAt || new Date(k.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length, // Active in last 30 days
         },
       },
       emails: {
