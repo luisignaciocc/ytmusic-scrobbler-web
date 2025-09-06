@@ -198,7 +198,7 @@ function EnhancedFilters() {
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="all">🎵 All activity</option>
-            <option value="recent">🔥 Recent active (7d)</option>
+            <option value="recent">🔥 Recently active (7d)</option>
             <option value="inactive_30d">😴 Inactive 30+ days</option>
             <option value="no_scrobbles">🚫 No scrobbles</option>
             <option value="high_activity">⭐ High activity (100+)</option>
