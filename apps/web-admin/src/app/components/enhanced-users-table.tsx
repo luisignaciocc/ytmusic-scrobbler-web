@@ -325,7 +325,7 @@ export default function EnhancedUsersTable({
                     {user.consecutiveFailures > 0 ? (
                       <div className="space-y-1">
                         <div className="font-semibold text-red-600">
-                          {user.consecutiveFailures} consecutive
+                          {user.consecutiveFailures} consecutive failures
                         </div>
                         <div className="text-xs text-gray-500">
                           {user.lastFailureType} •{" "}
