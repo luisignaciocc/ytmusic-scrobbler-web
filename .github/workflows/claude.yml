@@ -49,6 +49,31 @@ jobs:
           #   --allowedTools "Bash(npm install),Bash(npm run build),Bash(npm run test:*),Bash(npm run lint:*)"
           #   --system-prompt "Follow our coding standards. Ensure all new code has tests. Use TypeScript for new files."
 
+          claude_args: |
+            --allowedTools "
+              Bash(git:*),
+              View,
+              GlobTool,
+              GrepTool,
+              BatchTool,
+              Bash(pnpm type-check:*),
+              Bash(pnpm lint:*),
+              Bash(pnpm get-history:*),
+              Bash(sed:*),
+              Bash(grep:*),
+              Bash(pnpm generate:*),
+              Bash(pnpm tsx:*),
+              Bash(jq:*),
+              Bash(npx tsc:*),
+              Bash(pnpm tsc:*),
+              Bash(turbo run:*),
+              WebSearch,
+              Bash(pnpm build:*),
+              Bash(pnpm test:*),
+              WebFetch(domain:github.com),
+              Bash(gh api:*)
+            "
+
           # Optional: Advanced settings configuration
           # settings: |
           #   {
