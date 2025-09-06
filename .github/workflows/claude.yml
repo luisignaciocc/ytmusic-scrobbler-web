@@ -74,10 +74,10 @@ jobs:
               Bash(gh api:*)
             "
 
-          # Optional: Advanced settings configuration
-          # settings: |
-          #   {
-          #     "env": {
-          #       "NODE_ENV": "test"
-          #     }
-          #   }
+          # Advanced settings configuration
+          settings: |
+            {
+              "env": {
+                "DATABASE_URL": "${{ secrets.DATABASE_URL }}"
+              }
+            }
