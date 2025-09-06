@@ -67,7 +67,7 @@ export default function EnhancedUsersTable({
     if (!hasSetup) {
       return (
         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-          🔧 Setup Incompleto
+          🔧 Incomplete Setup
         </span>
       );
     }
@@ -75,7 +75,7 @@ export default function EnhancedUsersTable({
     if (!user.isActive) {
       return (
         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-          ⏸️ Pausado
+          ⏸️ Paused
         </span>
       );
     }
@@ -91,14 +91,14 @@ export default function EnhancedUsersTable({
               : "❌";
       return (
         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-          {failureEmoji} {user.consecutiveFailures} fallos
+          {failureEmoji} {user.consecutiveFailures} failures
         </span>
       );
     }
 
     return (
       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-        ✅ Activo
+        ✅ Active
       </span>
     );
   };
@@ -113,17 +113,17 @@ export default function EnhancedUsersTable({
       : null;
 
     if (!user.lastSuccessfulScrobble) {
-      return <span className="text-gray-400">🔘 Nunca</span>;
+      return <span className="text-gray-400">🔘 Never</span>;
     }
 
     if (daysSinceLastScrobble! <= 1) {
-      return <span className="text-green-600">🟢 Muy activo</span>;
+      return <span className="text-green-600">🟢 Very active</span>;
     } else if (daysSinceLastScrobble! <= 7) {
-      return <span className="text-yellow-600">🟡 Activo</span>;
+      return <span className="text-yellow-600">🟡 Active</span>;
     } else if (daysSinceLastScrobble! <= 30) {
-      return <span className="text-orange-600">🟠 Inactivo</span>;
+      return <span className="text-orange-600">🟠 Inactive</span>;
     } else {
-      return <span className="text-red-600">🔴 Muy inactivo</span>;
+      return <span className="text-red-600">🔴 Very inactive</span>;
     }
   };
 
@@ -139,7 +139,7 @@ export default function EnhancedUsersTable({
     if (days > 0) return `${days}d`;
     if (hours > 0) return `${hours}h`;
     if (minutes > 0) return `${minutes}m`;
-    return "Ahora";
+    return "Now";
   };
 
   const getSetupProgress = (user: User) => {
@@ -189,7 +189,7 @@ export default function EnhancedUsersTable({
                 Setup
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actividad
+                Activity
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Scrobbles
@@ -198,10 +198,10 @@ export default function EnhancedUsersTable({
                 Plan
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Fallos
+                Failures
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Acciones
+                Actions
               </th>
             </tr>
           </thead>
@@ -272,15 +272,15 @@ export default function EnhancedUsersTable({
                 <td className="px-4 py-4 whitespace-nowrap">
                   <div className="text-sm space-y-1">
                     <div>
-                      <span className="text-gray-500">Último:</span>{" "}
+                      <span className="text-gray-500">Last:</span>{" "}
                       <span className="font-medium">
                         {user.lastSuccessfulScrobble
                           ? formatTimeAgo(user.lastSuccessfulScrobble)
-                          : "Nunca"}
+                          : "Never"}
                       </span>
                     </div>
                     <div className="text-xs text-gray-500">
-                      Registrado: {formatTimeAgo(user.createdAt)}
+                      Registered: {formatTimeAgo(user.createdAt)}
                     </div>
                   </div>
                 </td>
@@ -293,7 +293,7 @@ export default function EnhancedUsersTable({
                     </div>
                     <div className="text-xs text-gray-500">
                       {user.Songs.length > 0 && (
-                        <>Último: {formatTimeAgo(user.Songs[0].addedAt)}</>
+                        <>Last: {formatTimeAgo(user.Songs[0].addedAt)}</>
                       )}
                     </div>
                   </div>
@@ -325,7 +325,7 @@ export default function EnhancedUsersTable({
                     {user.consecutiveFailures > 0 ? (
                       <div className="space-y-1">
                         <div className="font-semibold text-red-600">
-                          {user.consecutiveFailures} consecutivos
+                          {user.consecutiveFailures} consecutive
                         </div>
                         <div className="text-xs text-gray-500">
                           {user.lastFailureType} •{" "}
@@ -333,13 +333,13 @@ export default function EnhancedUsersTable({
                         </div>
                         {user.authNotificationCount > 0 && (
                           <div className="text-xs text-orange-600">
-                            📧 {user.authNotificationCount} notificaciones
+                            📧 {user.authNotificationCount} notifications
                           </div>
                         )}
                       </div>
                     ) : (
                       <span className="text-green-600 text-sm">
-                        ✅ Sin fallos
+                        ✅ No failures
                       </span>
                     )}
                   </div>
@@ -358,14 +358,14 @@ export default function EnhancedUsersTable({
                           : "bg-green-100 text-green-700 hover:bg-green-200"
                       }`}
                     >
-                      {user.isActive ? "⏸️ Pausar" : "▶️ Activar"}
+                      {user.isActive ? "⏸️ Pause" : "▶️ Activate"}
                     </button>
 
                     {user.consecutiveFailures > 0 && (
                       <button
                         onClick={() => handleResetFailures(user.id)}
                         className="px-3 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
-                        title="Resetear fallos consecutivos"
+                        title="Reset consecutive failures"
                       >
                         🔄 Reset
                       </button>
@@ -394,15 +394,15 @@ export default function EnhancedUsersTable({
           <div className="flex items-center space-x-4 text-xs">
             <div className="flex items-center space-x-1">
               <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-              <span>Saludable</span>
+              <span>Healthy</span>
             </div>
             <div className="flex items-center space-x-1">
               <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
-              <span>Atención</span>
+              <span>Warning</span>
             </div>
             <div className="flex items-center space-x-1">
               <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-              <span>Crítico</span>
+              <span>Critical</span>
             </div>
           </div>
         </div>

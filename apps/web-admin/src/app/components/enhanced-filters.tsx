@@ -184,9 +184,9 @@ function EnhancedFilters() {
             onChange={(e) => setFilterByActive(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="all">📊 Todos los estados</option>
-            <option value="active">✅ Solo activos</option>
-            <option value="inactive">❌ Solo inactivos</option>
+            <option value="all">📊 All statuses</option>
+            <option value="active">✅ Active only</option>
+            <option value="inactive">❌ Inactive only</option>
           </select>
         </div>
 
@@ -197,11 +197,11 @@ function EnhancedFilters() {
             onChange={(e) => setActivityFilter(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="all">🎵 Toda la actividad</option>
-            <option value="recent">🔥 Activos recientes (7d)</option>
-            <option value="inactive_30d">😴 Inactivos 30+ días</option>
-            <option value="no_scrobbles">🚫 Sin scrobbles</option>
-            <option value="high_activity">⭐ Alta actividad (100+)</option>
+            <option value="all">🎵 All activity</option>
+            <option value="recent">🔥 Recent active (7d)</option>
+            <option value="inactive_30d">😴 Inactive 30+ days</option>
+            <option value="no_scrobbles">🚫 No scrobbles</option>
+            <option value="high_activity">⭐ High activity (100+)</option>
           </select>
         </div>
       </div>
@@ -214,85 +214,85 @@ function EnhancedFilters() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {/* Subscription Filter */}
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">💳 Suscripción</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">💳 Subscription</label>
               <select
                 value={subscriptionFilter}
                 onChange={(e) => setSubscriptionFilter(e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="all">Todas</option>
+                <option value="all">All</option>
                 <option value="free">🆓 Free</option>
                 <option value="pro">⭐ Pro</option>
-                <option value="active_subscription">✅ Suscripción activa</option>
-                <option value="canceled">❌ Cancelada</option>
+                <option value="active_subscription">✅ Active subscription</option>
+                <option value="canceled">❌ Canceled</option>
                 <option value="trial">🎯 Trial</option>
               </select>
             </div>
 
             {/* Setup Completion Filter */}
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">⚙️ Configuración</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">⚙️ Setup</label>
               <select
                 value={setupFilter}
                 onChange={(e) => setSetupFilter(e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="all">Todas</option>
-                <option value="complete">✅ Completa</option>
-                <option value="incomplete">⚠️ Incompleta</option>
-                <option value="no_cookie">🍪 Sin cookie YTMusic</option>
-                <option value="no_lastfm">🎵 Sin Last.fm</option>
+                <option value="all">All</option>
+                <option value="complete">✅ Complete</option>
+                <option value="incomplete">⚠️ Incomplete</option>
+                <option value="no_cookie">🍪 No YTMusic cookie</option>
+                <option value="no_lastfm">🎵 No Last.fm</option>
               </select>
             </div>
 
             {/* Health Status Filter */}
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">🏥 Estado de salud</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">🏥 Health status</label>
               <select
                 value={healthFilter}
                 onChange={(e) => setHealthFilter(e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="all">Todos</option>
-                <option value="healthy">💚 Saludable</option>
-                <option value="warnings">⚠️ Con advertencias</option>
-                <option value="errors">❌ Con errores</option>
-                <option value="auth_failures">🔐 Fallos de auth</option>
-                <option value="network_failures">🌐 Fallos de red</option>
+                <option value="all">All</option>
+                <option value="healthy">💚 Healthy</option>
+                <option value="warnings">⚠️ With warnings</option>
+                <option value="errors">❌ With errors</option>
+                <option value="auth_failures">🔐 Auth failures</option>
+                <option value="network_failures">🌐 Network failures</option>
               </select>
             </div>
 
             {/* Registration Date Filter */}
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">📅 Registrado</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">📅 Registered</label>
               <select
                 value={dateRangeFilter}
                 onChange={(e) => setDateRangeFilter(e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="all">Cualquier fecha</option>
-                <option value="today">🔥 Hoy</option>
-                <option value="week">📅 Esta semana</option>
-                <option value="month">📅 Este mes</option>
-                <option value="quarter">📅 Últimos 3 meses</option>
-                <option value="year">📅 Este año</option>
-                <option value="older">📅 Más de 1 año</option>
+                <option value="all">Any date</option>
+                <option value="today">🔥 Today</option>
+                <option value="week">📅 This week</option>
+                <option value="month">📅 This month</option>
+                <option value="quarter">📅 Last 3 months</option>
+                <option value="year">📅 This year</option>
+                <option value="older">📅 More than 1 year</option>
               </select>
             </div>
 
             {/* Notifications Filter */}
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">🔔 Notificaciones</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">🔔 Notifications</label>
               <select
                 value={notificationsFilter}
                 onChange={(e) => setNotificationsFilter(e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="all">Todas</option>
-                <option value="enabled">🔔 Habilitadas</option>
-                <option value="disabled">🔕 Deshabilitadas</option>
-                <option value="high_notifications">⚠️ Muchas notificaciones</option>
-                <option value="recent_notifications">📧 Notificados recientemente</option>
+                <option value="all">All</option>
+                <option value="enabled">🔔 Enabled</option>
+                <option value="disabled">🔕 Disabled</option>
+                <option value="high_notifications">⚠️ Many notifications</option>
+                <option value="recent_notifications">📧 Recently notified</option>
               </select>
             </div>
           </div>
