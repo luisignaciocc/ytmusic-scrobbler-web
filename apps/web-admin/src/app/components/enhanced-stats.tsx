@@ -131,7 +131,7 @@ export default function EnhancedStats() {
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Active 24h</p>
+                <p className="text-sm font-medium text-gray-600">Active Users (24h)</p>
                 <p className="text-2xl font-bold text-purple-600">{stats.usersWithRecentScrobbles24h.toLocaleString()}</p>
                 <p className="text-xs text-gray-500 mt-1">{stats.recentActivityRate24h}% of total</p>
               </div>
