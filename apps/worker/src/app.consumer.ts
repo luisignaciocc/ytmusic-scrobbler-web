@@ -25,15 +25,9 @@ export class AppConsumer implements OnModuleInit {
   private calculateScrobbleTimestamp(
     songsScrobbledSoFar: number,
     totalSongsToScrobble: number,
-    isProUser: boolean = false
+    isProUser: boolean = false,
+    isFirstTimeScrobbling: boolean = false
   ): string {
-    // Fixed: Use much shorter distribution windows to prevent incorrect timestamps
-    // Pro users (5 min intervals): distribute over last 30 minutes max
-    // Free users (1 hour intervals): distribute over last 90 minutes max
-    // This ensures scrobbles appear recent and in correct chronological order
-    const distributionMinutes = isProUser ? 30 : 90;
-    const distributionSeconds = distributionMinutes * 60;
-    
     const now = Math.floor(new Date().getTime() / 1000);
     
     // If only one song, place it 30 seconds ago
@@ -41,18 +35,46 @@ export class AppConsumer implements OnModuleInit {
       return (now - 30).toString();
     }
     
-    // Distribute songs across a much smaller, more recent time window
-    // Most recent song gets smallest offset (30 seconds)
-    // Oldest song gets largest offset (up to distributionSeconds)
-    const minOffset = 30;
-    const maxOffset = distributionSeconds;
+    let distributionSeconds: number;
+    let useLinearDistribution = false;
+    
+    // Three-case approach as suggested in the issue:
+    if (isFirstTimeScrobbling) {
+      // Case 1: First-time scrobbling - use logarithmic with max 1 day (24 hours)
+      distributionSeconds = 24 * 60 * 60; // 24 hours = 86400 seconds
+    } else if (!isProUser) {
+      // Case 2: Free user (not first time) - use logarithmic with max 1 hour
+      distributionSeconds = 60 * 60; // 1 hour = 3600 seconds
+    } else {
+      // Case 3: Pro user (not first time) - use linear with max 5 minutes
+      distributionSeconds = 5 * 60; // 5 minutes = 300 seconds
+      useLinearDistribution = true;
+    }
+    
+    const minOffset = 30; // Minimum 30 seconds ago
     
     // Calculate position ratio (0 = most recent, 1 = oldest)
     const positionRatio = songsScrobbledSoFar / (totalSongsToScrobble - 1);
     
-    // Use linear distribution for more predictable timing
-    // This maintains chronological order from YouTube Music history
-    const offset = minOffset + (maxOffset - minOffset) * positionRatio;
+    let offset: number;
+    
+    if (useLinearDistribution) {
+      // Linear distribution for pro users: evenly space songs across the time window
+      // Example: 5 songs over 5 minutes = 1 minute apart each
+      // Example: 10 songs over 5 minutes = 30 seconds apart each
+      const intervalSeconds = distributionSeconds / totalSongsToScrobble;
+      offset = minOffset + (intervalSeconds * songsScrobbledSoFar);
+    } else {
+      // Logarithmic distribution for first-time and free users
+      // This places more recent songs closer together and spreads older ones further back
+      const maxOffset = distributionSeconds;
+      
+      // Use logarithmic scaling to concentrate recent songs
+      // Most recent songs get clustered near minOffset
+      // Older songs get distributed across the full time window
+      const logScale = Math.log(1 + positionRatio * (Math.E - 1));
+      offset = minOffset + (maxOffset - minOffset) * logScale;
+    }
     
     return Math.floor(now - offset).toString();
   }
@@ -870,7 +892,8 @@ export class AppConsumer implements OnModuleInit {
                   timestamp: this.calculateScrobbleTimestamp(
                     songsScrobbled,
                     totalSongsToScrobble,
-                    isProUser
+                    isProUser,
+                    true
                   ),
                 }),
                 this.prisma.song.create({
@@ -935,7 +958,8 @@ export class AppConsumer implements OnModuleInit {
                 timestamp: this.calculateScrobbleTimestamp(
                   songsScrobbled,
                   totalSongsToScrobble,
-                  isProUser
+                  isProUser,
+                  false
                 ),
               }),
               this.prisma.song.create({
@@ -973,7 +997,8 @@ export class AppConsumer implements OnModuleInit {
                 timestamp: this.calculateScrobbleTimestamp(
                   songsScrobbled,
                   totalSongsToScrobble,
-                  isProUser
+                  isProUser,
+                  false
                 ),
               }),
               this.prisma.song.update({
