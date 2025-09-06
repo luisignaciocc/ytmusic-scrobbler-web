@@ -23,7 +23,7 @@ jobs:
           track_progress: true
           claude_args: |
             --allowedTools "Read,Write,Edit,Grep,Bash(gh issue:*),Bash(gh pr:*),Bash(git:*),Bash(pnpm test:*),Bash(pnpm type-check:*),Bash(pnpm lint:*)"
-            --max-turns 25
+            --max-turns 100
           prompt: |
             REPO: ${{ github.repository }}
             ISSUE NUMBER: ${{ github.event.issue.number }}
