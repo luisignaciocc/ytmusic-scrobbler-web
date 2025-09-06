@@ -226,9 +226,9 @@ export default async function Home() {
                     automatically paused until you update your credentials
                   </li>
                   <li>
-                    • After initial setup, it may take up to an hour for your
-                    first songs to appear on Last.fm. After that, the scrobbling
-                    frequency will depend on your selected plan (1 hour for free
+                    • After initial setup, your first songs will appear on Last.fm
+                    immediately upon the next scrobbling cycle. The scrobbling
+                    frequency depends on your selected plan (1 hour for free
                     users, 5 minutes for Pro users)
                   </li>
                 </ul>
