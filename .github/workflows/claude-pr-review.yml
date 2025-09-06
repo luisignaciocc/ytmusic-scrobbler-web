@@ -21,8 +21,8 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           track_progress: true
           claude_args: |
-            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
-            --max-turns 15
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(pnpm test:*),Bash(pnpm type-check:*),Bash(pnpm lint:*)"
+            --max-turns 50
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
@@ -65,5 +65,15 @@ jobs:
             - Documentation updates needed
             - Breaking changes identification
 
-            Use inline comments for specific code issues and a summary comment for overall feedback.
+            ## Review Process
+            1. First, run `pnpm type-check` and `pnpm lint` to validate code quality
+            2. Analyze the PR changes using `gh pr diff` and `gh pr view`
+            3. Use inline comments for specific code issues
+            4. **REQUIRED**: Post a final summary comment on the PR using `gh pr comment` with:
+               - Overall assessment (Approve/Request Changes/Comment)
+               - Key findings and recommendations
+               - Any lint/type-check results
+               - Specific areas of concern or praise
+            
+            Your review MUST end with a visible comment on the PR thread using the gh pr comment command.
             Be constructive and helpful in your review.
