@@ -94,17 +94,17 @@ export default function EnhancedStats() {
   };
 
   const getGrowthIndicator = (value: number) => {
-    if (value > 10) return '📈 Excelente';
-    if (value > 5) return '📊 Bueno';
-    if (value > 0) return '🔄 Lento';
-    return '😴 Sin crecimiento';
+    if (value > 10) return '📈 Excellent';
+    if (value > 5) return '📊 Good';
+    if (value > 0) return '🔄 Slow';
+    return '😴 No growth';
   };
 
   return (
     <div className="space-y-6">
       {/* Overview Cards */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">📊 Resumen General</h3>
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">📊 General Overview</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
             <div className="flex items-center justify-between">
@@ -131,9 +131,9 @@ export default function EnhancedStats() {
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Activos 24h</p>
+                <p className="text-sm font-medium text-gray-600">Active Users (24h)</p>
                 <p className="text-2xl font-bold text-purple-600">{stats.usersWithRecentScrobbles24h.toLocaleString()}</p>
-                <p className="text-xs text-gray-500 mt-1">{stats.recentActivityRate24h}% del total</p>
+                <p className="text-xs text-gray-500 mt-1">{stats.recentActivityRate24h}% of total</p>
               </div>
               <div className="text-2xl">🔥</div>
             </div>
@@ -154,14 +154,14 @@ export default function EnhancedStats() {
 
       {/* Activity Cards */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">⚡ Actividad Reciente</h3>
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">⚡ Recent Activity</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Scrobbles Hoy</p>
+                <p className="text-sm font-medium text-gray-600">Scrobbles Today</p>
                 <p className="text-2xl font-bold text-emerald-600">{stats.recentScrobbles24h.toLocaleString()}</p>
-                <p className="text-xs text-gray-500 mt-1">Últimas 24 horas</p>
+                <p className="text-xs text-gray-500 mt-1">Last 24 hours</p>
               </div>
               <div className="text-2xl">📈</div>
             </div>
@@ -183,7 +183,7 @@ export default function EnhancedStats() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Scrobbles 30d</p>
                 <p className="text-2xl font-bold text-cyan-600">{stats.recentScrobbles30d.toLocaleString()}</p>
-                <p className="text-xs text-gray-500 mt-1">Último mes</p>
+                <p className="text-xs text-gray-500 mt-1">Last month</p>
               </div>
               <div className="text-2xl">📋</div>
             </div>
@@ -193,14 +193,14 @@ export default function EnhancedStats() {
 
       {/* Health Metrics */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">🩺 Estado del Sistema</h3>
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">🩺 System Health</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className={`border rounded-lg p-6 ${getHealthColor(stats.usersWithAuthFailures, stats.totalUsers)}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Fallos de Auth</p>
+                <p className="text-sm font-medium text-gray-600">Auth Failures</p>
                 <p className="text-2xl font-bold">{stats.usersWithAuthFailures.toLocaleString()}</p>
-                <p className="text-xs text-gray-500 mt-1">Credenciales expiradas</p>
+                <p className="text-xs text-gray-500 mt-1">Expired credentials</p>
               </div>
               <div className="text-2xl">🔐</div>
             </div>
@@ -209,9 +209,9 @@ export default function EnhancedStats() {
           <div className={`border rounded-lg p-6 ${getHealthColor(stats.usersWithNetworkFailures, stats.totalUsers)}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Fallos de Red</p>
+                <p className="text-sm font-medium text-gray-600">Network Failures</p>
                 <p className="text-2xl font-bold">{stats.usersWithNetworkFailures.toLocaleString()}</p>
-                <p className="text-xs text-gray-500 mt-1">Problemas temporales</p>
+                <p className="text-xs text-gray-500 mt-1">Temporary issues</p>
               </div>
               <div className="text-2xl">🌐</div>
             </div>
@@ -220,9 +220,9 @@ export default function EnhancedStats() {
           <div className={`border rounded-lg p-6 ${getHealthColor(stats.usersWithoutCookie, stats.totalUsers)}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Sin Cookie YTM</p>
+                <p className="text-sm font-medium text-gray-600">No YTM Cookie</p>
                 <p className="text-2xl font-bold">{stats.usersWithoutCookie.toLocaleString()}</p>
-                <p className="text-xs text-gray-500 mt-1">Setup incompleto</p>
+                <p className="text-xs text-gray-500 mt-1">Incomplete setup</p>
               </div>
               <div className="text-2xl">🍪</div>
             </div>
@@ -231,9 +231,9 @@ export default function EnhancedStats() {
           <div className={`border rounded-lg p-6 ${getHealthColor(stats.usersWithoutLastFm, stats.totalUsers)}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Sin Last.fm</p>
+                <p className="text-sm font-medium text-gray-600">No Last.fm</p>
                 <p className="text-2xl font-bold">{stats.usersWithoutLastFm.toLocaleString()}</p>
-                <p className="text-xs text-gray-500 mt-1">Setup incompleto</p>
+                <p className="text-xs text-gray-500 mt-1">Incomplete setup</p>
               </div>
               <div className="text-2xl">🎧</div>
             </div>
@@ -270,7 +270,7 @@ export default function EnhancedStats() {
 
         {/* Top Artists */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">🎤 Top Artistas (30d)</h3>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">🎤 Top Artists (30d)</h3>
           <div className="bg-white border rounded-lg p-6">
             <div className="space-y-3">
               {stats.topArtists.slice(0, 5).map((artist, index) => (
@@ -285,7 +285,7 @@ export default function EnhancedStats() {
                 </div>
               ))}
               {stats.topArtists.length === 0 && (
-                <p className="text-sm text-gray-500 text-center py-4">No hay datos suficientes</p>
+                <p className="text-sm text-gray-500 text-center py-4">Not enough data</p>
               )}
             </div>
           </div>
@@ -295,7 +295,7 @@ export default function EnhancedStats() {
       {/* Failure Breakdown */}
       {Object.keys(stats.failureStats).length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">⚠️ Tipos de Fallos</h3>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">⚠️ Failure Types</h3>
           <div className="bg-white border rounded-lg p-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {Object.entries(stats.failureStats).map(([type, count]) => (
