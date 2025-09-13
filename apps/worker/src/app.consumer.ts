@@ -983,7 +983,7 @@ export class AppConsumer implements OnModuleInit {
               `Scrobbled song ${song.title} by ${song.artist} - user ${userId}`,
             );
           } else if (songsReproducedToday < savedSong.arrayPosition) {
-            // This is a re-reproduction - song appears higher in the list than before (compared to last session)
+            // This is a re-reproduction - song appears at a better position (lower position number) than before (compared to last session)
             this.logger.debug(
               `Re-reproduction detected for user ${userId}: "${song.title}" at position ${songsReproducedToday}, previous position was ${savedSong.arrayPosition}`,
             );
