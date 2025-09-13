@@ -425,7 +425,15 @@ export function parseYTMusicPageResponse(html: string): {
   const initialData = extractInitialDataFromPage(html);
 
   if (!initialData) {
-    throw new Error("No initial data found in page");
+    // Provide more diagnostic information
+    const htmlSize = html.length;
+    const hasInitialDataPush = html.includes('initialData.push');
+    const hasYouTubeMusic = html.includes('music.youtube.com') || html.includes('YouTube Music');
+
+    throw new Error(
+      `No initial data found in page (HTML size: ${htmlSize} chars, ` +
+      `has initialData.push: ${hasInitialDataPush}, has YT Music content: ${hasYouTubeMusic})`
+    );
   }
 
   // Use the existing parseYTMusicResponse function
@@ -487,7 +495,15 @@ function parseYTMusicResponse(data: any): {
       ?.content?.sectionListRenderer?.contents;
 
   if (!results) {
-    throw new Error("No results found");
+    // Provide diagnostic information about the data structure
+    const hasContents = !!data.contents;
+    const hasBrowseResults = !!data.contents?.singleColumnBrowseResultsRenderer;
+    const hasTabs = !!data.contents?.singleColumnBrowseResultsRenderer?.tabs;
+
+    throw new Error(
+      `No results found in YouTube Music response (has contents: ${hasContents}, ` +
+      `has browseResults: ${hasBrowseResults}, has tabs: ${hasTabs})`
+    );
   }
 
   const songs: {

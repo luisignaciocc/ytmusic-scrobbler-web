@@ -295,6 +295,16 @@ export class AppConsumer implements OnModuleInit {
       return FailureType.TEMPORARY;
     }
 
+    // YouTube Music parsing errors (likely due to page structure changes or empty responses)
+    if (
+      errorMessage.includes("No initial data found in page") ||
+      errorMessage.includes("No results found") ||
+      errorMessage.includes("Failed to parse YouTube Music") ||
+      errorMessage.includes("Invalid YouTube Music response")
+    ) {
+      return FailureType.NETWORK; // Treat as network-like issues since they're often temporary
+    }
+
     // Network/YouTube Music errors
     if (
       errorMessage.includes("Failed to fetch") ||
@@ -766,6 +776,27 @@ export class AppConsumer implements OnModuleInit {
             status: "success",
             authError: true,
             message: "YouTube Music headers are invalid",
+          };
+        }
+
+        // Check for YouTube Music parsing errors (e.g., page structure changes)
+        if (
+          error.message?.includes("No initial data found in page") ||
+          error.message?.includes("No results found in YouTube Music response")
+        ) {
+          this.logger.debug(
+            `YouTube Music parsing error for user ${userId}: ${error.message}${wasDeactivated ? " - USER DEACTIVATED" : ""}`,
+          );
+          job.log(
+            `YouTube Music parsing error: ${error.message}${wasDeactivated ? " (user deactivated)" : ""}`,
+          );
+
+          // Mark the job as successful but with special status - this avoids infinite retries for parsing issues
+          await job.progress(100);
+          return {
+            status: "success",
+            parsingError: true,
+            message: `YouTube Music parsing failed: ${error.message}`,
           };
         }
 
