@@ -4,11 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "dotenv -e ../../.env -- next dev",
-    "build": "node --max-old-space-size=512 node_modules/.bin/next build",
+    "build": "node --max-old-space-size=2048 node_modules/.bin/next build",
     "start": "next start",
     "type-check": "tsc --pretty --noEmit",
     "lint": "next lint --fix",
-    "vercel-build": "pnpm --workspace-root run generate && pnpm --workspace-root run migrate deploy && node --max-old-space-size=512 node_modules/.bin/next build"
+    "vercel-build": "pnpm --workspace-root run generate && pnpm --workspace-root run migrate deploy && next build"
   },
   "dependencies": {
     "@paddle/paddle-js": "^1.4.0",
