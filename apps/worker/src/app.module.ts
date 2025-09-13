@@ -5,6 +5,7 @@ import { BullModule } from "@nestjs/bull";
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { ScheduleModule } from "@nestjs/schedule";
+import { SentryModule } from "@sentry/nestjs/setup";
 
 import { AppConsumer } from "./app.consumer";
 import { AppController } from "./app.controller";
@@ -13,6 +14,7 @@ import { PrismaService } from "./prisma.service";
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     ConfigModule.forRoot(),
     ScheduleModule.forRoot(),
     BullModule.forRoot({

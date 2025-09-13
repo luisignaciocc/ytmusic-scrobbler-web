@@ -27,6 +27,8 @@
     "@nestjs/platform-express": "^10.3.9",
     "@nestjs/schedule": "^4.0.2",
     "@prisma/client": "*",
+    "@sentry/nestjs": "^10.11.0",
+    "@sentry/profiling-node": "^10.11.0",
     "bull": "^4.13.0",
     "crypto": "^1.0.1",
     "express-basic-auth": "^1.2.1",
