@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest'
  * Original (buggy): songsReproducedToday < savedSong.maxArrayPosition
  * Fixed: songsReproducedToday < savedSong.arrayPosition
  *
- * The issue: maxArrayPosition represents the best position ever achieved across different sessions
+ * The issue: maxArrayPosition tracks the worst position (highest number) ever achieved across different sessions
  * with potentially different numbers of "today" songs, making position numbers incomparable.
  * We should only compare against the previous position in the most recent session (arrayPosition).
  */
@@ -18,7 +18,6 @@ describe('Re-reproduction Logic', () => {
       // Song moved from position 15 to position 10 (better)
       const currentPosition = 10
       const previousPosition = 15
-      const _maxPosition = 20
 
       // This should be considered a re-reproduction
       const isReproduction = currentPosition < previousPosition
@@ -29,7 +28,6 @@ describe('Re-reproduction Logic', () => {
       // Song moved from position 10 to position 15 (worse)
       const currentPosition = 15
       const previousPosition = 10
-      const _maxPosition = 5
 
       // This should NOT be considered a re-reproduction (the original bug scenario)
       const isReproduction = currentPosition < previousPosition
@@ -40,7 +38,6 @@ describe('Re-reproduction Logic', () => {
       // Song stayed at same position
       const currentPosition = 10
       const previousPosition = 10
-      const _maxPosition = 8
 
       // This should NOT be considered a re-reproduction
       const isReproduction = currentPosition < previousPosition
@@ -57,7 +54,7 @@ describe('Re-reproduction Logic', () => {
 
       const currentPosition = 40  // Position among today's songs
       const previousPosition = 28 // Position in last session
-      const maxPosition = 127     // Best position ever achieved
+      const maxPosition = 127     // Worst position (highest number) ever achieved
 
       // Original buggy logic: currentPosition < maxPosition
       const originalBuggyLogic = currentPosition < maxPosition
@@ -86,7 +83,6 @@ describe('Re-reproduction Logic', () => {
       // Song appears much later in the list
       const currentPosition = 200
       const previousPosition = 50
-      const _maxPosition = 10
 
       const isReproduction = currentPosition < previousPosition
       expect(isReproduction).toBe(false)
@@ -96,7 +92,6 @@ describe('Re-reproduction Logic', () => {
       // Song moves to very top of the list
       const currentPosition = 1
       const previousPosition = 50
-      const _maxPosition = 25
 
       const isReproduction = currentPosition < previousPosition
       expect(isReproduction).toBe(true)

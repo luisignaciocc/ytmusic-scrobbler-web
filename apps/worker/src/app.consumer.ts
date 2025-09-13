@@ -983,7 +983,7 @@ export class AppConsumer implements OnModuleInit {
               `Scrobbled song ${song.title} by ${song.artist} - user ${userId}`,
             );
           } else if (songsReproducedToday < savedSong.arrayPosition) {
-            // This is a re-reproduction - song appears at a better position (lower position number) than before (compared to last session)
+            // This is a re-reproduction - song appears at a better position (lower position number) than in the last session
             this.logger.debug(
               `Re-reproduction detected for user ${userId}: "${song.title}" at position ${songsReproducedToday}, previous position was ${savedSong.arrayPosition}`,
             );
@@ -1022,7 +1022,7 @@ export class AppConsumer implements OnModuleInit {
           } else {
             // Update position but don't scrobble (song moved down or stayed same)
             this.logger.debug(
-              `Song position updated without scrobbling for user ${userId}: "${song.title}" moved from position ${savedSong.arrayPosition} to ${songsReproducedToday} (max ever: ${savedSong.maxArrayPosition})`,
+              `Song position updated without scrobbling for user ${userId}: "${song.title}" moved from position ${savedSong.arrayPosition} to ${songsReproducedToday} (worst position ever: ${savedSong.maxArrayPosition})`,
             );
             await this.prisma.song.update({
               where: {
