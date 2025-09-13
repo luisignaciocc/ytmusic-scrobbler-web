@@ -158,23 +158,8 @@ export default async function Home() {
                       automatically
                     </p>
                     {step === 4 && (
-                      <div className="mt-2 space-y-3">
+                      <div className="mt-2">
                         <ScrobbleBtnServer />
-                        {isActive && (
-                          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                            <h4 className="font-semibold text-green-900 mb-2 flex items-center">
-                              <span className="mr-2">ℹ️</span>
-                              First Time Setup Notice
-                            </h4>
-                            <p className="text-sm text-green-800">
-                              When you first activate your account, you&apos;ll
-                              start seeing your songs on Last.fm after the
-                              second scrobble cycle (~2 hours). The first cycle
-                              fills your history to prevent duplicates, and the
-                              second begins sending new songs to Last.fm.
-                            </p>
-                          </div>
-                        )}
                       </div>
                     )}
                   </div>
@@ -241,9 +226,9 @@ export default async function Home() {
                     automatically paused until you update your credentials
                   </li>
                   <li>
-                    • After initial setup, it may take up to an hour for your
-                    first songs to appear on Last.fm. After that, the scrobbling
-                    frequency will depend on your selected plan (1 hour for free
+                    • After initial setup, your first songs will appear on Last.fm
+                    immediately upon the next scrobbling cycle. The scrobbling
+                    frequency depends on your selected plan (1 hour for free
                     users, 5 minutes for Pro users)
                   </li>
                 </ul>
