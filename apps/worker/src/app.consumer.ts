@@ -982,10 +982,10 @@ export class AppConsumer implements OnModuleInit {
             job.log(
               `Scrobbled song ${song.title} by ${song.artist} - user ${userId}`,
             );
-          } else if (songsReproducedToday < savedSong.maxArrayPosition) {
-            // This is a re-reproduction - song appears higher in the list than before
+          } else if (songsReproducedToday < savedSong.arrayPosition) {
+            // This is a re-reproduction - song appears higher in the list than before (compared to last session)
             this.logger.debug(
-              `Re-reproduction detected for user ${userId}: "${song.title}" at position ${songsReproducedToday}, previous max was ${savedSong.maxArrayPosition}`,
+              `Re-reproduction detected for user ${userId}: "${song.title}" at position ${songsReproducedToday}, previous position was ${savedSong.arrayPosition}`,
             );
 
             await Promise.all([
@@ -1021,6 +1021,9 @@ export class AppConsumer implements OnModuleInit {
             );
           } else {
             // Update position but don't scrobble (song moved down or stayed same)
+            this.logger.debug(
+              `Song position updated without scrobbling for user ${userId}: "${song.title}" moved from position ${savedSong.arrayPosition} to ${songsReproducedToday} (max ever: ${savedSong.maxArrayPosition})`,
+            );
             await this.prisma.song.update({
               where: {
                 id: savedSong.id,
