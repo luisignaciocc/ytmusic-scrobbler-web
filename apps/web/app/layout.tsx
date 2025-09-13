@@ -1,5 +1,6 @@
 import "./globals.css";
 
+import * as Sentry from "@sentry/nextjs";
 import { Analytics } from "@vercel/analytics/react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -31,26 +32,31 @@ export default function RootLayout({
   );
 }
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://scrobbler.bocono-labs.com"),
-  title: "Last.fm Scrobbler for YouTube Music",
-  description:
-    "Automatically track your listening activity on YouTube Music with Last.fm",
-  openGraph: {
-    type: "website",
-    title: "Last.fm Scrobbler for YouTube Music",
-    url: "https://scrobbler.bocono-labs.com",
-    description:
-      "Automatically track your listening activity on YouTube Music with Last.fm",
-    siteName: "Last.fm Scrobbler for YouTube Music",
-    images: [{ url: "/icon.png" }],
-  },
-  twitter: {
-    card: "summary_large_image",
+export function generateMetadata(): Metadata {
+  return {
+    metadataBase: new URL("https://scrobbler.bocono-labs.com"),
     title: "Last.fm Scrobbler for YouTube Music",
     description:
       "Automatically track your listening activity on YouTube Music with Last.fm",
-    creator: "@luisignaciocc",
-    images: `/icon.png`,
-  },
-};
+    openGraph: {
+      type: "website",
+      title: "Last.fm Scrobbler for YouTube Music",
+      url: "https://scrobbler.bocono-labs.com",
+      description:
+        "Automatically track your listening activity on YouTube Music with Last.fm",
+      siteName: "Last.fm Scrobbler for YouTube Music",
+      images: [{ url: "/icon.png" }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Last.fm Scrobbler for YouTube Music",
+      description:
+        "Automatically track your listening activity on YouTube Music with Last.fm",
+      creator: "@luisignaciocc",
+      images: `/icon.png`,
+    },
+    other: {
+      ...Sentry.getTraceData(),
+    },
+  };
+}

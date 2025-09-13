@@ -1,3 +1,5 @@
+import "./instrument";
+
 import { NestFactory } from "@nestjs/core";
 import * as basicAuth from "express-basic-auth";
 
