@@ -782,7 +782,8 @@ export class AppConsumer implements OnModuleInit {
         // Check for YouTube Music parsing errors (e.g., page structure changes)
         if (
           error.message?.includes("No initial data found in page") ||
-          error.message?.includes("No results found in YouTube Music response")
+          error.message?.includes("No results found in YouTube Music response") ||
+          error.message?.includes("No results found")
         ) {
           this.logger.debug(
             `YouTube Music parsing error for user ${userId}: ${error.message}${wasDeactivated ? " - USER DEACTIVATED" : ""}`,
