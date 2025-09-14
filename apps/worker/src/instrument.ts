@@ -6,5 +6,4 @@ Sentry.init({
   integrations: [nodeProfilingIntegration()],
   tracesSampleRate: 0.1,
   profilesSampleRate: 0.1,
-  release: process.env.NEXT_PUBLIC_SENTRY_RELEASE || process.env.SENTRY_RELEASE,
 });
