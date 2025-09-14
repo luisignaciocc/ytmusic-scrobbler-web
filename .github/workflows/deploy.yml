@@ -72,15 +72,15 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           echo "⏳ Waiting for Vercel deployment to complete..."
-          
+
           # Get the current commit SHA
           COMMIT_SHA="${{ github.sha }}"
           echo "Looking for deployment of commit: $COMMIT_SHA"
-          
+
           # Wait up to 10 minutes for deployment
           MAX_ATTEMPTS=60
           ATTEMPT=0
-          
+
           while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
             echo "Attempt $((ATTEMPT + 1))/$MAX_ATTEMPTS: Checking Vercel deployments..."
             
@@ -130,7 +130,7 @@ jobs:
             sleep 10
             ATTEMPT=$((ATTEMPT + 1))
           done
-          
+
           echo "⏰ Timeout: Vercel deployment took longer than expected"
           echo "🚫 Cancelling VPS deployment for safety"
           exit 1
@@ -206,6 +206,7 @@ jobs:
           REMOTE_DIR: ~/ytmusic-scrobbler-web
           SHOULD_DEPLOY_WORKER: ${{ needs.check-changes.outputs.should-deploy-worker }}
           SHOULD_DEPLOY_WEB: ${{ needs.check-changes.outputs.should-deploy-web }}
+          RELEASE: ${{ github.sha }}
         run: |
           ssh $REMOTE_USER@$REMOTE_HOST << EOF
             export PATH=$PATH:/home/$REMOTE_USER/.nvm/versions/node/v22.3.0/bin:/home/$REMOTE_USER/.local/share/pnpm
@@ -225,6 +226,8 @@ jobs:
             # Build web if needed (web stays online during build)
             if [ "$SHOULD_DEPLOY_WEB" = "true" ]; then
               echo "🏗️ Building web app (online)..."
+              export SENTRY_RELEASE=$RELEASE
+              export NEXT_PUBLIC_SENTRY_RELEASE=$RELEASE
               pnpm build --filter web
               pkill turbo || true
               echo "✅ Web build completed"
