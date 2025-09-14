@@ -8,7 +8,7 @@
     "start": "next start",
     "type-check": "tsc --pretty --noEmit",
     "lint": "next lint --fix",
-    "vercel-build": "pnpm --workspace-root run generate && pnpm --workspace-root run migrate deploy && next build"
+    "vercel-build": "pnpm --workspace-root run generate && pnpm --workspace-root run migrate deploy && SENTRY_RELEASE=$VERCEL_GIT_COMMIT_SHA NEXT_PUBLIC_SENTRY_RELEASE=$VERCEL_GIT_COMMIT_SHA next build"
   },
   "dependencies": {
     "@paddle/paddle-js": "^1.4.0",
