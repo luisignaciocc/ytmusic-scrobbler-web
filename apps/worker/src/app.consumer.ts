@@ -138,12 +138,16 @@ export class AppConsumer implements OnModuleInit {
         lastFailureType: failureType,
         lastFailedAt: new Date(),
         ...(shouldDeactivate && { isActive: false }),
+        // Clear invalid YouTube Music cookie for auth failures to make the issue visible in frontend
+        ...(failureType === FailureType.AUTH && { ytmusicCookie: null }),
       },
     });
 
     this.logger.debug(
       `User ${userId} failure #${newFailureCount} (${failureType}): ${errorMessage}${
         shouldDeactivate ? " - USER DEACTIVATED" : ""
+      }${
+        failureType === FailureType.AUTH ? " - COOKIE CLEARED" : ""
       }`,
     );
 
