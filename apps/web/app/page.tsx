@@ -23,11 +23,11 @@ async function getUserStatus() {
     return { step: 1 };
   }
 
-  if (!user.ytmusicCookie) {
+  if (!user.lastFmSessionKey) {
     return { step: 2 };
   }
 
-  if (!user.lastFmSessionKey) {
+  if (!user.ytmusicCookie) {
     return { step: 3 };
   }
 
@@ -94,22 +94,14 @@ export default async function Home() {
                     {step > 2 ? "✓" : "2"}
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold mb-1">
-                      Connect YouTube Music
-                    </h3>
+                    <h3 className="font-semibold mb-1">Connect Last.fm</h3>
                     <p className="text-sm text-gray-500">
-                      Follow our step-by-step guide with images to connect your
-                      YouTube Music account
+                      Authorize the connection with your Last.fm account with a
+                      single click
                     </p>
                     {step === 2 && (
                       <div className="mt-2">
-                        <YouTubeHeadersForm />
-                        <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                          <p className="text-sm text-blue-800">
-                            💡 Follow the step-by-step guide above to connect
-                            your YouTube Music account.
-                          </p>
-                        </div>
+                        <LastfmBtn />
                       </div>
                     )}
                   </div>
@@ -128,14 +120,22 @@ export default async function Home() {
                     {step > 3 ? "✓" : "3"}
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold mb-1">Connect Last.fm</h3>
+                    <h3 className="font-semibold mb-1">
+                      Connect YouTube Music
+                    </h3>
                     <p className="text-sm text-gray-500">
-                      Authorize the connection with your Last.fm account with a
-                      single click
+                      Follow our step-by-step guide with images to connect your
+                      YouTube Music account
                     </p>
                     {step === 3 && (
                       <div className="mt-2">
-                        <LastfmBtn />
+                        <YouTubeHeadersForm />
+                        <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                          <p className="text-sm text-blue-800">
+                            💡 Follow the step-by-step guide above to connect
+                            your YouTube Music account.
+                          </p>
+                        </div>
                       </div>
                     )}
                   </div>
