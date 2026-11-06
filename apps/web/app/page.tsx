@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import Image from "next/image";
 import { getServerSession } from "next-auth";
 
+import { SUPPORT_EMAIL, SUPPORT_MAILTO } from "../lib/support-contact";
 import LastfmBtn from "./components/lastfm-btn";
 import LoginBtn from "./components/login-btn";
 import ScrobbleBtnServer from "./components/scrobble-button-server";
@@ -226,10 +227,10 @@ export default async function Home() {
                     automatically paused until you update your credentials
                   </li>
                   <li>
-                    • After initial setup, your first songs will appear on Last.fm
-                    immediately upon the next scrobbling cycle. The scrobbling
-                    frequency depends on your selected plan (1 hour for free
-                    users, 5 minutes for Pro users)
+                    • After initial setup, your first songs will appear on
+                    Last.fm immediately upon the next scrobbling cycle. The
+                    scrobbling frequency depends on your selected plan (1 hour
+                    for free users, 5 minutes for Pro users)
                   </li>
                 </ul>
                 <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
@@ -240,13 +241,13 @@ export default async function Home() {
                   same simple steps as before.
                 </p>
                 <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                  Need help? We&apos;re here for you! Contact us at{" "}
-                  <a
-                    href="mailto:hi@bocono-labs.com"
-                    className="underline text-blue-500"
-                  >
-                    hi@bocono-labs.com
-                  </a>
+                  Need help? We&apos;re here for you! Email{" "}
+                  <a href={SUPPORT_MAILTO} className="underline text-blue-500">
+                    {SUPPORT_EMAIL}
+                  </a>{" "}
+                  and our support assistant will reply, usually within minutes.
+                  If it can&apos;t solve your problem, it forwards your email to
+                  the developer.
                 </p>
               </div>
             </div>
@@ -338,13 +339,12 @@ export default async function Home() {
                   What happens if my YouTube Music cookie expires?
                 </h3>
                 <p className="text-gray-500 dark:text-gray-400">
-                  Cookies naturally expire over time (usually every few weeks or
-                  months). When this happens, we&apos;ll automatically detect
-                  the issue and send you up to 3 email notifications:
-                  immediately, after 2 days, and after 5 days. After the third
-                  notification, your account will be automatically paused until
-                  you update your cookie. This prevents unnecessary processing
-                  and ensures you&apos;re aware of the issue.
+                  Google decides how long a YouTube session lasts, and it can
+                  range from a few hours to several weeks, so sooner or later
+                  the cookie has to be refreshed. When we detect the problem,
+                  your account is paused and we send you up to 3 email
+                  notifications: immediately, after 2 days, and after 5 days.
+                  Scrobbling resumes as soon as you paste a fresh cookie.
                 </p>
               </div>
 
@@ -416,6 +416,47 @@ export default async function Home() {
                   priority in our processing queue, meaning more consistent and
                   faster scrobbling. Both plans include the same notification
                   system and reliability features.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-xl font-semibold">
+                  My cookie keeps expiring every few hours or days. Am I doing
+                  something wrong?
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Probably not. Google invalidates YouTube sessions on its own
+                  schedule and we can&apos;t extend that from our side. What
+                  often helps: open music.youtube.com in a private/incognito
+                  window, sign in, play a song, copy the request from the
+                  Network tab as described in the setup steps, paste it here,
+                  and then close the private window without signing out. A tab
+                  left open keeps rotating the session and invalidates the copy
+                  we hold. If it still fails repeatedly, email{" "}
+                  <a href={SUPPORT_MAILTO} className="underline text-blue-500">
+                    {SUPPORT_EMAIL}
+                  </a>
+                  .
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-xl font-semibold">
+                  How do I delete my account and data?
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Email{" "}
+                  <a
+                    href={`${SUPPORT_MAILTO}?subject=${encodeURIComponent("Delete my account and data")}`}
+                    className="underline text-blue-500"
+                  >
+                    {SUPPORT_EMAIL}
+                  </a>{" "}
+                  from any address. We&apos;ll send a confirmation link to the
+                  email of your account; once you confirm, your credentials,
+                  Last.fm connection and scrobble history are permanently
+                  deleted. If you have an active paid subscription, cancel it
+                  first on the pricing page.
                 </p>
               </div>
             </div>
