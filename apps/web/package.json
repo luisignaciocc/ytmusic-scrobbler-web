@@ -11,6 +11,7 @@
     "vercel-build": "pnpm --workspace-root run generate && pnpm --workspace-root run migrate deploy && SENTRY_RELEASE=$VERCEL_GIT_COMMIT_SHA NEXT_PUBLIC_SENTRY_RELEASE=$VERCEL_GIT_COMMIT_SHA next build"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.6.0",
     "@paddle/paddle-js": "^1.4.0",
     "@paddle/paddle-node-sdk": "^2.5.1",
     "@prisma/client": "*",
@@ -24,6 +25,7 @@
     "next-auth": "^4.24.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "resend": "^6.37.0",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
     "xml2js": "^0.6.2"

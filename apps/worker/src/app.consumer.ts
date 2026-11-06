@@ -458,6 +458,8 @@ export class AppConsumer implements OnModuleInit {
       await resend.emails.send({
         from: "YTMusic Scrobbler <noreply@bocono-labs.com>",
         to: recipientEmail,
+        // Replies go to the support agent inbox when configured
+        replyTo: process.env.SUPPORT_REPLY_TO || undefined,
         subject: subjects[notificationType],
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
