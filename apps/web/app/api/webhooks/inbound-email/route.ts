@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import { Prisma, PrismaClient } from "@prisma/client";
-import { Resend } from "resend";
+import { CreateEmailOptions, Resend } from "resend";
 
 import {
   AccountStatus,
@@ -21,6 +21,9 @@ const prisma = new PrismaClient();
 
 const MAX_REPLIES_PER_SENDER_PER_DAY = 3;
 const MAX_BODY_CHARS = 6000;
+// A row still "processing" after this long belongs to a crashed/timed-out
+// attempt: a webhook retry may take it over (lease).
+const LEASE_MS = 5 * 60 * 1000;
 
 function config() {
   const {
@@ -31,8 +34,12 @@ function config() {
     SUPPORT_OWN_DOMAINS,
     APP_URL,
   } = process.env;
-  if (!RESEND_API_KEY || !RESEND_WEBHOOK_SECRET) {
-    throw new Error("RESEND_API_KEY and RESEND_WEBHOOK_SECRET are required");
+  // Validated BEFORE an email is claimed, so a misconfiguration fails the
+  // webhook (Resend retries) instead of silently dropping the message.
+  if (!RESEND_API_KEY || !RESEND_WEBHOOK_SECRET || !SUPPORT_ESCALATION_EMAIL) {
+    throw new Error(
+      "RESEND_API_KEY, RESEND_WEBHOOK_SECRET and SUPPORT_ESCALATION_EMAIL are required",
+    );
   }
   return {
     resend: new Resend(RESEND_API_KEY),
@@ -44,6 +51,16 @@ function config() {
       .map((d) => d.trim().toLowerCase()),
     appUrl: APP_URL ?? "https://scrobbler.bocono-labs.com",
   };
+}
+
+type Config = ReturnType<typeof config>;
+
+/** Resend resolves with `{ error }` instead of throwing: surface it. */
+async function sendChecked(cfg: Config, payload: CreateEmailOptions) {
+  const { error } = await cfg.resend.emails.send(payload);
+  if (error) {
+    throw new Error(`Resend send failed: ${error.name}: ${error.message}`);
+  }
 }
 
 export async function POST(request: Request) {
@@ -70,7 +87,8 @@ export async function POST(request: Request) {
 
   const { email_id: resendId, message_id: messageId, subject } = event.data;
 
-  // 2. Idempotency: Resend retries webhooks; process each email once.
+  // 2. Claim the email (idempotency + lease). Duplicate deliveries are
+  //    acknowledged only if the original attempt finished or is still fresh.
   try {
     await prisma.supportEmail.create({
       data: {
@@ -83,22 +101,29 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
+      !(
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      )
     ) {
-      return new Response("duplicate");
+      throw error;
     }
-    throw error;
+    const takeover = await prisma.supportEmail.updateMany({
+      where: {
+        resendId,
+        status: "processing",
+        createdAt: { lt: new Date(Date.now() - LEASE_MS) },
+      },
+      data: { createdAt: new Date() }, // renew the lease
+    });
+    if (takeover.count === 0) return new Response("duplicate");
+    console.warn(`inbound-email: taking over stale attempt ${resendId}`);
   }
 
-  const finish = (
-    data: Prisma.SupportEmailUpdateInput,
-  ): Promise<unknown> =>
+  const finish = (data: Prisma.SupportEmailUpdateInput): Promise<unknown> =>
     prisma.supportEmail.update({ where: { resendId }, data });
 
-  let fullEmail:
-    | { from: string; text: string; headers: Record<string, string> | null }
-    | undefined;
+  let fullEmail: { from: string; text: string } | undefined;
 
   try {
     // 3. The webhook carries metadata only: fetch the body.
@@ -114,11 +139,14 @@ export async function POST(request: Request) {
       .replace(/\r/g, "")
       .slice(0, MAX_BODY_CHARS);
     const replyTo = received.reply_to?.[0] ?? received.from;
-    fullEmail = { from: replyTo, text, headers: received.headers };
+    fullEmail = { from: replyTo, text };
 
+    // One identity for everything: lookup, reply destination and rate
+    // limiting all use the address we would actually answer.
     const sender = parseAddress(replyTo);
+    await finish({ fromAddress: sender });
 
-    // 4. Guards: loops, bulk mail, per-sender rate limit.
+    // 4. Guards: loops, bulk mail, per-sender quota.
     const skipReason = shouldSkipAutoReply({
       from: received.from,
       headers: received.headers,
@@ -129,29 +157,34 @@ export async function POST(request: Request) {
       return new Response("skipped");
     }
 
-    const recentReplies = await prisma.supportEmail.count({
+    // Counts other emails from this sender in the last 24h that replied,
+    // escalated or are still processing. In-flight rows count, so concurrent
+    // emails see each other and the cap cannot be exceeded (they may both
+    // be held back, which is the safe direction).
+    const others = await prisma.supportEmail.count({
       where: {
         fromAddress: sender,
-        status: { in: ["replied", "escalated"] },
+        resendId: { not: resendId },
+        status: { in: ["processing", "replied", "escalated"] },
         createdAt: { gt: new Date(Date.now() - 24 * 60 * 60 * 1000) },
       },
     });
-    if (recentReplies >= MAX_REPLIES_PER_SENDER_PER_DAY) {
-      await finish({ status: "skipped", detail: "rate limited" });
-      if (cfg.escalationEmail) {
-        await cfg.resend.emails.send({
-          from: cfg.from,
-          to: cfg.escalationEmail,
-          replyTo,
-          subject: `[support escalation] ${subject}`,
-          text: `Reason: sender hit the daily auto-reply limit, needs a human.\nFrom: ${received.from}\n\n---\n${text}`,
-        });
-      }
+    if (others >= MAX_REPLIES_PER_SENDER_PER_DAY) {
+      await sendChecked(cfg, {
+        from: cfg.from,
+        to: cfg.escalationEmail,
+        replyTo,
+        subject: `[support escalation] ${subject}`,
+        text: `Reason: sender hit the daily auto-reply limit, needs a human.\nFrom: ${received.from}\n\n---\n${text}`,
+      });
+      await finish({ status: "escalated", detail: "rate limited" });
       return new Response("rate limited");
     }
 
-    // 5. Run the agent. Tools are bound to THIS sender.
-    const user = await prisma.user.findFirst({
+    // 5. Resolve the account. The primary email wins. A notificationEmail is
+    //    free-form and not unique, so it is only trusted when it identifies
+    //    exactly one account; ambiguous matches are treated as "unknown".
+    const matches = await prisma.user.findMany({
       where: {
         deletedAt: null,
         OR: [
@@ -159,26 +192,28 @@ export async function POST(request: Request) {
           { notificationEmail: { equals: sender, mode: "insensitive" } },
         ],
       },
+      take: 5,
     });
+    const primary = matches.filter(
+      (u) => u.email.toLowerCase() === sender,
+    );
+    const user =
+      primary.length === 1
+        ? primary[0]
+        : primary.length === 0 && matches.length === 1
+          ? matches[0]
+          : null;
 
-    const threadHeaders = {
-      "In-Reply-To": messageId,
-      References: messageId,
-    };
+    const threadHeaders = { "In-Reply-To": messageId, References: messageId };
 
-    const escalate = async (reason: string) => {
-      if (!cfg.escalationEmail) {
-        console.error("SUPPORT_ESCALATION_EMAIL not set; cannot escalate");
-        return;
-      }
-      await cfg.resend.emails.send({
+    const escalate = (reason: string) =>
+      sendChecked(cfg, {
         from: cfg.from,
         to: cfg.escalationEmail,
-        replyTo: replyTo,
+        replyTo,
         subject: `[support escalation] ${subject}`,
-        text: `Reason: ${reason}\nFrom: ${received!.from}\nAccount found: ${user ? user.email : "no"}\n\n---\n${text}`,
+        text: `Reason: ${reason}\nFrom: ${received.from}\nAccount found: ${user ? user.email : "no"}\n\n---\n${text}`,
       });
-    }
 
     const handlers: SupportToolHandlers = {
       async getAccountStatus(): Promise<AccountStatus> {
@@ -198,23 +233,22 @@ export async function POST(request: Request) {
         };
       },
 
-      async sendReply(body: string) {
-        await cfg.resend.emails.send({
+      sendReply: (body: string) =>
+        sendChecked(cfg, {
           from: cfg.from,
           to: replyTo,
           bcc: cfg.escalationEmail,
-          subject: /^re:/i.test(subject) ? subject : `Re: ${subject}`,
+          subject: /^re:/i.test(subject ?? "") ? subject : `Re: ${subject}`,
           text: body,
           headers: threadHeaders,
-        });
-      },
+        }),
 
       async sendDeletionConfirmation() {
         if (!user) {
           return {
             ok: false,
             message:
-              "No account matches the sender's address (they may have signed up with another email).",
+              "No single account matches the sender's address (they may have signed up with another email).",
           };
         }
         if (hasLiveSubscription(user)) {
@@ -226,17 +260,14 @@ export async function POST(request: Request) {
         }
         const link = `${cfg.appUrl}/api/support/confirm-deletion?token=${createDeletionToken(user.id)}`;
         // Goes to the ACCOUNT's own email, never to an arbitrary sender.
-        await cfg.resend.emails.send({
+        await sendChecked(cfg, {
           from: cfg.from,
           to: user.email,
           bcc: cfg.escalationEmail,
           subject: "Confirm deletion of your YTMusic Scrobbler account",
           text: `Hi ${user.name},\n\nWe received a request to delete your YouTube Music Scrobbler account and all associated data (credentials, Last.fm connection and scrobble history).\n\nTo confirm, open this link (valid for 48 hours):\n${link}\n\nIf you did not ask for this, ignore this email and nothing will be deleted.\n\n— Bocono Labs support (automated assistant)`,
         });
-        return {
-          ok: true,
-          message: `confirmation sent to ${user.email}`,
-        };
+        return { ok: true, message: `confirmation sent to ${user.email}` };
       },
 
       escalate,
@@ -256,23 +287,23 @@ export async function POST(request: Request) {
     return new Response("ok");
   } catch (error) {
     console.error("inbound-email handler failed", error);
-    await finish({
-      status: "error",
-      detail: error instanceof Error ? error.message : String(error),
-    }).catch(() => undefined);
+    const message = error instanceof Error ? error.message : String(error);
+    let detail = message;
     // Never leave a user unanswered silently: tell the developer.
-    if (cfg.escalationEmail) {
-      await cfg.resend.emails
-        .send({
-          from: cfg.from,
-          to: cfg.escalationEmail,
-          replyTo: fullEmail?.from,
-          subject: `[support agent error] ${subject}`,
-          text: `The agent failed on an inbound email (resend id ${resendId}).\nFrom: ${fullEmail?.from ?? event.data.from}\n\n${fullEmail?.text ?? "(body not fetched)"}`,
-        })
-        .catch(() => undefined);
+    try {
+      await sendChecked(cfg, {
+        from: cfg.from,
+        to: cfg.escalationEmail,
+        replyTo: fullEmail?.from,
+        subject: `[support agent error] ${subject}`,
+        text: `The agent failed on an inbound email (resend id ${resendId}).\nError: ${message}\nFrom: ${fullEmail?.from ?? event.data.from}\n\n${fullEmail?.text ?? "(body not fetched)"}`,
+      });
+    } catch (notifyError) {
+      console.error("inbound-email: error notification failed", notifyError);
+      detail = `${message} | DEVELOPER NOTIFICATION FAILED, needs manual follow-up`;
     }
-    // 200 so Resend does not retry (the row is already recorded as error).
+    await finish({ status: "error", detail }).catch(() => undefined);
+    // 200 so Resend does not retry; the failure is recorded on the row.
     return new Response("error handled");
   }
 }

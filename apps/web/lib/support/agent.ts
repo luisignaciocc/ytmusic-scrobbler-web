@@ -123,14 +123,21 @@ export async function runSupportAgent(
 
     messages.push({ role: "assistant", content: response.content });
     const results: Anthropic.ToolResultBlockParam[] = [];
+    // Terminal actions are collected over the WHOLE batch so that a holding
+    // reply and an escalation requested together are both executed.
+    let replied: string | null = null;
+    let deletionMessage: string | null = null;
+    let escalated: string | null = null;
+    let category: SupportCategory = "other";
 
     for (const use of toolUses) {
       const input = (use.input ?? {}) as Record<string, unknown>;
-      const category = (
-        CATEGORIES as readonly string[]
-      ).includes(input.category as string)
+      const inputCategory = (CATEGORIES as readonly string[]).includes(
+        input.category as string,
+      )
         ? (input.category as SupportCategory)
-        : "other";
+        : null;
+      if (inputCategory) category = inputCategory;
 
       switch (use.name) {
         case "get_account_status": {
@@ -150,33 +157,35 @@ export async function runSupportAgent(
               content: "Empty body, try again.",
               is_error: true,
             });
-            break;
+          } else if (replied === null) {
+            await handlers.sendReply(body);
+            replied = body;
           }
-          await handlers.sendReply(body);
-          return { action: "reply", category, detail: body.slice(0, 500) };
+          break;
         }
         case "send_deletion_confirmation": {
+          if (deletionMessage !== null) break;
           const result = await handlers.sendDeletionConfirmation();
           if (result.ok) {
-            return {
-              action: "deletion_confirmation_sent",
-              category: "deletion",
-              detail: result.message,
-            };
+            deletionMessage = result.message;
+            category = "deletion";
+          } else {
+            // e.g. unknown account or live subscription: let the model explain.
+            results.push({
+              type: "tool_result",
+              tool_use_id: use.id,
+              content: `${result.message} Explain this to the user with send_reply, or escalate_to_human.`,
+              is_error: true,
+            });
           }
-          // e.g. unknown account or live subscription: let the model explain.
-          results.push({
-            type: "tool_result",
-            tool_use_id: use.id,
-            content: `${result.message} Explain this to the user with send_reply, or escalate_to_human.`,
-            is_error: true,
-          });
           break;
         }
         case "escalate_to_human": {
+          if (escalated !== null) break;
           const reason = String(input.reason ?? "").trim() || "(no reason)";
           await handlers.escalate(reason);
-          return { action: "escalated", category, detail: reason };
+          escalated = reason;
+          break;
         }
         default:
           results.push({
@@ -186,6 +195,26 @@ export async function runSupportAgent(
             is_error: true,
           });
       }
+    }
+
+    if (escalated !== null) {
+      return {
+        action: "escalated",
+        category,
+        detail: replied
+          ? `${escalated} (holding reply also sent)`
+          : escalated,
+      };
+    }
+    if (deletionMessage !== null) {
+      return {
+        action: "deletion_confirmation_sent",
+        category: "deletion",
+        detail: deletionMessage,
+      };
+    }
+    if (replied !== null) {
+      return { action: "reply", category, detail: replied.slice(0, 500) };
     }
 
     messages.push({ role: "user", content: results });
