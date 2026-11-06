@@ -53,3 +53,19 @@ model Song {
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId           String
 }
+
+// Inbound support emails handled by the support agent (idempotency, rate limiting, audit)
+model SupportEmail {
+  id          String   @id @default(cuid())
+  resendId    String   @unique // Resend received email id (webhook retries are deduplicated on this)
+  messageId   String?
+  fromAddress String
+  subject     String
+  status      String // processing, replied, escalated, skipped, error
+  category    String? // cookie_expiry, deletion, subscription, outage, other
+  action      String? // reply, deletion_confirmation_sent, escalated
+  detail      String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  @@index([fromAddress, createdAt])
+}
