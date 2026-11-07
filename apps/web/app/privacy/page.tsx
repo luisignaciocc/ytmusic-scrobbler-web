@@ -1,5 +1,7 @@
 import React from "react";
 
+import { SUPPORT_EMAIL, SUPPORT_MAILTO } from "../../lib/support-contact";
+
 const PrivacyPolicy = () => (
   <main className="flex-1 flex justify-center items-center py-12 bg-gray-100">
     <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
@@ -120,7 +122,13 @@ const PrivacyPolicy = () => (
         </li>
         <li>
           The right to erasure – You have the right to request that we erase
-          your personal data, under certain conditions.
+          your personal data, under certain conditions. You can make this
+          request by emailing{" "}
+          <a href={SUPPORT_MAILTO} className="underline text-blue-500">
+            {SUPPORT_EMAIL}
+          </a>
+          ; we will send a confirmation link to the email address of your
+          account and delete your data once you confirm.
         </li>
         <li>
           The right to restrict processing – You have the right to request that
@@ -193,6 +201,10 @@ const PrivacyPolicy = () => (
         at{" "}
         <a href="mailto:hi@bocono-labs.com" className="underline text-blue-500">
           hi@bocono-labs.com
+        </a>
+        . For help with the service, or to request deletion of your data, email{" "}
+        <a href={SUPPORT_MAILTO} className="underline text-blue-500">
+          {SUPPORT_EMAIL}
         </a>
         .
       </p>

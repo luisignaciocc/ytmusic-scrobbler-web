@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 
+import { SUPPORT_MAILTO } from "../../lib/support-contact";
 import Modal from "./modal";
 
 interface Step {
@@ -183,10 +184,10 @@ export default function YouTubeHeadersForm({
               <p className="text-sm text-gray-500 mt-4">
                 Need help?{" "}
                 <a
-                  href="mailto:hi@bocono-labs.com"
+                  href={SUPPORT_MAILTO}
                   className="text-blue-500 hover:underline"
                 >
-                  Contact us
+                  Email support
                 </a>
                 .
               </p>
