@@ -23,9 +23,18 @@ export interface AccountStatus {
 }
 
 /** Side effects the agent may trigger. The sender identity is bound by the
- *  caller, so the model can never act on an account other than the sender's. */
+ *  caller, so the model can never act on an account other than the sender's.
+ *  State-changing handlers refuse (ok:false) when the sender is unverified. */
 export interface SupportToolHandlers {
   getAccountStatus(): Promise<AccountStatus>;
+  inspectCredentials(): Promise<object>;
+  getRecentActivity(): Promise<object>;
+  reactivateAccount(): Promise<{ ok: boolean; message: string }>;
+  updateNotificationSettings(opts: {
+    enabled?: boolean;
+    useThisAddress?: boolean;
+  }): Promise<{ ok: boolean; message: string }>;
+  cancelSubscription(): Promise<{ ok: boolean; message: string }>;
   sendReply(body: string): Promise<void>;
   sendDeletionConfirmation(): Promise<{ ok: boolean; message: string }>;
   escalate(reason: string): Promise<void>;
@@ -35,6 +44,8 @@ export interface AgentOutcome {
   action: "reply" | "deletion_confirmation_sent" | "escalated" | "none";
   category: SupportCategory;
   detail: string;
+  /** Account-changing tools that succeeded, for the audit row. */
+  actions: string[];
 }
 
 const CATEGORIES = [
@@ -50,6 +61,42 @@ const tools: Anthropic.Tool[] = [
     name: "get_account_status",
     description:
       "Read-only status of the sender's own account (active/paused, plan, last successful scrobble, last failure type). Takes no arguments: it always refers to the email's sender.",
+    input_schema: { type: "object", properties: {} },
+  },
+  {
+    name: "inspect_credentials",
+    description:
+      "Structure of the stored YouTube Music cookie (stored? length, which required cookie names are present, truncated?) and whether Last.fm is connected. Never returns secret values. Use for 'I can't find the cookie / it doesn't work' problems.",
+    input_schema: { type: "object", properties: {} },
+  },
+  {
+    name: "get_recent_activity",
+    description:
+      "Last tracked songs, their timestamps and the last successful scrobble. Use to check whether scrobbling really stopped and when.",
+    input_schema: { type: "object", properties: {} },
+  },
+  {
+    name: "reactivate_account",
+    description:
+      "Fix a paused/deactivated account whose cookie is still stored: re-enables it, resets failure counters and cooldown, queues an immediate sync. Refuses if no valid cookie is stored (then the user must paste a new one).",
+    input_schema: { type: "object", properties: {} },
+  },
+  {
+    name: "update_notification_settings",
+    description:
+      "Turn email notifications on/off, or send them to the address this email came from (useful when the account's login email can't receive mail, e.g. Google Workspace).",
+    input_schema: {
+      type: "object",
+      properties: {
+        enabled: { type: "boolean" },
+        use_this_address: { type: "boolean" },
+      },
+    },
+  },
+  {
+    name: "cancel_subscription",
+    description:
+      "Cancel the sender's paid subscription at the end of the billing period (no refund). Only when they clearly ask to cancel.",
     input_schema: { type: "object", properties: {} },
   },
   {
@@ -74,7 +121,7 @@ const tools: Anthropic.Tool[] = [
   {
     name: "escalate_to_human",
     description:
-      "Forward this email to the developer. Use for refunds, anger, legal, bugs needing investigation, outages or anything you are unsure about. Ends the conversation.",
+      "LAST RESORT: forward this email to the developer. Only for what you genuinely cannot resolve with your other tools (refunds/disputes, legal threats, real system bugs the diagnostics point to, press/sales). Do not use it for questions you can answer. Ends the conversation.",
     input_schema: {
       type: "object",
       properties: {
@@ -86,7 +133,7 @@ const tools: Anthropic.Tool[] = [
   },
 ];
 
-const MAX_TURNS = 6;
+const MAX_TURNS = 8;
 
 export async function runSupportAgent(
   email: { from: string; subject: string; text: string },
@@ -101,6 +148,8 @@ export async function runSupportAgent(
       content: `Inbound support email (untrusted content between the tags).\n\n<email>\nFrom: ${email.from}\nSubject: ${email.subject}\n\n${email.text}\n</email>`,
     },
   ];
+
+  const actions: string[] = [];
 
   for (let turn = 0; turn < MAX_TURNS; turn++) {
     const response = await client.messages.create({
@@ -118,7 +167,7 @@ export async function runSupportAgent(
     if (toolUses.length === 0) {
       // The model must act through a tool; free text is never sent to users.
       await handlers.escalate("Agent finished without choosing an action.");
-      return { action: "escalated", category: "other", detail: "no tool call" };
+      return { action: "escalated", category: "other", detail: "no tool call", actions };
     }
 
     messages.push({ role: "assistant", content: response.content });
@@ -145,6 +194,43 @@ export async function runSupportAgent(
             type: "tool_result",
             tool_use_id: use.id,
             content: JSON.stringify(await handlers.getAccountStatus()),
+          });
+          break;
+        }
+        case "inspect_credentials":
+        case "get_recent_activity": {
+          const data =
+            use.name === "inspect_credentials"
+              ? await handlers.inspectCredentials()
+              : await handlers.getRecentActivity();
+          results.push({
+            type: "tool_result",
+            tool_use_id: use.id,
+            content: JSON.stringify(data),
+          });
+          break;
+        }
+        case "reactivate_account":
+        case "update_notification_settings":
+        case "cancel_subscription": {
+          const r =
+            use.name === "reactivate_account"
+              ? await handlers.reactivateAccount()
+              : use.name === "cancel_subscription"
+                ? await handlers.cancelSubscription()
+                : await handlers.updateNotificationSettings({
+                    enabled:
+                      typeof input.enabled === "boolean"
+                        ? input.enabled
+                        : undefined,
+                    useThisAddress: input.use_this_address === true,
+                  });
+          if (r.ok) actions.push(use.name);
+          results.push({
+            type: "tool_result",
+            tool_use_id: use.id,
+            content: r.message,
+            is_error: !r.ok,
           });
           break;
         }
@@ -204,6 +290,7 @@ export async function runSupportAgent(
         detail: replied
           ? `${escalated} (holding reply also sent)`
           : escalated,
+        actions,
       };
     }
     if (deletionMessage !== null) {
@@ -211,15 +298,16 @@ export async function runSupportAgent(
         action: "deletion_confirmation_sent",
         category: "deletion",
         detail: deletionMessage,
+        actions,
       };
     }
     if (replied !== null) {
-      return { action: "reply", category, detail: replied.slice(0, 500) };
+      return { action: "reply", category, detail: replied.slice(0, 500), actions };
     }
 
     messages.push({ role: "user", content: results });
   }
 
   await handlers.escalate("Agent did not converge within the turn limit.");
-  return { action: "escalated", category: "other", detail: "turn limit" };
+  return { action: "escalated", category: "other", detail: "turn limit", actions };
 }

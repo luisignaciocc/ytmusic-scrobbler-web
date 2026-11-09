@@ -21,6 +21,11 @@ function fakeClient(responses: Array<Array<{ name: string; input: object }>>) {
 function handlers(over: Partial<SupportToolHandlers> = {}): SupportToolHandlers {
   return {
     getAccountStatus: vi.fn(async () => ({ found: true })),
+    inspectCredentials: vi.fn(async () => ({})),
+    getRecentActivity: vi.fn(async () => ({})),
+    reactivateAccount: vi.fn(async () => ({ ok: true, message: "reactivated" })),
+    updateNotificationSettings: vi.fn(async () => ({ ok: true, message: "ok" })),
+    cancelSubscription: vi.fn(async () => ({ ok: true, message: "cancelled" })),
     sendReply: vi.fn(async () => undefined),
     sendDeletionConfirmation: vi.fn(async () => ({ ok: true, message: "sent" })),
     escalate: vi.fn(async () => undefined),
@@ -70,5 +75,39 @@ describe("runSupportAgent", () => {
     expect(h.sendReply).not.toHaveBeenCalled();
     expect(h.escalate).toHaveBeenCalledOnce();
     expect(out.action).toBe("escalated");
+  });
+
+  it("diagnoses, fixes the account and replies without escalating", async () => {
+    const h = handlers();
+    const out = await runSupportAgent(
+      email,
+      h,
+      fakeClient([
+        [
+          { name: "get_account_status", input: {} },
+          { name: "inspect_credentials", input: {} },
+        ],
+        [{ name: "reactivate_account", input: {} }],
+        [{ name: "send_reply", input: { category: "cookie_expiry", body: "Fixed" } }],
+      ]),
+    );
+    expect(h.reactivateAccount).toHaveBeenCalledOnce();
+    expect(h.escalate).not.toHaveBeenCalled();
+    expect(out).toMatchObject({ action: "reply", actions: ["reactivate_account"] });
+  });
+
+  it("does not record failed fixes as actions", async () => {
+    const h = handlers({
+      reactivateAccount: vi.fn(async () => ({ ok: false, message: "no cookie" })),
+    });
+    const out = await runSupportAgent(
+      email,
+      h,
+      fakeClient([
+        [{ name: "reactivate_account", input: {} }],
+        [{ name: "send_reply", input: { category: "cookie_expiry", body: "Paste a new cookie" } }],
+      ]),
+    );
+    expect(out.actions).toEqual([]);
   });
 });
