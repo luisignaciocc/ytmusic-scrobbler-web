@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+import { Environment, Paddle } from "@paddle/paddle-node-sdk";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { CreateEmailOptions, Resend } from "resend";
 
@@ -13,6 +14,14 @@ import {
   parseAddress,
   shouldSkipAutoReply,
 } from "@/lib/support/guards";
+import {
+  cancelSubscriptionAtPeriodEnd,
+  getRecentActivity,
+  inspectCredentials,
+  isVerifiedSender,
+  reactivateAccount,
+  updateNotificationSettings,
+} from "@/lib/support/tools";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -146,6 +155,15 @@ export async function POST(request: Request) {
     const sender = parseAddress(replyTo);
     await finish({ fromAddress: sender });
 
+    // Account changes only for senders whose domain authentication passed
+    // (and whose reply address is the authenticated From address).
+    const verified = isVerifiedSender(
+      (received as { authentication?: { spf?: string; dkim?: string; dmarc?: string } | null })
+        .authentication,
+      parseAddress(received.from),
+      sender,
+    );
+
     // 4. Guards: loops, bulk mail, per-sender quota.
     const skipReason = shouldSkipAutoReply({
       from: received.from,
@@ -215,6 +233,17 @@ export async function POST(request: Request) {
         text: `Reason: ${reason}\nFrom: ${received.from}\nAccount found: ${user ? user.email : "no"}\n\n---\n${text}`,
       });
 
+    const noAccount = {
+      ok: false,
+      message:
+        "No single account matches the sender's address (they may have signed up with another email).",
+    };
+    const unverified = {
+      ok: false,
+      message:
+        "The sender could not be verified (the email failed SPF/DKIM/DMARC or the reply address differs from the sender). Do not change anything; explain that for security, account changes need an email sent from the account's own address, or the user can do it on the website.",
+    };
+
     const handlers: SupportToolHandlers = {
       async getAccountStatus(): Promise<AccountStatus> {
         if (!user) return { found: false };
@@ -231,6 +260,46 @@ export async function POST(request: Request) {
           lastFmConnected: Boolean(user.lastFmSessionKey),
           youtubeCookieSet: Boolean(user.ytmusicCookie),
         };
+      },
+
+      async inspectCredentials() {
+        if (!user) return { found: false };
+        return inspectCredentials(user);
+      },
+
+      async getRecentActivity() {
+        if (!user) return { found: false };
+        return getRecentActivity(prisma, user);
+      },
+
+      async reactivateAccount() {
+        if (!user) return noAccount;
+        if (!verified) return unverified;
+        return reactivateAccount(prisma, user);
+      },
+
+      async updateNotificationSettings(opts) {
+        if (!user) return noAccount;
+        if (!verified) return unverified;
+        return updateNotificationSettings(prisma, user, {
+          enabled: opts.enabled,
+          useSenderAddress: opts.useThisAddress,
+          senderAddress: sender,
+        });
+      },
+
+      async cancelSubscription() {
+        if (!user) return noAccount;
+        if (!verified) return unverified;
+        if (!process.env.PADDLE_API_KEY) {
+          return { ok: false, message: "Billing is not configured." };
+        }
+        const paddle = new Paddle(process.env.PADDLE_API_KEY, {
+          environment:
+            (process.env.NEXT_PUBLIC_PADDLE_ENV as Environment) ??
+            Environment.sandbox,
+        });
+        return cancelSubscriptionAtPeriodEnd(paddle, user, hasLiveSubscription);
       },
 
       sendReply: (body: string) =>
@@ -282,7 +351,9 @@ export async function POST(request: Request) {
       status: outcome.action === "escalated" ? "escalated" : "replied",
       category: outcome.category,
       action: outcome.action,
-      detail: outcome.detail,
+      detail: outcome.actions.length
+        ? `[actions: ${outcome.actions.join(", ")}] ${outcome.detail}`
+        : outcome.detail,
     });
     return new Response("ok");
   } catch (error) {
