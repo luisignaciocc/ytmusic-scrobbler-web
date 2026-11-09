@@ -334,7 +334,7 @@ export async function POST(request: Request) {
           to: user.email,
           bcc: cfg.escalationEmail,
           subject: "Confirm deletion of your YTMusic Scrobbler account",
-          text: `Hi ${user.name},\n\nWe received a request to delete your YouTube Music Scrobbler account and all associated data (credentials, Last.fm connection and scrobble history).\n\nTo confirm, open this link (valid for 48 hours):\n${link}\n\nIf you did not ask for this, ignore this email and nothing will be deleted.\n\n— Bocono Labs support (automated assistant)`,
+          text: `Hi ${user.name},\n\nWe received a request to delete your YouTube Music Scrobbler account and all associated data (credentials, Last.fm connection and scrobble history).\n\nTo confirm, open this link (valid for 48 hours):\n${link}\n\nIf you did not ask for this, ignore this email and nothing will be deleted.\n\nBocono Labs support`,
         });
         return { ok: true, message: `confirmation sent to ${user.email}` };
       },
