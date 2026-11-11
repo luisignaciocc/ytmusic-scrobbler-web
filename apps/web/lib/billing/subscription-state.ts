@@ -25,8 +25,13 @@ export interface SubscriptionColumns {
 
 /** Stripe statuses during which the customer keeps Pro. */
 const PRO_STATUSES = ["active", "trialing", "past_due"];
-/** Stripe statuses that mean the subscription is over for good. */
-const ENDED_STATUSES = ["canceled", "incomplete_expired", "unpaid"];
+/**
+ * Stripe statuses that mean the subscription is over for good. `unpaid` is
+ * not one of them: the subscription still exists and comes back to life when
+ * the open invoice is paid, so it is stored as is (without Pro) and keeps
+ * counting as a live subscription until Stripe actually cancels it.
+ */
+const ENDED_STATUSES = ["canceled", "incomplete_expired"];
 
 const toDate = (seconds: number) => new Date(seconds * 1000);
 

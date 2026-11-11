@@ -45,46 +45,69 @@ async function findUser(
 /**
  * Stripe does not deliver events in order, so the event only tells us which
  * subscription changed; the state we store is always re-read from the API.
+ *
+ * Deliveries also overlap, so the read and the write happen under two locks:
+ * an advisory lock on the subscription, taken before asking Stripe, so that
+ * a handler holding an older answer cannot write after one holding a newer
+ * one; and a lock on the user row, so that the decision to replace a
+ * different stored subscription is made against what is stored right now.
  */
 async function syncSubscription(subscriptionId: string) {
   const stripe = getStripe();
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-  const customerId =
-    typeof subscription.customer === "string"
-      ? subscription.customer
-      : subscription.customer.id;
 
-  const user = await findUser(stripe, subscription, customerId);
-  if (!user) {
-    console.error("Stripe webhook: no user for subscription", subscriptionId);
-    return;
-  }
+  await prisma.$transaction(
+    async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${subscriptionId}))`;
 
-  const columns = stripeSubscriptionToColumns(subscription);
-  if (!shouldApplyStripeSubscription(user, columns)) {
-    console.log(
-      "Stripe webhook: ignoring ended subscription",
-      subscriptionId,
-      "- user is on",
-      user.subscriptionId,
-    );
-    return;
-  }
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      const customerId =
+        typeof subscription.customer === "string"
+          ? subscription.customer
+          : subscription.customer.id;
 
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      ...columns,
-      subscriptionProvider: "stripe",
-      stripeCustomerId: customerId,
+      const user = await findUser(stripe, subscription, customerId);
+      if (!user) {
+        console.error(
+          "Stripe webhook: no user for subscription",
+          subscriptionId,
+        );
+        return;
+      }
+
+      const [stored] = await tx.$queryRaw<
+        Array<{ subscriptionId: string | null }>
+      >`SELECT "subscriptionId" FROM "User" WHERE "id" = ${user.id} FOR UPDATE`;
+
+      const columns = stripeSubscriptionToColumns(subscription);
+      if (!stored || !shouldApplyStripeSubscription(stored, columns)) {
+        console.log(
+          "Stripe webhook: ignoring ended subscription",
+          subscriptionId,
+          "- user is on",
+          stored?.subscriptionId,
+        );
+        return;
+      }
+
+      await tx.user.update({
+        where: { id: user.id },
+        data: {
+          ...columns,
+          subscriptionProvider: "stripe",
+          stripeCustomerId: customerId,
+        },
+      });
+      console.log(
+        "Stripe webhook: user",
+        user.id,
+        "is now",
+        columns.subscriptionPlan,
+        columns.subscriptionStatus,
+      );
     },
-  });
-  console.log(
-    "Stripe webhook: user",
-    user.id,
-    "is now",
-    columns.subscriptionPlan,
-    columns.subscriptionStatus,
+    // The transaction spans calls to Stripe, and may wait for another
+    // delivery about the same subscription to finish.
+    { maxWait: 15_000, timeout: 30_000 },
   );
 }
 

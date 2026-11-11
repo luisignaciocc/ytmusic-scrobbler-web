@@ -17,6 +17,7 @@ interface BillingStats {
     totalRevenue: number;
     monthlyRevenue: number;
   };
+  truncated?: boolean;
   lastUpdated: string;
 }
 
@@ -108,6 +109,12 @@ function BillingStatsCard({
           </span>
         )}
       </div>
+
+      {stats?.truncated && (
+        <p className="mb-4 text-sm text-yellow-800 bg-yellow-50 border border-yellow-200 rounded-md p-3">
+          Partial figures: {name} has more records than this page reads, so the numbers below cover only the most recent ones.
+        </p>
+      )}
 
       {loading ? (
         <div className="animate-pulse space-y-4">

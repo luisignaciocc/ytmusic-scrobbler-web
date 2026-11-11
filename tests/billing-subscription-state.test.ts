@@ -4,6 +4,7 @@ import {
   shouldApplyStripeSubscription,
   stripeSubscriptionToColumns,
 } from "../apps/web/lib/billing/subscription-state";
+import { hasLiveSubscription } from "../apps/web/lib/support/guards";
 
 const PERIOD_END = 1_800_000_000;
 const sub = (over: Record<string, unknown> = {}) => ({
@@ -27,7 +28,7 @@ describe("stripeSubscriptionToColumns", () => {
   });
 
   it("stores ended subscriptions as free and 'cancelled'", () => {
-    for (const status of ["canceled", "incomplete_expired", "unpaid"]) {
+    for (const status of ["canceled", "incomplete_expired"]) {
       const columns = stripeSubscriptionToColumns(
         sub({ status, cancel_at: PERIOD_END, cancel_at_period_end: true }),
       );
@@ -35,6 +36,18 @@ describe("stripeSubscriptionToColumns", () => {
       expect(columns.subscriptionStatus).toBe("cancelled");
       expect(columns.scheduledCancellationDate).toBeNull();
     }
+  });
+
+  it("keeps an unpaid subscription alive but without Pro", () => {
+    const columns = stripeSubscriptionToColumns(sub({ status: "unpaid" }));
+    expect(columns.subscriptionPlan).toBe("free");
+    expect(columns.subscriptionStatus).toBe("unpaid");
+    expect(
+      hasLiveSubscription({
+        subscriptionId: columns.subscriptionId,
+        subscriptionStatus: columns.subscriptionStatus,
+      }),
+    ).toBe(true);
   });
 
   it("does not grant Pro before the first payment succeeds", () => {

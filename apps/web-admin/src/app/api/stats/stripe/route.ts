@@ -3,7 +3,7 @@ import Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
 
-// Upper bound on what one dashboard load reads from Stripe.
+// Upper bound, per list, on what one dashboard load reads from Stripe.
 const MAX_ITEMS = 1000;
 
 const emptyStats = {
@@ -25,18 +25,20 @@ export async function GET() {
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-    const [subscriptions, customers, invoices] = await Promise.all([
-      stripe.subscriptions
-        .list({ status: "all", limit: 100 })
-        .autoPagingToArray({ limit: MAX_ITEMS }),
-      stripe.customers.list({ limit: 100 }).autoPagingToArray({ limit: MAX_ITEMS }),
-      stripe.invoices
-        .list({ status: "paid", limit: 100 })
-        .autoPagingToArray({ limit: MAX_ITEMS }),
+    // One item more than the cap is requested so a cut-off list is detectable.
+    const upTo = { limit: MAX_ITEMS + 1 };
+    const [active, trialing, customers, invoices] = await Promise.all([
+      stripe.subscriptions.list({ status: "active", limit: 100 }).autoPagingToArray(upTo),
+      stripe.subscriptions.list({ status: "trialing", limit: 100 }).autoPagingToArray(upTo),
+      stripe.customers.list({ limit: 100 }).autoPagingToArray(upTo),
+      stripe.invoices.list({ status: "paid", limit: 100 }).autoPagingToArray(upTo),
     ]);
 
-    const active = subscriptions.filter((s) => s.status === "active");
-    const trialing = subscriptions.filter((s) => s.status === "trialing");
+    // Past the cap these figures are a sample of the most recent records,
+    // not totals; the dashboard says so instead of showing them as complete.
+    const lists = [active, trialing, customers, invoices];
+    const truncated = lists.some((list) => list.length > MAX_ITEMS);
+    for (const list of lists) list.length = Math.min(list.length, MAX_ITEMS);
 
     // Monthly recurring revenue, in cents
     let mrrCents = 0;
@@ -62,7 +64,9 @@ export async function GET() {
 
     const totalRevenueCents = invoices.reduce((sum, i) => sum + i.amount_paid, 0);
     const monthlyRevenueCents = invoices
-      .filter((i) => i.created >= monthStartSeconds)
+      // When the money came in, not when the invoice was issued: an invoice
+      // from last month paid after a retry counts for this month.
+      .filter((i) => (i.status_transitions.paid_at ?? i.created) >= monthStartSeconds)
       .reduce((sum, i) => sum + i.amount_paid, 0);
 
     const mrr = mrrCents / 100;
@@ -79,6 +83,7 @@ export async function GET() {
         totalRevenue: Number((totalRevenueCents / 100).toFixed(2)),
         monthlyRevenue: Number((monthlyRevenueCents / 100).toFixed(2)),
       },
+      truncated,
       lastUpdated: new Date().toISOString(),
     });
   } catch (error) {

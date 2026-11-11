@@ -12,8 +12,6 @@ import {
 import { PrismaClient } from "@prisma/client";
 import { NextRequest } from "next/server";
 
-import { hasLiveSubscription } from "@/lib/support/guards";
-
 // Define interfaces for various Paddle data structures
 interface PaddleSubscriptionData {
   id?: string;
@@ -184,12 +182,13 @@ class ProcessWebhook {
         return;
       }
 
-      // A user matched by email may have moved to Stripe since: events about
-      // their old Paddle subscription must not overwrite the Stripe one.
+      // A user matched by email may have moved to Stripe since. Events about
+      // their old Paddle subscription must never overwrite what Stripe wrote,
+      // even after the Stripe subscription has ended: new subscriptions can
+      // only start on Stripe, so such an event is always about the past.
       if (
         user.subscriptionProvider === "stripe" &&
-        user.subscriptionId !== eventData.data.id &&
-        hasLiveSubscription(user)
+        user.subscriptionId !== eventData.data.id
       ) {
         console.log(
           "Ignoring Paddle event: user is now billed by Stripe:",

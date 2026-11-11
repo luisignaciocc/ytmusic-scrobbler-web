@@ -30,16 +30,20 @@ export function getStripe(): Stripe {
   return stripeClient;
 }
 
-let proPriceId: string | undefined;
+const PRICE_CACHE_MS = 5 * 60 * 1000;
+let cachedProPrice: { id: string; expiresAt: number } | undefined;
 
 /**
  * Price charged for the Pro plan. STRIPE_PRICE_ID pins one; otherwise it is
  * the default price of STRIPE_PRODUCT_ID, so changing the price in the
- * Stripe dashboard needs no new configuration here.
+ * Stripe dashboard needs no new configuration here. The lookup is cached
+ * only briefly so such a change reaches new checkouts within minutes.
  */
 export async function getProPriceId(): Promise<string> {
   if (process.env.STRIPE_PRICE_ID) return process.env.STRIPE_PRICE_ID;
-  if (proPriceId) return proPriceId;
+  if (cachedProPrice && cachedProPrice.expiresAt > Date.now()) {
+    return cachedProPrice.id;
+  }
   if (!process.env.STRIPE_PRODUCT_ID) {
     throw new Error("STRIPE_PRODUCT_ID (or STRIPE_PRICE_ID) is missing");
   }
@@ -52,8 +56,11 @@ export async function getProPriceId(): Promise<string> {
       `Stripe product ${product.id} has no default price; set one or use STRIPE_PRICE_ID`,
     );
   }
-  proPriceId = typeof price === "string" ? price : price.id;
-  return proPriceId;
+  cachedProPrice = {
+    id: typeof price === "string" ? price : price.id,
+    expiresAt: Date.now() + PRICE_CACHE_MS,
+  };
+  return cachedProPrice.id;
 }
 
 export function getPaddle(): Paddle {
