@@ -74,10 +74,10 @@ describe("cancelSubscriptionAtPeriodEnd", () => {
   it("cancels at period end for live subscriptions only", async () => {
     const cancel = vi.fn(async () => ({}));
     const live = () => true;
-    const r = await cancelSubscriptionAtPeriodEnd({ subscriptions: { cancel } }, { subscriptionId: "s1", subscriptionStatus: "active" } as never, live);
+    const r = await cancelSubscriptionAtPeriodEnd(cancel, { subscriptionId: "s1", subscriptionStatus: "active" } as never, live);
     expect(r.ok).toBe(true);
-    expect(cancel).toHaveBeenCalledWith("s1", { effectiveFrom: "next_billing_period" });
-    const none = await cancelSubscriptionAtPeriodEnd({ subscriptions: { cancel } }, { subscriptionId: null, subscriptionStatus: null } as never, () => false);
+    expect(cancel).toHaveBeenCalledTimes(1);
+    const none = await cancelSubscriptionAtPeriodEnd(cancel, { subscriptionId: null, subscriptionStatus: null } as never, () => false);
     expect(none.ok).toBe(false);
   });
 });

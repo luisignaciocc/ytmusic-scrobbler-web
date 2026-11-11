@@ -18,6 +18,7 @@
     "react-dom": "^18",
     "react-loading-skeleton": "^3.4.0",
     "resend": "^4.2.0",
+    "stripe": "^23.1.0",
     "use-debounce": "^10.0.2"
   },
   "devDependencies": {

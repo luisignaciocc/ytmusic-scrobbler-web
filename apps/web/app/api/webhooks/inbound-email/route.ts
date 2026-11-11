@@ -1,8 +1,12 @@
 /* eslint-disable no-console */
-import { Environment, Paddle } from "@paddle/paddle-node-sdk";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { CreateEmailOptions, Resend } from "resend";
 
+import {
+  cancelAtPeriodEnd,
+  isBillingConfigured,
+  providerOf,
+} from "@/lib/billing/provider";
 import {
   AccountStatus,
   runSupportAgent,
@@ -291,15 +295,14 @@ export async function POST(request: Request) {
       async cancelSubscription() {
         if (!user) return noAccount;
         if (!verified) return unverified;
-        if (!process.env.PADDLE_API_KEY) {
+        if (!isBillingConfigured(providerOf(user))) {
           return { ok: false, message: "Billing is not configured." };
         }
-        const paddle = new Paddle(process.env.PADDLE_API_KEY, {
-          environment:
-            (process.env.NEXT_PUBLIC_PADDLE_ENV as Environment) ??
-            Environment.sandbox,
-        });
-        return cancelSubscriptionAtPeriodEnd(paddle, user, hasLiveSubscription);
+        return cancelSubscriptionAtPeriodEnd(
+          () => cancelAtPeriodEnd(user),
+          user,
+          hasLiveSubscription,
+        );
       },
 
       sendReply: (body: string) =>

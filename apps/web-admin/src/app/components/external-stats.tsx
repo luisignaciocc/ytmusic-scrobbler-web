@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-interface PaddleStats {
+interface BillingStats {
   subscriptions: {
     active: number;
     trialing: number;
@@ -53,30 +53,122 @@ interface ResendStats {
   lastUpdated: string;
 }
 
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(amount);
+};
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleString('es-ES');
+};
+
+function BillingStatsCard({
+  name,
+  icon,
+  endpoint,
+  subtitle = "Billing & subscription metrics",
+}: {
+  name: string;
+  icon: string;
+  endpoint: string;
+  subtitle?: string;
+}) {
+  const [stats, setStats] = useState<BillingStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch(endpoint)
+      .then((response) => {
+        if (!response.ok) throw new Error(`Failed to fetch ${name} stats`);
+        return response.json();
+      })
+      .then(setStats)
+      .catch((e) => setError(e instanceof Error ? e.message : 'Unknown error'))
+      .finally(() => setLoading(false));
+  }, [endpoint, name]);
+
+  return (
+    <div className="bg-white rounded-lg shadow p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+            <span className="text-blue-600 font-semibold text-sm">{icon}</span>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">{name} Analytics</h3>
+            <p className="text-sm text-gray-500">{subtitle}</p>
+          </div>
+        </div>
+        {stats && (
+          <span className="text-xs text-gray-400">
+            Updated: {formatDate(stats.lastUpdated)}
+          </span>
+        )}
+      </div>
+
+      {loading ? (
+        <div className="animate-pulse space-y-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-gray-200 h-20 rounded"></div>
+            ))}
+          </div>
+        </div>
+      ) : error ? (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex">
+            <div className="text-red-400">⚠️</div>
+            <div className="ml-3">
+              <p className="text-sm text-red-800">Failed to load {name} statistics</p>
+              <p className="text-xs text-red-600 mt-1">{error}</p>
+            </div>
+          </div>
+        </div>
+      ) : stats ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+            <div className="text-2xl font-bold text-green-700">{stats.subscriptions.active}</div>
+            <div className="text-sm text-green-600">Active Subscriptions</div>
+          </div>
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+            <div className="text-2xl font-bold text-blue-700">{stats.subscriptions.trialing}</div>
+            <div className="text-sm text-blue-600">Trial Subscriptions</div>
+          </div>
+          <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+            <div className="text-2xl font-bold text-purple-700">{stats.customers.total}</div>
+            <div className="text-sm text-purple-600">Total Customers</div>
+          </div>
+          <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 p-4 rounded-lg border border-yellow-200">
+            <div className="text-2xl font-bold text-yellow-700">{formatCurrency(stats.revenue.mrr)}</div>
+            <div className="text-sm text-yellow-600">Monthly Recurring Revenue</div>
+          </div>
+          <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 p-4 rounded-lg border border-indigo-200">
+            <div className="text-2xl font-bold text-indigo-700">{formatCurrency(stats.revenue.arr)}</div>
+            <div className="text-sm text-indigo-600">Annual Recurring Revenue</div>
+          </div>
+          <div className="bg-gradient-to-r from-pink-50 to-pink-100 p-4 rounded-lg border border-pink-200">
+            <div className="text-2xl font-bold text-pink-700">{formatCurrency(stats.revenue.totalRevenue)}</div>
+            <div className="text-sm text-pink-600">Total Revenue</div>
+          </div>
+          <div className="bg-gradient-to-r from-teal-50 to-teal-100 p-4 rounded-lg border border-teal-200">
+            <div className="text-2xl font-bold text-teal-700">{formatCurrency(stats.revenue.monthlyRevenue)}</div>
+            <div className="text-sm text-teal-600">This Month Revenue</div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function ExternalStats() {
-  const [paddleStats, setPaddleStats] = useState<PaddleStats | null>(null);
   const [resendStats, setResendStats] = useState<ResendStats | null>(null);
-  const [loadingPaddle, setLoadingPaddle] = useState(true);
   const [loadingResend, setLoadingResend] = useState(true);
-  const [paddleError, setPaddleError] = useState<string | null>(null);
   const [resendError, setResendError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchPaddleStats() {
-      try {
-        const response = await fetch('/api/stats/paddle');
-        if (!response.ok) {
-          throw new Error('Failed to fetch Paddle stats');
-        }
-        const data = await response.json();
-        setPaddleStats(data);
-      } catch (error) {
-        setPaddleError(error instanceof Error ? error.message : 'Unknown error');
-      } finally {
-        setLoadingPaddle(false);
-      }
-    }
-
     async function fetchResendStats() {
       try {
         const response = await fetch('/api/stats/resend');
@@ -92,93 +184,18 @@ export default function ExternalStats() {
       }
     }
 
-    fetchPaddleStats();
     fetchResendStats();
   }, []);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('es-ES');
-  };
-
   return (
     <div className="space-y-8">
-      {/* Paddle Statistics */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-              <span className="text-blue-600 font-semibold text-sm">🚣</span>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Paddle Analytics</h3>
-              <p className="text-sm text-gray-500">Billing & subscription metrics</p>
-            </div>
-          </div>
-          {paddleStats && (
-            <span className="text-xs text-gray-400">
-              Updated: {formatDate(paddleStats.lastUpdated)}
-            </span>
-          )}
-        </div>
-
-        {loadingPaddle ? (
-          <div className="animate-pulse space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-gray-200 h-20 rounded"></div>
-              ))}
-            </div>
-          </div>
-        ) : paddleError ? (
-          <div className="bg-red-50 border border-red-200 rounded-md p-4">
-            <div className="flex">
-              <div className="text-red-400">⚠️</div>
-              <div className="ml-3">
-                <p className="text-sm text-red-800">Failed to load Paddle statistics</p>
-                <p className="text-xs text-red-600 mt-1">{paddleError}</p>
-              </div>
-            </div>
-          </div>
-        ) : paddleStats ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
-              <div className="text-2xl font-bold text-green-700">{paddleStats.subscriptions.active}</div>
-              <div className="text-sm text-green-600">Active Subscriptions</div>
-            </div>
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
-              <div className="text-2xl font-bold text-blue-700">{paddleStats.subscriptions.trialing}</div>
-              <div className="text-sm text-blue-600">Trial Subscriptions</div>
-            </div>
-            <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
-              <div className="text-2xl font-bold text-purple-700">{paddleStats.customers.total}</div>
-              <div className="text-sm text-purple-600">Total Customers</div>
-            </div>
-            <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 p-4 rounded-lg border border-yellow-200">
-              <div className="text-2xl font-bold text-yellow-700">{formatCurrency(paddleStats.revenue.mrr)}</div>
-              <div className="text-sm text-yellow-600">Monthly Recurring Revenue</div>
-            </div>
-            <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 p-4 rounded-lg border border-indigo-200">
-              <div className="text-2xl font-bold text-indigo-700">{formatCurrency(paddleStats.revenue.arr)}</div>
-              <div className="text-sm text-indigo-600">Annual Recurring Revenue</div>
-            </div>
-            <div className="bg-gradient-to-r from-pink-50 to-pink-100 p-4 rounded-lg border border-pink-200">
-              <div className="text-2xl font-bold text-pink-700">{formatCurrency(paddleStats.revenue.totalRevenue)}</div>
-              <div className="text-sm text-pink-600">Total Revenue</div>
-            </div>
-            <div className="bg-gradient-to-r from-teal-50 to-teal-100 p-4 rounded-lg border border-teal-200">
-              <div className="text-2xl font-bold text-teal-700">{formatCurrency(paddleStats.revenue.monthlyRevenue)}</div>
-              <div className="text-sm text-teal-600">This Month Revenue</div>
-            </div>
-          </div>
-        ) : null}
-      </div>
+      <BillingStatsCard name="Stripe" icon="💳" endpoint="/api/stats/stripe" />
+      <BillingStatsCard
+        name="Paddle"
+        icon="🚣"
+        endpoint="/api/stats/paddle"
+        subtitle="Subscriptions bought before the move to Stripe"
+      />
 
       {/* Resend Statistics */}
       <div className="bg-white rounded-lg shadow p-6">
