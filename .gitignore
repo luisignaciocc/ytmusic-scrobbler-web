@@ -43,3 +43,6 @@ next-env.d.ts
 
 # monorepo
 .turbo
+
+# Private notes for Claude Code (connection details)
+CLAUDE.local.md
