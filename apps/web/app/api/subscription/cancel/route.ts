@@ -1,24 +1,10 @@
-import { Environment, Paddle, PaddleOptions } from "@paddle/paddle-node-sdk";
 import { PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
+import { cancelAtPeriodEnd } from "@/lib/billing/provider";
+
 const prisma = new PrismaClient();
-
-function getPaddleInstance() {
-  const paddleOptions: PaddleOptions = {
-    environment:
-      (process.env.NEXT_PUBLIC_PADDLE_ENV as Environment) ??
-      Environment.sandbox,
-  };
-
-  if (!process.env.PADDLE_API_KEY) {
-    console.error("PADDLE_API_KEY is missing!");
-    throw new Error("Paddle API key is missing");
-  }
-
-  return new Paddle(process.env.PADDLE_API_KEY!, paddleOptions);
-}
 
 export async function POST() {
   try {
@@ -42,11 +28,8 @@ export async function POST() {
       );
     }
 
-    // Cancel the subscription through Paddle API
-    const paddle = getPaddleInstance();
-    await paddle.subscriptions.cancel(user.subscriptionId, {
-      effectiveFrom: "next_billing_period", // Keep access until subscription period ends
-    });
+    // Keeps access until the paid period ends, on whichever provider bills it
+    await cancelAtPeriodEnd(user);
 
     return NextResponse.json({
       success: true,

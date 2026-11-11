@@ -68,7 +68,7 @@ export async function getEnhancedUsers(filters: GetUsersFilters) {
           whereConditions.subscriptionStatus = { in: ['active', 'trialing'] };
           break;
         case 'canceled':
-          whereConditions.subscriptionStatus = 'canceled';
+          whereConditions.subscriptionStatus = 'cancelled';
           break;
         case 'trial':
           whereConditions.subscriptionStatus = 'trialing';

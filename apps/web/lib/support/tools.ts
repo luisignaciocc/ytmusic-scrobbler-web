@@ -166,27 +166,19 @@ export async function updateNotificationSettings(
   return { ok: true, message: `Notification settings updated: ${JSON.stringify(data)}` };
 }
 
-export interface PaddleLike {
-  subscriptions: {
-    cancel(
-      id: string,
-      opts: { effectiveFrom: "next_billing_period" | "immediately" },
-    ): Promise<unknown>;
-  };
-}
-
-/** Stops renewal; access continues until the paid period ends. No refunds. */
+/**
+ * Stops renewal; access continues until the paid period ends. No refunds.
+ * `cancel` performs the cancellation at whichever provider bills the user.
+ */
 export async function cancelSubscriptionAtPeriodEnd(
-  paddle: PaddleLike,
+  cancel: () => Promise<unknown>,
   user: Pick<User, "subscriptionId" | "subscriptionStatus">,
   isLive: (u: { subscriptionId: string | null; subscriptionStatus: string | null }) => boolean,
 ): Promise<ActionResult> {
   if (!user.subscriptionId || !isLive(user)) {
     return { ok: false, message: "There is no active subscription to cancel." };
   }
-  await paddle.subscriptions.cancel(user.subscriptionId, {
-    effectiveFrom: "next_billing_period",
-  });
+  await cancel();
   return {
     ok: true,
     message:

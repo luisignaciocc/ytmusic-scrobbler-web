@@ -1,8 +1,5 @@
 "use client";
 
-import type { Paddle } from "@paddle/paddle-js";
-import { getPaddleInstance, initializePaddle } from "@paddle/paddle-js";
-import { Environment } from "@paddle/paddle-node-sdk";
 import { useSession } from "next-auth/react";
 import React, { useCallback, useEffect, useState } from "react";
 
@@ -106,10 +103,6 @@ const SubscriptionStatus = ({
 
 export default function PricingClient() {
   const { data: session } = useSession();
-  const [paddleInstance, setPaddleInstance] = useState<Paddle | undefined>(
-    undefined,
-  );
-  const [paddleInitialized, setPaddleInitialized] = useState(false);
   const [proPrice, setProPrice] = useState("$3.00");
   const [isLoading, setIsLoading] = useState(false);
   const [cancelStatus, setCancelStatus] = useState<{
@@ -182,103 +175,54 @@ export default function PricingClient() {
     ? new Date(subscriptionInfo.scheduledCancellationDate)
     : null;
 
-  // Initialize Paddle when component mounts
+  // Show the current price from Stripe (the default above is the fallback)
   useEffect(() => {
-    const setupPaddle = async () => {
-      try {
-        await initializePaddle({
-          environment: process.env.NEXT_PUBLIC_PADDLE_ENV as Environment,
-          token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN!,
-        });
-
-        const paddle = getPaddleInstance();
-        setPaddleInstance(paddle);
-        setPaddleInitialized(true);
-      } catch (error) {
-        console.error("Paddle initialization error:", error);
-      }
-    };
-
-    setupPaddle();
+    fetch("/api/subscription/price")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (data?.formatted) setProPrice(data.formatted);
+      })
+      .catch((error) => console.error("Error fetching price:", error));
   }, []);
 
-  // Function to fetch the latest price from Paddle
-  const updatePrice = useCallback(async () => {
-    if (!paddleInitialized || !paddleInstance) return;
-
-    try {
-      const result = await paddleInstance.PricePreview({
-        items: [
-          {
-            priceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID!,
-            quantity: 1,
-          },
-        ],
-      });
-
-      if (result.data.details.lineItems.length > 0) {
-        setProPrice(result.data.details.lineItems[0].formattedTotals.total);
-      }
-    } catch (error) {
-      console.error("Error fetching price:", error);
-    }
-  }, [paddleInitialized, paddleInstance]);
-
-  // Update price when Paddle is initialized
+  // Back from Stripe Checkout: the webhook that activates Pro can land a
+  // moment after the redirect, so look again shortly.
   useEffect(() => {
-    if (paddleInitialized && paddleInstance) {
-      updatePrice();
-    }
-  }, [paddleInitialized, paddleInstance, updatePrice]);
+    if (!window.location.search.includes("checkout=success")) return;
+    const timeoutId = setTimeout(() => fetchSubscriptionInfo(), 3000);
+    return () => clearTimeout(timeoutId);
+  }, [fetchSubscriptionInfo]);
 
-  // Open Paddle checkout
-  const openCheckout = () => {
-    if (!paddleInitialized || !paddleInstance) return;
-
-    // Get user email from session
-    const userEmail = session?.user?.email;
+  // Send the user to Stripe Checkout
+  const openCheckout = async () => {
+    setIsLoading(true);
+    setCancelStatus({});
 
     try {
-      // We'll use a global event listener for checkout completion
-      // since Paddle.js doesn't expose direct event methods
-      const checkoutCompletedListener = () => {
-        // When the checkout completes, Paddle will redirect to the success URL
-        // or emit a global paddle:complete event which we can listen for
-        // We'll use a simple timeout to refresh data after checkout
-        setTimeout(() => {
-          fetchSubscriptionInfo();
-        }, 3000);
-      };
+      const response = await fetch("/api/subscription/checkout", {
+        method: "POST",
+      });
+      const data = await response.json();
 
-      // Try to attach to the window object for Paddle events
-      if (typeof window !== "undefined") {
-        window.addEventListener("paddle:complete", checkoutCompletedListener);
+      if (response.ok && data.url) {
+        window.location.href = data.url;
+        return;
       }
-
-      paddleInstance.Checkout.open({
-        items: [
-          {
-            priceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID!,
-            quantity: 1,
-          },
-        ],
-        customer: userEmail
-          ? {
-              email: userEmail,
-            }
-          : undefined,
-        customData: {
-          userEmail: userEmail,
-        },
-        settings: {
-          displayMode: "overlay",
-          theme: "light",
-          successUrl: window.location.href, // Redirect to the same page
-        },
+      setCancelStatus({
+        success: false,
+        message:
+          response.status === 401
+            ? "Please sign in to subscribe."
+            : data.error || "Failed to start checkout",
       });
     } catch (error) {
       console.error("Checkout error:", error);
+      setCancelStatus({
+        success: false,
+        message: "An error occurred while starting checkout",
+      });
     }
+    setIsLoading(false);
   };
 
   // Cancel subscription
@@ -513,9 +457,10 @@ export default function PricingClient() {
           ) : (
             <button
               onClick={openCheckout}
-              className="block w-full text-center bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors"
+              disabled={isLoading}
+              className="block w-full text-center bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-60"
             >
-              Subscribe Now
+              {isLoading ? "Redirecting..." : "Subscribe Now"}
             </button>
           )}
         </div>

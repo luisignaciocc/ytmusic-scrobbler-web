@@ -182,6 +182,21 @@ class ProcessWebhook {
         return;
       }
 
+      // A user matched by email may have moved to Stripe since. Events about
+      // their old Paddle subscription must never overwrite what Stripe wrote,
+      // even after the Stripe subscription has ended: new subscriptions can
+      // only start on Stripe, so such an event is always about the past.
+      if (
+        user.subscriptionProvider === "stripe" &&
+        user.subscriptionId !== eventData.data.id
+      ) {
+        console.log(
+          "Ignoring Paddle event: user is now billed by Stripe:",
+          user.id,
+        );
+        return;
+      }
+
       // Get subscription end date if available
       let endDate: Date | undefined;
       if (eventData.data.currentBillingPeriod) {
@@ -314,6 +329,7 @@ class ProcessWebhook {
         },
         data: {
           subscriptionId: eventData.data.id,
+          subscriptionProvider: "paddle",
           subscriptionStatus: eventData.data.status,
           subscriptionPlan,
           subscriptionEndDate: endDate,

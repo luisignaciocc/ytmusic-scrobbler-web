@@ -98,7 +98,9 @@ export function hasLiveSubscription(user: {
   subscriptionStatus: string | null;
 }): boolean {
   if (!user.subscriptionId) return false;
-  return ["active", "trialing", "past_due", "paused"].includes(
+  // "unpaid" (Stripe): no Pro access, but the subscription still exists and
+  // resumes billing once its open invoice is paid.
+  return ["active", "trialing", "past_due", "paused", "unpaid"].includes(
     user.subscriptionStatus ?? "",
   );
 }
