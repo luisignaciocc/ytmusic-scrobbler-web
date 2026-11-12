@@ -1,0 +1,30 @@
+# Keeps dependencies current without a pull request per package: one grouped
+# PR a week for minor and patch updates, one for security fixes, and major
+# versions one by one because those need a human to read the changelog.
+#
+# Merging any of them to master deploys (see CLAUDE.md), and the deploy checks
+# the result and rolls back by itself, but majors still deserve a look.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
+      minor-and-patch:
+        applies-to: version-updates
+        update-types: ["minor", "patch"]
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]

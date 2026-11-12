@@ -82,6 +82,12 @@ Required environment variables:
 - Database changes require running `pnpm generate` after schema updates
 - The worker's `build` script runs migrations first (`prebuild`); production deploys call `nest build` directly and migrate from the deploy script
 
+## Dependencies
+
+- `.github/dependabot.yml` opens one grouped pull request a week for minor and patch updates, one for security fixes, and separate ones for major versions.
+- **Never declare a dependency as `*`.** `@prisma/client` was, and an update resolved it to a major version that no longer matched the `prisma` CLI, which removed every model from the generated client. It is pinned to the CLI's major; move both together.
+- Known debt, each needing a deliberate migration: Next.js 14 is past its last patch (most open security alerts are fixed only in 15.5+), NestJS 10 (11 carries the fixes for its HTTP stack) and vitest 3.
+
 ## Production Deployment
 
 **The live site is served from a VPS, not from Vercel.** Vercel also builds every push, which makes it easy to look in the wrong place.
