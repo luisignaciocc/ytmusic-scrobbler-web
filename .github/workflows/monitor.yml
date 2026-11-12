@@ -14,6 +14,11 @@ on:
   schedule:
     - cron: "17 12 * * *" # every day at 12:17 UTC
   workflow_dispatch:
+    inputs:
+      retriage:
+        description: "Have Claude triage the issue even if it was already open, printing its full output"
+        type: boolean
+        default: false
 
 concurrency:
   group: production-monitor
@@ -169,9 +174,13 @@ jobs:
         run: exit 1
 
   triage:
-    # Runs only when this run opened a new issue.
+    # Runs when this run opened a new issue, or on demand (`retriage`) for the
+    # one already open.
     needs: check
-    if: always() && needs.check.outputs.new_issue == 'true'
+    if: >-
+      always() &&
+      (needs.check.outputs.new_issue == 'true' ||
+       (inputs.retriage && needs.check.outputs.issue_number != ''))
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -188,6 +197,8 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Off by default: the Actions log of this repository is public.
+          show_full_output: ${{ inputs.retriage == true }}
           prompt: |
             The daily production monitor of ${{ github.repository }} found problems and opened issue #${{ needs.check.outputs.issue_number }}.
 
