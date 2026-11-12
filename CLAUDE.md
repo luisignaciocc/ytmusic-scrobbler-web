@@ -108,6 +108,25 @@ curl -s -o /dev/null -w '%{http_code}\n' https://scrobbler.bocono-labs.com/prici
 
 On the VPS, `pm2 ls` shows both apps and `pm2 logs <app> --lines 50 --nostream` their output. pm2 and node are not on the default PATH of a non-interactive SSH session; see `CLAUDE.local.md` for the PATH to export.
 
+## Production Monitor
+
+`.github/workflows/monitor.yml` runs once a day (and on demand from the Actions tab) and checks that production is healthy. The checks live in `scripts/monitor/` and only read:
+
+- `external-check.sh` (on the GitHub runner): the site, pricing page, Stripe and Paddle webhooks, price endpoint, admin dashboard and TLS certificate.
+- `server-check.sh` (piped to the VPS over SSH): nginx, PostgreSQL, Redis, both pm2 apps, the build on disk, memory, out-of-memory kills, disk and load.
+- `subscriptions-check.cjs` (piped to the VPS, so it uses the server's own `.env`): recent scrobbling activity, Pro users past their paid period, Stripe and Paddle subscriptions compared with the database, and Stripe webhook deliveries.
+- The workflow itself compares the commit deployed on the VPS with `master` for the paths that deploy.
+
+On a failure it opens an issue labelled `production-monitor`, or comments on the one already open; when everything passes again it closes it. Claude triages a newly opened issue: a pull request for a bug in this repo, a diagnosis with steps for anything else. It has no access to the server and never merges.
+
+Every check prints `OK|WARN|FAIL <name> | <detail>`. That output is public (Actions logs and issues), so checks print states and counts only, never user data. To see which records a subscription check is counting, run it by hand on the VPS with `--verbose`:
+
+```bash
+cd ~/ytmusic-scrobbler-web/apps/web && node --env-file=../../.env - --verbose < ../../scripts/monitor/subscriptions-check.cjs
+```
+
+To add a check, print one more such line from the script that fits; the workflow picks it up without changes.
+
 ## Billing
 
 New subscriptions are billed through **Stripe**; subscriptions bought before the move stay on **Paddle** until they end. Both run side by side.
