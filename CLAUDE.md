@@ -82,6 +82,13 @@ Required environment variables:
 - Database changes require running `pnpm generate` after schema updates
 - The worker's `build` script runs migrations first (`prebuild`); production deploys call `nest build` directly and migrate from the deploy script
 
+## Web UI conventions (apps/web)
+
+- **Colours come from tokens** defined in `app/globals.css` (`bg-background`, `bg-card`, `text-muted-foreground`, `border-border`, `bg-primary`, `text-success`, `bg-warning-soft`...). Do not use fixed greys or `dark:` variants: the dark theme is those same tokens under `prefers-color-scheme`.
+- Buttons and button-looking links use `buttonVariants` from `components/ui/button.ts`; inline messages use `components/ui/notice.tsx`. No `alert()`.
+- The home page (`app/page.tsx`) shows `Landing` to visitors and to users still setting up, and `Dashboard` once Last.fm and the cookie are connected. The cookie guide is its own page, `/setup`; what users paste is checked by `lib/ytmusic-cookie.ts` on the client and again in the API.
+- The free plan checks every **hour** and Pro every **5 minutes** (`apps/worker/src/app.producer.ts`); keep the copy in step with the worker.
+
 ## Dependencies
 
 - `.github/dependabot.yml` opens one grouped pull request a week for minor and patch updates, one for security fixes, and separate ones for major versions.

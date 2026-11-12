@@ -3,20 +3,20 @@ import React from "react";
 import { SUPPORT_EMAIL, SUPPORT_MAILTO } from "../../lib/support-contact";
 
 const PrivacyPolicy = () => (
-  <main className="flex-1 flex justify-center items-center py-12 bg-gray-100">
-    <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
-      <h1 className="text-4xl font-bold mb-6 text-center">Privacy Policy</h1>
+  <main className="container py-10 md:py-16">
+    <div className="mx-auto w-full max-w-3xl rounded-2xl border bg-card p-6 leading-relaxed sm:p-10">
+      <h1 className="text-4xl font-bold tracking-tight mb-8">Privacy Policy</h1>
 
-      <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>
-      <p className="mb-6 text-justify">
+      <h2 className="text-xl font-semibold mb-3 mt-8">1. Introduction</h2>
+      <p className="mb-6">
         We value your privacy and are committed to protecting your personal
         information. This Privacy Policy explains how we collect, use, and share
         information about you when you use our application (&quot;the
         Application&quot;).
       </p>
 
-      <h2 className="text-2xl font-semibold mb-4">2. Information We Collect</h2>
-      <p className="mb-4 text-justify">
+      <h2 className="text-xl font-semibold mb-3 mt-8">2. Information We Collect</h2>
+      <p className="mb-4">
         We collect the following types of information:
       </p>
       <ul className="list-disc list-inside mb-6">
@@ -38,10 +38,10 @@ const PrivacyPolicy = () => (
         </li>
       </ul>
 
-      <h2 className="text-2xl font-semibold mb-4">
+      <h2 className="text-xl font-semibold mb-3 mt-8">
         3. How We Use Your Information
       </h2>
-      <p className="mb-6 text-justify">We use the information we collect to:</p>
+      <p className="mb-6">We use the information we collect to:</p>
       <ul className="list-disc list-inside mb-6">
         <li>Provide, operate, and maintain the Application.</li>
         <li>Improve, personalize, and expand the Application.</li>
@@ -60,10 +60,10 @@ const PrivacyPolicy = () => (
         </li>
       </ul>
 
-      <h2 className="text-2xl font-semibold mb-4">
+      <h2 className="text-xl font-semibold mb-3 mt-8">
         4. Sharing Your Information
       </h2>
-      <p className="mb-6 text-justify">
+      <p className="mb-6">
         We do not share your personal information with third parties except in
         the following circumstances:
       </p>
@@ -80,33 +80,33 @@ const PrivacyPolicy = () => (
         </li>
       </ul>
 
-      <h2 className="text-2xl font-semibold mb-4">5. Data Security</h2>
-      <p className="mb-6 text-justify">
+      <h2 className="text-xl font-semibold mb-3 mt-8">5. Data Security</h2>
+      <p className="mb-6">
         We implement appropriate technical and organizational measures to
         protect the security of your personal information. However, please note
         that no method of transmission over the Internet or method of electronic
         storage is completely secure.
       </p>
 
-      <h2 className="text-2xl font-semibold mb-4">6. Limited Use</h2>
-      <p className="mb-6 text-justify">
+      <h2 className="text-xl font-semibold mb-3 mt-8">6. Limited Use</h2>
+      <p className="mb-6">
         Last.fm Scrobbler for YouTube Music&apos;s use and transfer to any other
         app of information received from Google APIs will adhere to{" "}
         <a
           href="https://developers.google.com/terms/api-services-user-data-policy"
           target="_blank"
           rel="noreferrer"
-          className="underline text-blue-500"
+          className="underline font-medium text-primary underline underline-offset-2"
         >
           Google API Services User Data Policy
         </a>
         , including the Limited Use requirements.
       </p>
 
-      <h2 className="text-2xl font-semibold mb-4">
+      <h2 className="text-xl font-semibold mb-3 mt-8">
         7. Your Data Protection Rights
       </h2>
-      <p className="mb-6 text-justify">
+      <p className="mb-6">
         Depending on your location, you may have the following rights regarding
         your personal information:
       </p>
@@ -124,7 +124,7 @@ const PrivacyPolicy = () => (
           The right to erasure – You have the right to request that we erase
           your personal data, under certain conditions. You can make this
           request by emailing{" "}
-          <a href={SUPPORT_MAILTO} className="underline text-blue-500">
+          <a href={SUPPORT_MAILTO} className="underline font-medium text-primary underline underline-offset-2">
             {SUPPORT_EMAIL}
           </a>
           ; we will send a confirmation link to the email address of your
@@ -146,10 +146,10 @@ const PrivacyPolicy = () => (
         </li>
       </ul>
 
-      <h2 className="text-2xl font-semibold mb-4">
+      <h2 className="text-xl font-semibold mb-3 mt-8">
         8. International Data Transfers
       </h2>
-      <p className="mb-6 text-justify">
+      <p className="mb-6">
         Your information, including personal data, may be transferred to and
         maintained on computers located outside of your state, province,
         country, or other governmental jurisdiction where the data protection
@@ -161,8 +161,8 @@ const PrivacyPolicy = () => (
         information represents your agreement to that transfer.
       </p>
 
-      <h2 className="text-2xl font-semibold mb-4">9. Retention of Data</h2>
-      <p className="mb-6 text-justify">
+      <h2 className="text-xl font-semibold mb-3 mt-8">9. Retention of Data</h2>
+      <p className="mb-6">
         We will retain your personal data only for as long as is necessary for
         the purposes set out in this Privacy Policy. We will retain and use your
         personal data to the extent necessary to comply with our legal
@@ -171,10 +171,10 @@ const PrivacyPolicy = () => (
         agreements and policies.
       </p>
 
-      <h2 className="text-2xl font-semibold mb-4">
+      <h2 className="text-xl font-semibold mb-3 mt-8">
         10. Children&apos;s Privacy
       </h2>
-      <p className="mb-6 text-justify">
+      <p className="mb-6">
         Our Application does not address anyone under the age of 13. We do not
         knowingly collect personally identifiable information from anyone under
         the age of 13. If you are a parent or guardian and you are aware that
@@ -184,10 +184,10 @@ const PrivacyPolicy = () => (
         remove that information from our servers.
       </p>
 
-      <h2 className="text-2xl font-semibold mb-4">
+      <h2 className="text-xl font-semibold mb-3 mt-8">
         11. Changes to This Privacy Policy
       </h2>
-      <p className="mb-6 text-justify">
+      <p className="mb-6">
         We may update our Privacy Policy from time to time. We will notify you
         of any changes by posting the new Privacy Policy on this page. You are
         advised to review this Privacy Policy periodically for any changes.
@@ -195,15 +195,15 @@ const PrivacyPolicy = () => (
         this page.
       </p>
 
-      <h2 className="text-2xl font-semibold mb-4">12. Contact Us</h2>
-      <p className="mb-6 text-justify">
+      <h2 className="text-xl font-semibold mb-3 mt-8">12. Contact Us</h2>
+      <p className="mb-6">
         If you have any questions about this Privacy Policy, please contact us
         at{" "}
-        <a href="mailto:hi@bocono-labs.com" className="underline text-blue-500">
+        <a href="mailto:hi@bocono-labs.com" className="underline font-medium text-primary underline underline-offset-2">
           hi@bocono-labs.com
         </a>
         . For help with the service, or to request deletion of your data, email{" "}
-        <a href={SUPPORT_MAILTO} className="underline text-blue-500">
+        <a href={SUPPORT_MAILTO} className="underline font-medium text-primary underline underline-offset-2">
           {SUPPORT_EMAIL}
         </a>
         .

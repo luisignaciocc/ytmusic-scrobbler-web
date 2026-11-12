@@ -2,6 +2,8 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
+import { checkYtmusicCookie } from "@/lib/ytmusic-cookie";
+
 const prisma = new PrismaClient();
 
 export async function POST(request: Request) {
@@ -12,11 +14,15 @@ export async function POST(request: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { cookie } = await request.json();
+    const body = await request.json();
+    const check = checkYtmusicCookie(
+      typeof body.cookie === "string" ? body.cookie : "",
+    );
 
-    if (!cookie) {
-      return new NextResponse("Missing required fields", { status: 400 });
+    if (!check.ok) {
+      return NextResponse.json({ error: check.problem }, { status: 400 });
     }
+    const cookie = check.cookie;
 
     // Get current user info to determine if we should set first-time ready flag
     const currentUser = await prisma.user.findUnique({

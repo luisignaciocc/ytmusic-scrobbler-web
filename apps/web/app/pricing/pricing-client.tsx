@@ -1,7 +1,12 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { Check } from "lucide-react";
+import Link from "next/link";
+import { signIn, useSession } from "next-auth/react";
 import React, { useCallback, useEffect, useState } from "react";
+
+import { buttonVariants } from "@/components/ui/button";
+import Notice from "@/components/ui/notice";
 
 // Type for extended user session
 interface SubscriptionInfo {
@@ -21,85 +26,12 @@ const formatDate = (date: Date) => {
   });
 };
 
-// Checkbox component for billing cycle toggle
-const CheckIcon = () => (
-  <svg
-    className="w-5 h-5 text-green-500 mr-2"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-      d="M5 13l4 4L19 7"
-    ></path>
-  </svg>
+const Feature = ({ children }: { children: React.ReactNode }) => (
+  <li className="flex items-start gap-3">
+    <Check className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-hidden="true" />
+    <span>{children}</span>
+  </li>
 );
-
-// Loading spinner component
-const LoadingSpinner = () => (
-  <div className="flex flex-col items-center justify-center p-8 space-y-4">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-    <p className="text-gray-600">Loading subscription information...</p>
-  </div>
-);
-
-// Status badge component
-const StatusBadge = ({
-  status,
-  message,
-}: {
-  status: "success" | "error" | "warning";
-  message: string;
-}) => (
-  <div
-    className={`mt-2 p-3 text-sm rounded-lg ${
-      status === "success"
-        ? "bg-green-50 text-green-800 border border-green-200"
-        : status === "error"
-          ? "bg-red-50 text-red-800 border border-red-200"
-          : "bg-yellow-50 text-yellow-800 border border-yellow-200"
-    }`}
-  >
-    {message}
-  </div>
-);
-
-// Subscription status component
-const SubscriptionStatus = ({
-  status,
-  endDate,
-  scheduledCancellationDate,
-}: {
-  status: string | null;
-  endDate: Date | null;
-  scheduledCancellationDate: Date | null;
-}) => {
-  if (!status) return null;
-
-  return (
-    <div className="mb-6 p-4 rounded-lg bg-gray-50 border border-gray-200">
-      <h3 className="font-semibold text-gray-900 mb-2">Subscription Status</h3>
-      <div className="space-y-2">
-        <p className="text-sm text-gray-600">
-          Status: <span className="font-medium capitalize">{status}</span>
-        </p>
-        {endDate && (
-          <p className="text-sm text-gray-600">
-            End Date: {formatDate(endDate)}
-          </p>
-        )}
-        {scheduledCancellationDate && (
-          <p className="text-sm text-yellow-800">
-            Scheduled Cancellation: {formatDate(scheduledCancellationDate)}
-          </p>
-        )}
-      </div>
-    </div>
-  );
-};
 
 export default function PricingClient() {
   const { data: session } = useSession();
@@ -113,7 +45,7 @@ export default function PricingClient() {
     subscriptionPlan: "free",
   });
   const [loading, setLoading] = useState(true);
-  const [isFetching, setIsFetching] = useState(false);
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
 
   // Function to fetch subscription info
   const fetchSubscriptionInfo = useCallback(async () => {
@@ -122,7 +54,6 @@ export default function PricingClient() {
       return;
     }
 
-    setIsFetching(true);
     try {
       const response = await fetch("/api/subscription/info");
       if (response.ok) {
@@ -135,7 +66,6 @@ export default function PricingClient() {
       console.error("Error fetching subscription info:", error);
     } finally {
       setLoading(false);
-      setIsFetching(false);
     }
   }, [session?.user?.email]);
 
@@ -227,6 +157,7 @@ export default function PricingClient() {
 
   // Cancel subscription
   const cancelSubscription = async () => {
+    setConfirmingCancel(false);
     setIsLoading(true);
     setCancelStatus({});
 
@@ -332,147 +263,199 @@ export default function PricingClient() {
     }
   };
 
-  if (loading || isFetching) {
-    return <LoadingSpinner />;
-  }
+  const signedIn = Boolean(session?.user?.email);
+  const fullWidth = "w-full";
 
-  return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      {/* Subscription Status Section */}
-      {session?.user?.email && (
-        <SubscriptionStatus
-          status={userSubscriptionStatus}
-          endDate={userSubscriptionEndDate}
-          scheduledCancellationDate={hasScheduledCancellation}
-        />
-      )}
+  const message = cancelStatus.message && (
+    <Notice tone={cancelStatus.success ? "success" : "error"}>
+      {cancelStatus.message}
+    </Notice>
+  );
 
-      {/* Pricing Grid */}
-      <div className="grid md:grid-cols-2 gap-8">
-        {/* Free Tier */}
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h2 className="text-2xl font-bold mb-4">Free</h2>
-          <div className="text-4xl font-bold mb-6">$0</div>
-          <ul className="space-y-4 mb-8">
-            <li className="flex items-center">
-              <CheckIcon />
-              Basic scrobbling functionality
-            </li>
-            <li className="flex items-center">
-              <CheckIcon />
-              30-minute update interval
-            </li>
-            <li className="flex items-center">
-              <CheckIcon />
-              Immediate notifications when headers need updating
-            </li>
-            <li className="flex items-center">
-              <CheckIcon />
-              Basic support
-            </li>
-          </ul>
-
-          {userSubscriptionPlan === "free" ? (
-            <button
-              disabled
-              className="block w-full text-center bg-gray-100 text-gray-800 py-3 rounded-lg cursor-not-allowed opacity-75"
-            >
-              Current Plan
-            </button>
-          ) : (
-            <button
-              disabled
-              className="block w-full text-center bg-gray-100 text-gray-800 py-3 rounded-lg cursor-not-allowed opacity-75"
-            >
-              Free Plan
-            </button>
-          )}
-        </div>
-
-        {/* Pro Tier */}
-        <div className="bg-white rounded-lg shadow-lg p-8 border-2 border-blue-500">
-          <h2 className="text-2xl font-bold mb-4">Pro</h2>
-          <div className="text-4xl font-bold mb-6">
-            {proPrice}
-            <span className="text-lg text-gray-500">/month</span>
-          </div>
-          <ul className="space-y-4 mb-8">
-            <li className="flex items-center">
-              <CheckIcon />
-              Everything in Free
-            </li>
-            <li className="flex items-center">
-              <CheckIcon />
-              5-minute update interval
-            </li>
-            <li className="flex items-center">
-              <CheckIcon />
-              Immediate notifications when headers need updating
-            </li>
-            <li className="flex items-center">
-              <CheckIcon />
-              Priority support
-            </li>
-          </ul>
-
-          {isActivePro ? (
-            <div className="space-y-4">
-              {hasScheduledCancellation ? (
-                <>
-                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm">
-                    Your subscription will be cancelled on{" "}
-                    {formatDate(hasScheduledCancellation)}
-                  </div>
-                  <button
-                    onClick={cancelScheduledCancellation}
-                    disabled={isLoading}
-                    className="block w-full text-center bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 transition-colors disabled:opacity-75 disabled:cursor-not-allowed"
-                  >
-                    {isLoading ? "Processing..." : "Keep Subscription Active"}
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={cancelSubscription}
-                  disabled={isLoading}
-                  className="block w-full text-center bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 transition-colors disabled:opacity-75 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? "Processing..." : "Cancel Pro Subscription"}
-                </button>
-              )}
-            </div>
-          ) : isCancelledPro && userSubscriptionEndDate ? (
-            <div className="space-y-4">
-              <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm">
-                Your subscription will remain active until{" "}
-                {formatDate(userSubscriptionEndDate)}
-              </div>
-              <button
-                disabled
-                className="block w-full text-center bg-gray-500 text-white py-3 rounded-lg opacity-90 cursor-not-allowed"
-              >
-                Subscription Ending
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={openCheckout}
-              disabled={isLoading}
-              className="block w-full text-center bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-60"
-            >
-              {isLoading ? "Redirecting..." : "Subscribe Now"}
-            </button>
-          )}
+  let proAction: React.ReactNode;
+  if (loading) {
+    // Only on first load: later refreshes must not blank the buttons.
+    proAction = (
+      <div
+        className="h-12 animate-pulse rounded-lg bg-muted"
+        role="status"
+        aria-label="Loading your subscription"
+      />
+    );
+  } else if (!signedIn) {
+    proAction = (
+      <button
+        onClick={() => signIn(undefined, { callbackUrl: "/pricing" })}
+        className={buttonVariants({ size: "lg", className: fullWidth })}
+      >
+        Sign in to subscribe
+      </button>
+    );
+  } else if (isActivePro && hasScheduledCancellation) {
+    proAction = (
+      <div className="space-y-3">
+        <Notice tone="warning" title="Your subscription is set to end">
+          You keep Pro until {formatDate(hasScheduledCancellation)}, then your
+          account goes back to the free plan. You will not be charged again.
+        </Notice>
+        <button
+          onClick={cancelScheduledCancellation}
+          disabled={isLoading}
+          aria-busy={isLoading}
+          className={buttonVariants({ size: "lg", className: fullWidth })}
+        >
+          {isLoading ? "Saving…" : "Keep my subscription"}
+        </button>
+      </div>
+    );
+  } else if (isActivePro && confirmingCancel) {
+    proAction = (
+      <div className="space-y-3">
+        <Notice tone="warning" title="Cancel Pro?">
+          You keep Pro until the end of the period you already paid for
+          {userSubscriptionEndDate
+            ? ` (${formatDate(userSubscriptionEndDate)})`
+            : ""}
+          . After that, your history is checked every hour instead of every 5
+          minutes.
+        </Notice>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <button
+            onClick={() => setConfirmingCancel(false)}
+            className={buttonVariants({ variant: "outline", size: "lg" })}
+          >
+            Keep Pro
+          </button>
+          <button
+            onClick={cancelSubscription}
+            className={buttonVariants({ variant: "danger", size: "lg" })}
+          >
+            Yes, cancel
+          </button>
         </div>
       </div>
+    );
+  } else if (isActivePro) {
+    proAction = (
+      <div className="space-y-3">
+        <p className="flex items-center justify-center gap-2 rounded-lg bg-success-soft py-3 text-sm font-medium text-success">
+          <Check className="h-4 w-4" aria-hidden="true" />
+          This is your plan
+        </p>
+        {userSubscriptionEndDate && (
+          <p className="text-center text-xs text-muted-foreground">
+            Current period ends on {formatDate(userSubscriptionEndDate)}.
+          </p>
+        )}
+        <button
+          onClick={() => setConfirmingCancel(true)}
+          disabled={isLoading}
+          aria-busy={isLoading}
+          className={buttonVariants({
+            variant: "ghost",
+            className: `${fullWidth} text-muted-foreground`,
+          })}
+        >
+          {isLoading ? "Saving…" : "Cancel subscription"}
+        </button>
+      </div>
+    );
+  } else if (isCancelledPro && userSubscriptionEndDate) {
+    proAction = (
+      <Notice tone="info" title="Your subscription has been cancelled">
+        You keep Pro until {formatDate(userSubscriptionEndDate)}.
+      </Notice>
+    );
+  } else {
+    proAction = (
+      <button
+        onClick={openCheckout}
+        disabled={isLoading}
+        aria-busy={isLoading}
+        className={buttonVariants({ size: "lg", className: fullWidth })}
+      >
+        {isLoading ? "Taking you to checkout…" : "Subscribe to Pro"}
+      </button>
+    );
+  }
 
-      {/* Status Messages */}
-      {cancelStatus.message && (
-        <StatusBadge
-          status={cancelStatus.success ? "success" : "error"}
-          message={cancelStatus.message}
-        />
-      )}
+  const freeIsCurrent = signedIn && !loading && userSubscriptionPlan !== "pro";
+
+  return (
+    <div className="mx-auto max-w-4xl space-y-6">
+      <div className="grid gap-6 md:grid-cols-2">
+        <section className="flex flex-col rounded-2xl border bg-card p-6 sm:p-8">
+          <h2 className="text-xl font-semibold">Free</h2>
+          <p className="mt-4 font-display text-4xl font-bold">$0</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Everything you play gets scrobbled, a little later.
+          </p>
+          <ul className="mt-6 flex-1 space-y-3 text-sm">
+            <Feature>
+              History checked <strong>every hour</strong>
+            </Feature>
+            <Feature>Scrobbles from any device or app</Feature>
+            <Feature>Email when your cookie needs refreshing</Feature>
+            <Feature>Email support</Feature>
+          </ul>
+          <div className="mt-8">
+            {freeIsCurrent ? (
+              <p className="flex items-center justify-center gap-2 rounded-lg bg-muted py-3 text-sm font-medium text-muted-foreground">
+                <Check className="h-4 w-4" aria-hidden="true" />
+                This is your plan
+              </p>
+            ) : signedIn ? null : (
+              <Link
+                href="/"
+                className={buttonVariants({
+                  variant: "outline",
+                  size: "lg",
+                  className: fullWidth,
+                })}
+              >
+                Get started for free
+              </Link>
+            )}
+          </div>
+        </section>
+
+        <section className="flex flex-col rounded-2xl border-2 border-primary bg-card p-6 sm:p-8">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-xl font-semibold">Pro</h2>
+            <span className="rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
+              12× more frequent
+            </span>
+          </div>
+          <p className="mt-4 font-display text-4xl font-bold">
+            {proPrice}
+            <span className="text-base font-medium text-muted-foreground">
+              {" "}
+              / month
+            </span>
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Your Last.fm profile stays close to real time.
+          </p>
+          <ul className="mt-6 flex-1 space-y-3 text-sm">
+            <Feature>
+              History checked <strong>every 5 minutes</strong>
+            </Feature>
+            <Feature>Your account goes first in the queue</Feature>
+            <Feature>Everything in Free</Feature>
+            <Feature>Priority support</Feature>
+          </ul>
+          <div className="mt-8 space-y-3">
+            {proAction}
+            {!isActivePro && !isCancelledPro && (
+              <p className="text-center text-xs text-muted-foreground">
+                30-day money-back guarantee. Cancel any time.
+              </p>
+            )}
+          </div>
+        </section>
+      </div>
+
+      {message}
     </div>
   );
 }

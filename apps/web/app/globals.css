@@ -2,67 +2,90 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Colour tokens. Components use these (bg-background, text-muted-foreground,
+ * bg-card, border-border, bg-primary...) instead of fixed greys, so the dark
+ * theme below needs no per-component classes. The theme follows the system
+ * setting.
+ */
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 240 10% 8%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 240 10% 8%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 240 10% 8%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Brand: the red shared by the two services this app connects. */
+    --primary: 350 78% 45%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 240 5% 95%;
+    --secondary-foreground: 240 10% 12%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 40%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 350 80% 96%;
+    --accent-foreground: 350 70% 32%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --success: 152 62% 30%;
+    --success-soft: 150 55% 95%;
+    --warning: 30 90% 36%;
+    --warning-soft: 42 95% 93%;
+    --danger-soft: 0 85% 96%;
 
-    --radius: 0.5rem;
+    --border: 240 6% 89%;
+    --input: 240 6% 82%;
+    --ring: 350 78% 45%;
+
+    --radius: 0.75rem;
   }
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: 240 10% 6%;
+      --foreground: 0 0% 96%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+      --card: 240 8% 10%;
+      --card-foreground: 0 0% 96%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+      --popover: 240 8% 10%;
+      --popover-foreground: 0 0% 96%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+      --primary: 350 76% 52%;
+      --primary-foreground: 0 0% 100%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+      --secondary: 240 6% 16%;
+      --secondary-foreground: 0 0% 96%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+      --muted: 240 6% 13%;
+      --muted-foreground: 240 5% 68%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+      --accent: 350 45% 16%;
+      --accent-foreground: 350 90% 80%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+      --destructive: 0 70% 55%;
+      --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+      --success: 152 55% 55%;
+      --success-soft: 152 40% 12%;
+      --warning: 40 90% 60%;
+      --warning-soft: 40 50% 12%;
+      --danger-soft: 0 45% 14%;
+
+      --border: 240 6% 18%;
+      --input: 240 6% 26%;
+      --ring: 350 76% 60%;
+
+      color-scheme: dark;
+    }
   }
 }
 
@@ -71,6 +94,20 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+  }
+  /* One visible focus style for everything reachable by keyboard. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+  a,
+  button,
+  summary {
+    @apply rounded-sm;
   }
 }
