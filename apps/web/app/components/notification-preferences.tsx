@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
+import { buttonVariants } from "@/components/ui/button";
+
 import { toggleNotifications, updateNotificationPreferences } from "../actions";
 
 interface NotificationPreferencesProps {
@@ -107,19 +109,18 @@ export default function NotificationPreferences({
   const hasChanges = email !== defaultValues.email;
 
   return (
-    <div className="mt-4 border-t pt-4">
-      <div className="text-sm text-gray-600 mb-3">
-        <strong>Email Notifications</strong>
-        <p className="mt-1">
+    <div>
+      <div className="text-sm text-muted-foreground mb-4">
+        <p>
           We&apos;ll send you up to 3 email notifications when your scrobbler encounters
-          authentication issues that require your attention (like expired YouTube Music
-          headers). Notifications are sent immediately, then after 2 days, and finally after 5 days.
+          authentication issues that require your attention (like an expired YouTube Music
+          cookie). Notifications are sent immediately, then after 2 days, and finally after 5 days.
           After 3 consecutive authentication failures, your account will be automatically paused until you update your credentials.
         </p>
       </div>
 
       {/* Control de activación independiente */}
-      <div className="mb-6 pb-4 border-b">
+      <div className="mb-6 border-b pb-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <input
@@ -128,17 +129,17 @@ export default function NotificationPreferences({
               checked={enabled}
               onChange={(e) => handleToggleNotifications(e.target.checked)}
               disabled={toggleLoading}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="h-5 w-5 rounded border-input accent-[hsl(var(--primary))]"
             />
             <label
               htmlFor="enabled"
-              className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+              className="ml-3 block text-sm font-medium"
             >
               Enable email notifications
             </label>
           </div>
           {toggleLoading && (
-            <span className="text-xs text-gray-500">Saving...</span>
+            <span className="text-xs text-muted-foreground">Saving...</span>
           )}
         </div>
 
@@ -146,8 +147,8 @@ export default function NotificationPreferences({
           <div
             className={`mt-2 p-2 text-sm rounded-md ${
               toggleMessage.type === "success"
-                ? "bg-green-50 text-green-800 border border-green-200"
-                : "bg-red-50 text-red-800 border border-red-200"
+                ? "bg-success-soft text-success border border-success/30"
+                : "bg-danger-soft text-destructive border border-destructive/30"
             }`}
           >
             {toggleMessage.text}
@@ -160,7 +161,7 @@ export default function NotificationPreferences({
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            className="mb-1.5 block text-sm font-medium"
           >
             Notification Email
           </label>
@@ -170,21 +171,21 @@ export default function NotificationPreferences({
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
+              className="flex h-11 w-full rounded-lg border border-input bg-background px-3 text-sm placeholder:text-muted-foreground"
               placeholder="your@email.com"
               required
             />
             <button
               type="button"
               onClick={() => setEmail(defaultValues.email)}
-              className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded border border-gray-200 hover:bg-gray-50"
+              className="shrink-0 rounded-lg border border-input px-3 text-sm text-muted-foreground hover:bg-muted disabled:opacity-50"
               title="Reset to default value"
               disabled={email === defaultValues.email}
             >
               Reset
             </button>
           </div>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1.5 text-xs text-muted-foreground">
             This email will receive authentication failure notifications (up to 3 per issue).
             If left blank, we&apos;ll use your account email ({userEmail}).
           </p>
@@ -194,7 +195,7 @@ export default function NotificationPreferences({
           <button
             type="submit"
             disabled={loading || !hasChanges}
-            className="inline-flex h-10 items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+            className={buttonVariants()}
           >
             {loading ? "Saving..." : "Update Email"}
           </button>
@@ -203,7 +204,7 @@ export default function NotificationPreferences({
             <button
               type="button"
               onClick={resetForm}
-              className="inline-flex h-10 items-center justify-center rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-2"
+              className={buttonVariants({ variant: "outline" })}
             >
               Cancel
             </button>
@@ -214,8 +215,8 @@ export default function NotificationPreferences({
           <div
             className={`mt-2 p-2 text-sm rounded-md ${
               message.type === "success"
-                ? "bg-green-50 text-green-800 border border-green-200"
-                : "bg-red-50 text-red-800 border border-red-200"
+                ? "bg-success-soft text-success border border-success/30"
+                : "bg-danger-soft text-destructive border border-destructive/30"
             }`}
           >
             {message.text}
@@ -223,7 +224,7 @@ export default function NotificationPreferences({
         )}
 
         {defaultValues.email !== userEmail && (
-          <div className="mt-1 text-xs text-gray-500">
+          <div className="mt-1.5 text-xs text-muted-foreground">
             Default notification email: {userEmail}
           </div>
         )}

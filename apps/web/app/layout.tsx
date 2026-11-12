@@ -3,13 +3,18 @@ import "./globals.css";
 import * as Sentry from "@sentry/nextjs";
 import { Analytics } from "@vercel/analytics/react";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 
+import Footer from "./components/footer";
 import Header from "./components/header";
 import ImplementationNotice from "./components/implementation-notice";
 import SessionAuthProvider from "./components/session-provider";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const display = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-display",
+});
 
 export default function RootLayout({
   children,
@@ -18,11 +23,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${inter.variable} ${display.variable} font-sans`}>
         <SessionAuthProvider>
-          <div className="flex flex-col min-h-[100dvh]">
+          <a
+            href="#content"
+            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium"
+          >
+            Skip to content
+          </a>
+          <div className="flex min-h-[100dvh] flex-col">
             <Header />
-            <div className="container mx-auto px-4 mt-2">{children}</div>
+            <div id="content" className="flex-1">
+              {children}
+            </div>
+            <Footer />
           </div>
           <ImplementationNotice />
         </SessionAuthProvider>
