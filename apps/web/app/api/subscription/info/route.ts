@@ -34,6 +34,9 @@ export async function GET() {
       subscriptionPlan: user.subscriptionPlan,
       subscriptionEndDate: user.subscriptionEndDate,
       scheduledCancellationDate: user.scheduledCancellationDate,
+    }, {
+      // Per-user and changes with every cancel / keep: never reuse a copy.
+      headers: { "Cache-Control": "private, no-store" },
     });
   } catch (error) {
     console.error("Error fetching subscription info:", error);

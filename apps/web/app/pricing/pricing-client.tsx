@@ -2,8 +2,9 @@
 
 import { Check } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
 import Notice from "@/components/ui/notice";
@@ -46,6 +47,8 @@ export default function PricingClient() {
   });
   const [loading, setLoading] = useState(true);
   const [confirmingCancel, setConfirmingCancel] = useState(false);
+  const latestRequest = useRef(0);
+  const router = useRouter();
 
   // Function to fetch subscription info
   const fetchSubscriptionInfo = useCallback(async () => {
@@ -54,11 +57,15 @@ export default function PricingClient() {
       return;
     }
 
+    const mine = ++latestRequest.current;
     try {
-      const response = await fetch("/api/subscription/info");
+      const response = await fetch("/api/subscription/info", {
+        cache: "no-store",
+      });
       if (response.ok) {
         const data = await response.json();
-        setSubscriptionInfo(data);
+        // Superseded by a newer request or by a cancel / keep action.
+        if (mine === latestRequest.current) setSubscriptionInfo(data);
       } else {
         console.error("Failed to fetch subscription info");
       }
@@ -155,113 +162,52 @@ export default function PricingClient() {
     setIsLoading(false);
   };
 
-  // Cancel subscription
-  const cancelSubscription = async () => {
+  // Cancel at period end, or undo that. The server answers with the
+  // subscription as it now is, which is shown as is: no guessing here.
+  const changeSubscription = async (
+    endpoint: "/api/subscription/cancel" | "/api/subscription/cancel-scheduled",
+    failure: string,
+  ) => {
     setConfirmingCancel(false);
     setIsLoading(true);
     setCancelStatus({});
-
-    // Optimistically update the local state
-    setSubscriptionInfo((prev) => ({
-      ...prev,
-      scheduledCancellationDate: new Date(
-        Date.now() + 30 * 24 * 60 * 60 * 1000,
-      ).toISOString(), // 30 days from now
-    }));
+    // A background refresh that started before this finishes would bring
+    // back the old state: make it discard its result.
+    const mine = ++latestRequest.current;
 
     try {
-      const response = await fetch("/api/subscription/cancel", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const data = await response.json();
+      const response = await fetch(endpoint, { method: "POST" });
+      const data = await response.json().catch(() => ({}));
 
       if (response.ok) {
+        if (data.subscription && mine === latestRequest.current) {
+          setSubscriptionInfo(data.subscription);
+        }
         setCancelStatus({ success: true, message: data.message });
+        // Other pages rendered on the server (the dashboard) show the plan too.
+        router.refresh();
       } else {
-        // Revert optimistic update on error
-        setSubscriptionInfo((prev) => ({
-          ...prev,
-          scheduledCancellationDate: null,
-        }));
-        setCancelStatus({
-          success: false,
-          message: data.error || "Failed to cancel subscription",
-        });
+        setCancelStatus({ success: false, message: data.error || failure });
       }
     } catch (error) {
-      // Revert optimistic update on error
-      setSubscriptionInfo((prev) => ({
-        ...prev,
-        scheduledCancellationDate: null,
-      }));
-      console.error("Error cancelling subscription:", error);
-      setCancelStatus({
-        success: false,
-        message: "An error occurred while cancelling your subscription",
-      });
+      console.error(failure, error);
+      setCancelStatus({ success: false, message: failure });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Cancel scheduled cancellation
-  const cancelScheduledCancellation = async () => {
-    setIsLoading(true);
-    setCancelStatus({});
+  const cancelSubscription = () =>
+    changeSubscription(
+      "/api/subscription/cancel",
+      "We couldn't cancel your subscription. Please try again.",
+    );
 
-    // Optimistically update the local state
-    setSubscriptionInfo((prev) => ({
-      ...prev,
-      scheduledCancellationDate: null,
-    }));
-
-    try {
-      const response = await fetch("/api/subscription/cancel-scheduled", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setCancelStatus({ success: true, message: data.message });
-      } else {
-        // Revert optimistic update on error
-        setSubscriptionInfo((prev) => ({
-          ...prev,
-          scheduledCancellationDate: new Date(
-            Date.now() + 30 * 24 * 60 * 60 * 1000,
-          ).toISOString(), // 30 days from now
-        }));
-        setCancelStatus({
-          success: false,
-          message: data.error || "Failed to cancel scheduled cancellation",
-        });
-      }
-    } catch (error) {
-      // Revert optimistic update on error
-      setSubscriptionInfo((prev) => ({
-        ...prev,
-        scheduledCancellationDate: new Date(
-          Date.now() + 30 * 24 * 60 * 60 * 1000,
-        ).toISOString(), // 30 days from now
-      }));
-      console.error("Error cancelling scheduled cancellation:", error);
-      setCancelStatus({
-        success: false,
-        message:
-          "An error occurred while cancelling the scheduled cancellation",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const cancelScheduledCancellation = () =>
+    changeSubscription(
+      "/api/subscription/cancel-scheduled",
+      "We couldn't keep your subscription active. Please try again.",
+    );
 
   const signedIn = Boolean(session?.user?.email);
   const fullWidth = "w-full";
