@@ -26,7 +26,23 @@ WORKER=yt-music-scrobbler-worker
 FAILED=""
 
 code_of() { # <method> <url>
-  curl -s -o /dev/null -m 10 -X "$1" -w '%{http_code}' "$2"
+  curl -s -o /dev/null -m 20 -X "$1" -w '%{http_code}' "$2"
+}
+
+# Waits until <url> answers <code>, retrying until DEADLINE (a `date +%s`
+# value). Retrying matters: this machine is small and busy right after a
+# restart, and the first request to each kind of page can take many seconds.
+# A single attempt with a short timeout once rolled back a healthy build.
+wait_for() { # <method> <url> <code>
+  local code=""
+  while :; do
+    code=$(code_of "$1" "$2")
+    [ "$code" = "$3" ] && return 0
+    [ "$(date +%s)" -ge "$DEADLINE" ] && break
+    sleep 3
+  done
+  echo "   $2 answered HTTP $code to $1 (expected $3; 000 = no answer in time)"
+  return 1
 }
 
 # The new web build is good when it serves real pages and its payment
@@ -35,37 +51,27 @@ code_of() { # <method> <url>
 # Only things that depend on this machine are checked, so that a problem at
 # Stripe or Paddle cannot make a good build look bad and roll it back.
 web_healthy() {
-  local ready="" url code
-  # Up to 90 seconds for the app to come up.
-  for _ in $(seq 1 30); do
-    [ "$(code_of GET http://localhost:3000/pricing)" = "200" ] && { ready=1; break; }
-    sleep 3
-  done
-  [ -n "$ready" ] || { echo "   /pricing never answered 200"; return 1; }
-  code=$(code_of GET http://localhost:3000/)
-  [ "$code" = "200" ] || { echo "   / answered HTTP $code"; return 1; }
-  for url in /api/webhooks/stripe /api/webhooks/paddle; do
-    code=$(code_of POST "http://localhost:3000$url")
-    [ "$code" = "400" ] || { echo "   $url answered HTTP $code to an unsigned call (expected 400)"; return 1; }
-  done
+  # Three minutes in total for the app to come up and answer everything.
+  DEADLINE=$(( $(date +%s) + 180 ))
+  wait_for GET http://localhost:3000/pricing 200 || return 1
+  wait_for GET http://localhost:3000/ 200 || return 1
+  wait_for POST http://localhost:3000/api/webhooks/stripe 400 || return 1
+  wait_for POST http://localhost:3000/api/webhooks/paddle 400 || return 1
   return 0
 }
 
 # The worker is good when it answers and is still the same process a little
 # later: one that crashes on start is restarted by pm2 and looks "online".
 worker_healthy() {
-  local ready="" pid
-  for _ in $(seq 1 20); do
-    [ "$(code_of GET http://localhost:4000/)" = "200" ] && { ready=1; break; }
-    sleep 3
-  done
-  [ -n "$ready" ] || { echo "   the worker never answered on port 4000"; return 1; }
+  local pid
+  DEADLINE=$(( $(date +%s) + 120 ))
+  wait_for GET http://localhost:4000/ 200 || return 1
   pid=$(pm2 pid "$WORKER")
   sleep 15
   [ -n "$pid" ] && [ "$pid" != "0" ] && [ "$(pm2 pid "$WORKER")" = "$pid" ] ||
     { echo "   the worker restarted by itself right after starting"; return 1; }
-  [ "$(code_of GET http://localhost:4000/)" = "200" ] ||
-    { echo "   the worker stopped answering"; return 1; }
+  DEADLINE=$(( $(date +%s) + 60 ))
+  wait_for GET http://localhost:4000/ 200 || return 1
   return 0
 }
 
