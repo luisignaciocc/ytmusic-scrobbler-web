@@ -35,10 +35,22 @@ export async function POST() {
       );
     }
 
-    await resumeRenewal(user);
+    const change = await resumeRenewal(user);
+    const subscription = await prisma.user.update({
+      where: { id: user.id },
+      data: change,
+      select: {
+        subscriptionId: true,
+        subscriptionStatus: true,
+        subscriptionPlan: true,
+        subscriptionEndDate: true,
+        scheduledCancellationDate: true,
+      },
+    });
 
     return NextResponse.json({
       success: true,
+      subscription,
       message:
         "Scheduled cancellation has been cancelled. Your subscription will continue as normal.",
     });

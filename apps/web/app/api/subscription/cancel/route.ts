@@ -29,10 +29,24 @@ export async function POST() {
     }
 
     // Keeps access until the paid period ends, on whichever provider bills it
-    await cancelAtPeriodEnd(user);
+    const change = await cancelAtPeriodEnd(user);
+    // Stored now rather than when the provider's webhook arrives, so the
+    // page (and any reload) shows the cancellation immediately.
+    const subscription = await prisma.user.update({
+      where: { id: user.id },
+      data: change,
+      select: {
+        subscriptionId: true,
+        subscriptionStatus: true,
+        subscriptionPlan: true,
+        subscriptionEndDate: true,
+        scheduledCancellationDate: true,
+      },
+    });
 
     return NextResponse.json({
       success: true,
+      subscription,
       message:
         "Subscription successfully cancelled. Your access will continue until the end of your billing period.",
     });

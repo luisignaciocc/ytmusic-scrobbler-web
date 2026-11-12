@@ -1,6 +1,11 @@
 import { Environment, Paddle } from "@paddle/paddle-node-sdk";
 import Stripe from "stripe";
 
+import {
+  stripeSubscriptionToColumns,
+  type SubscriptionColumns,
+} from "./subscription-state";
+
 /**
  * Billing runs on two providers while subscriptions move from Paddle to
  * Stripe: new checkouts go to Stripe, subscriptions bought on Paddle stay
@@ -92,30 +97,52 @@ export function isBillingConfigured(provider: BillingProvider): boolean {
   );
 }
 
+/**
+ * What a cancel / resume call changed, ready to be written to the User row.
+ * The routes store it right away instead of waiting for the provider's
+ * webhook, so the next read already shows the new state. (The webhook writes
+ * the same values again a moment later, which is harmless.)
+ */
+export type SubscriptionChange = {
+  scheduledCancellationDate: Date | null;
+} & Partial<SubscriptionColumns>;
+
 /** Stops renewal; access continues until the paid period ends. */
-export async function cancelAtPeriodEnd(user: SubscriptionOwner) {
+export async function cancelAtPeriodEnd(
+  user: SubscriptionOwner,
+): Promise<SubscriptionChange> {
   if (!user.subscriptionId) throw new Error("No subscription to cancel");
   if (providerOf(user) === "stripe") {
-    await getStripe().subscriptions.update(user.subscriptionId, {
-      cancel_at_period_end: true,
-    });
-  } else {
-    await getPaddle().subscriptions.cancel(user.subscriptionId, {
-      effectiveFrom: "next_billing_period",
-    });
+    const subscription = await getStripe().subscriptions.update(
+      user.subscriptionId,
+      { cancel_at_period_end: true },
+    );
+    return stripeSubscriptionToColumns(subscription);
   }
+  const subscription = await getPaddle().subscriptions.cancel(
+    user.subscriptionId,
+    { effectiveFrom: "next_billing_period" },
+  );
+  const effectiveAt = subscription.scheduledChange?.effectiveAt;
+  return {
+    scheduledCancellationDate: effectiveAt ? new Date(effectiveAt) : null,
+  };
 }
 
 /** Undoes a scheduled cancellation so the subscription renews as usual. */
-export async function resumeRenewal(user: SubscriptionOwner) {
+export async function resumeRenewal(
+  user: SubscriptionOwner,
+): Promise<SubscriptionChange> {
   if (!user.subscriptionId) throw new Error("No subscription to resume");
   if (providerOf(user) === "stripe") {
-    await getStripe().subscriptions.update(user.subscriptionId, {
-      cancel_at_period_end: false,
-    });
-  } else {
-    await getPaddle().subscriptions.update(user.subscriptionId, {
-      scheduledChange: null,
-    });
+    const subscription = await getStripe().subscriptions.update(
+      user.subscriptionId,
+      { cancel_at_period_end: false },
+    );
+    return stripeSubscriptionToColumns(subscription);
   }
+  await getPaddle().subscriptions.update(user.subscriptionId, {
+    scheduledChange: null,
+  });
+  return { scheduledCancellationDate: null };
 }
