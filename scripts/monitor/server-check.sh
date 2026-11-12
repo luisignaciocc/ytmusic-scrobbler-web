@@ -76,6 +76,21 @@ if [ -d "$REPO/apps/web/.next.prev" ]; then
   warn web-build-leftover "apps/web/.next.prev exists: a deploy was interrupted mid-build"
 fi
 
+# --- maintenance page ---------------------------------------------------------
+# The deploy shows a maintenance page while it rebuilds the web app and
+# removes it when it ends. Left behind, real outages would be presented to
+# visitors as planned maintenance.
+flag=/var/www/scrobbler-status/maintenance.on.html
+if [ ! -f /var/www/scrobbler-status/error.html ]; then
+  warn status-pages "the maintenance and error pages are not installed in /var/www/scrobbler-status"
+elif [ -f "$flag" ] && [ -n "$(find "$flag" -mmin +60)" ]; then
+  fail maintenance-flag "the maintenance page has been switched on for over an hour: a deploy did not finish cleanly (remove $flag)"
+elif [ -f "$flag" ]; then
+  ok maintenance-flag "switched on: a deploy is rebuilding the web app"
+else
+  ok maintenance-flag "switched off"
+fi
+
 # --- memory, disk, load ------------------------------------------------------
 mem() { awk -v k="$1:" '$1 == k { print int($2 / 1024) }' /proc/meminfo; }
 available=$(mem MemAvailable)
