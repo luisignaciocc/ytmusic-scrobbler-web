@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Production monitor, part 2: the server itself. Piped over SSH and run ON
 # the production server (`ssh ... 'bash -s' < server-check.sh`), so it is
-# always the version in the repository. Read-only: it changes nothing.
+# always the version in the repository. It changes nothing on the server
+# (one scratch file in /tmp, removed before it ends).
 # Prints one line per check:  OK|WARN|FAIL|INFO <name> | <detail>
 # Output ends up in public logs and issues: states and numbers only.
 set -u
@@ -28,24 +29,35 @@ else
 fi
 
 # --- the two apps under pm2 --------------------------------------------------
+# An app that keeps crashing still shows as "online" most of the time, so the
+# restart counters are read twice, half a minute apart: a counter that moved
+# is a crash loop. (A recent restart alone is not: every deploy causes one.)
+pm2 jlist > /tmp/monitor-pm2-before.json 2>/dev/null
+sleep 30
 pm2 jlist 2>/dev/null | node -e '
+  const fs = require("fs");
   let raw = "";
   process.stdin.on("data", (c) => (raw += c)).on("end", () => {
-    let apps;
-    try { apps = JSON.parse(raw); } catch { console.log("FAIL pm2 | could not read the process list"); return; }
+    let apps, before;
+    try {
+      apps = JSON.parse(raw);
+      before = JSON.parse(fs.readFileSync("/tmp/monitor-pm2-before.json", "utf8"));
+    } catch { console.log("FAIL pm2 | could not read the process list"); return; }
     for (const name of ["yt-music-scrobbler-web", "yt-music-scrobbler-worker"]) {
       const app = apps.find((a) => a.name === name);
       if (!app) { console.log(`FAIL pm2-${name} | not registered in pm2`); continue; }
       const env = app.pm2_env;
+      const earlier = before.find((a) => a.name === name);
+      const restartsNow = env.restart_time - (earlier ? earlier.pm2_env.restart_time : env.restart_time);
       const upMinutes = Math.round((Date.now() - env.pm_uptime) / 60000);
-      const detail = `${env.status}, up ${upMinutes} min, ${env.restart_time} restarts since pm2 started`;
+      const detail = `${env.status}, up ${upMinutes} min`;
       if (env.status !== "online") console.log(`FAIL pm2-${name} | ${detail}`);
-      // An app that keeps crashing is "online" with a tiny uptime every time.
-      else if (upMinutes < 3 && env.restart_time > 0) console.log(`FAIL pm2-${name} | restarted moments ago, may be crash-looping: ${detail}`);
-      else console.log(`OK   pm2-${name} | ${detail}`);
+      else if (restartsNow > 0) console.log(`FAIL pm2-${name} | crash-looping: restarted ${restartsNow} time(s) in the last 30 seconds`);
+      else console.log(`OK   pm2-${name} | ${detail}, no restarts in the last 30 seconds`);
     }
   });
 ' || fail pm2 "could not run pm2/node on the server"
+rm -f /tmp/monitor-pm2-before.json
 
 code=$(curl -s -m 20 -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/)
 if [ "$code" = "200" ]; then
