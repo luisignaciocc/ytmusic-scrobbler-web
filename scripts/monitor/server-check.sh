@@ -78,7 +78,9 @@ else
   ok memory "$detail"
 fi
 
-oom=$( (sudo -n journalctl -k --since "24 hours ago" 2>/dev/null || journalctl -k --since "24 hours ago" 2>/dev/null) | grep -c "Out of memory" )
+# `-t kernel` rather than `-k`: -k only shows the current boot, and a machine
+# that ran out of memory has often been rebooted since.
+oom=$( (sudo -n journalctl -t kernel --since "24 hours ago" 2>/dev/null || journalctl -t kernel --since "24 hours ago" 2>/dev/null) | grep -c "Out of memory" )
 if [ "${oom:-0}" -gt 0 ]; then
   fail out-of-memory "the kernel killed $oom process(es) for lack of memory in the last 24 hours"
 else

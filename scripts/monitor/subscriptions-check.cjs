@@ -156,11 +156,12 @@ async function checkPaddle(prisma) {
     if (proOnPaddle.length === 0) return line("OK", "paddle", "no Paddle subscribers left and no Paddle key configured");
     return line("FAIL", "paddle-config", `${proOnPaddle.length} Pro user(s) are still on Paddle but PADDLE_API_KEY is not set`);
   }
-  const { Paddle, Environment } = require("@paddle/paddle-node-sdk");
+  const { Paddle, Environment, LogLevel } = require("@paddle/paddle-node-sdk");
   // Tolerates a trailing comment in the .env value.
   const env = (process.env.NEXT_PUBLIC_PADDLE_ENV ?? "").replace(/"/g, "").trim().split(/\s+/)[0];
   const paddle = new Paddle(process.env.PADDLE_API_KEY, {
     environment: env === "production" ? Environment.production : Environment.sandbox,
+    logLevel: LogLevel.error, // the SDK logs every request otherwise
   });
 
   const billed = [];
