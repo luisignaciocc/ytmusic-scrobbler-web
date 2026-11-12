@@ -75,3 +75,22 @@ export function shouldApplyStripeSubscription(
   if (stored.subscriptionId === incoming.subscriptionId) return true;
   return incoming.subscriptionPlan === "pro";
 }
+
+/**
+ * What a Paddle subscription status means for the plan. Paddle sends
+ * `subscription.updated` for every change, including the one to `canceled`,
+ * so the status has to decide the plan: granting Pro on any update left
+ * cancelled subscribers on Pro indefinitely. Only statuses under which
+ * Paddle is billing (or retrying a payment) keep Pro.
+ */
+export function paddleStatusToColumns(status: string): {
+  subscriptionStatus: string;
+  subscriptionPlan: "pro" | "free";
+} {
+  return {
+    // Stored with the spelling the rest of the app checks for.
+    subscriptionStatus: status === "canceled" ? "cancelled" : status,
+    subscriptionPlan: PRO_STATUSES.includes(status) ? "pro" : "free",
+  };
+}
+

@@ -12,6 +12,8 @@ import {
 import { PrismaClient } from "@prisma/client";
 import { NextRequest } from "next/server";
 
+import { paddleStatusToColumns } from "@/lib/billing/subscription-state";
+
 // Define interfaces for various Paddle data structures
 interface PaddleSubscriptionData {
   id?: string;
@@ -281,18 +283,24 @@ class ProcessWebhook {
         );
       }
 
-      // Determine subscription plan from product
-      let subscriptionPlan = "free";
-      if (eventData.data.items?.[0]?.price?.productId) {
-        const productId = eventData.data.items[0].price.productId;
-        // eslint-disable-next-line no-console
-        console.log("Product ID from subscription:", productId);
+      // The status decides the plan: an update to "canceled" or "paused"
+      // must take Pro away, not grant it.
+      const { subscriptionStatus, subscriptionPlan } = paddleStatusToColumns(
+        eventData.data.status,
+      );
 
-        // You may need to adjust this mapping based on your product IDs
-        subscriptionPlan = "pro";
-
-        // eslint-disable-next-line no-console
-        console.log("Setting subscription plan to:", subscriptionPlan);
+      // A late event about a subscription the user has since replaced must
+      // not downgrade the one they are paying for now.
+      if (
+        user.subscriptionId &&
+        user.subscriptionId !== eventData.data.id &&
+        subscriptionPlan !== "pro"
+      ) {
+        console.log(
+          "Ignoring Paddle event about a subscription the user no longer uses:",
+          eventData.data.id,
+        );
+        return;
       }
 
       // Handle scheduled changes
@@ -312,12 +320,14 @@ class ProcessWebhook {
         scheduledCancellation = null;
         console.log("Scheduled changes cancelled");
       }
+      // Nothing is scheduled any more once the subscription has ended.
+      if (subscriptionPlan !== "pro") scheduledCancellation = null;
 
       // Log update operation
       // eslint-disable-next-line no-console
       console.log("Updating user record with:", {
         subscriptionId: eventData.data.id,
-        subscriptionStatus: eventData.data.status,
+        subscriptionStatus,
         subscriptionPlan,
         subscriptionEndDate: endDate,
         scheduledCancellationDate: scheduledCancellation,
@@ -330,7 +340,7 @@ class ProcessWebhook {
         data: {
           subscriptionId: eventData.data.id,
           subscriptionProvider: "paddle",
-          subscriptionStatus: eventData.data.status,
+          subscriptionStatus,
           subscriptionPlan,
           subscriptionEndDate: endDate,
           scheduledCancellationDate: scheduledCancellation,
