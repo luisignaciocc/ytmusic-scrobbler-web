@@ -1,6 +1,5 @@
 /* eslint-disable no-console */
 import {
-  Environment,
   EventEntity,
   EventName,
   LogLevel,
@@ -12,6 +11,7 @@ import {
 import { PrismaClient } from "@prisma/client";
 import { NextRequest } from "next/server";
 
+import { paddleEnvironment } from "@/lib/billing/provider";
 import { paddleStatusToColumns } from "@/lib/billing/subscription-state";
 
 // Define interfaces for various Paddle data structures
@@ -29,9 +29,7 @@ function getPaddleInstance() {
   console.log("Getting Paddle instance");
 
   const paddleOptions: PaddleOptions = {
-    environment:
-      (process.env.NEXT_PUBLIC_PADDLE_ENV as Environment) ??
-      Environment.sandbox,
+    environment: paddleEnvironment(),
     logLevel: LogLevel.error,
   };
 

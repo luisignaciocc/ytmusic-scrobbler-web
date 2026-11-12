@@ -63,14 +63,24 @@ export async function getProPriceId(): Promise<string> {
   return cachedProPrice.id;
 }
 
+/**
+ * Which Paddle environment to talk to. Read through a computed key on
+ * purpose: Next.js replaces `process.env.NEXT_PUBLIC_*` with its value at
+ * build time, also in server code, and the build runs on a CI runner that
+ * does not have the server's variables. Written the direct way, a build made
+ * there would silently pin every Paddle call to the sandbox.
+ */
+export function paddleEnvironment(): Environment {
+  const name = "NEXT_PUBLIC_PADDLE_ENV";
+  return (process.env[name] as Environment | undefined) ?? Environment.sandbox;
+}
+
 export function getPaddle(): Paddle {
   if (!process.env.PADDLE_API_KEY) {
     throw new Error("PADDLE_API_KEY is missing");
   }
   return new Paddle(process.env.PADDLE_API_KEY, {
-    environment:
-      (process.env.NEXT_PUBLIC_PADDLE_ENV as Environment) ??
-      Environment.sandbox,
+    environment: paddleEnvironment(),
   });
 }
 
