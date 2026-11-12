@@ -50,6 +50,7 @@ This is a monorepo with three main applications:
 ### Data Layer
 - **Database**: PostgreSQL with Prisma ORM
 - **Schema**: Located at root `schema.prisma`
+- **Inactive users** (no successful scrobble in a week) are marked inactive by `GET /api/cron/deactivate`, which requires `Authorization: Bearer $CRON_SECRET`. The deploy script calls it after each web deploy when `CRON_SECRET` is in the VPS `.env`; nothing calls it on a schedule there.
 - **Migrations**: Stored in `/migrations` directory
 - **Message Queue**: Redis for job processing between scheduler and consumers
 
@@ -79,34 +80,35 @@ Required environment variables:
 - Each app has its own package.json with specific scripts
 - Use Turbo commands at root for cross-app operations
 - Database changes require running `pnpm generate` after schema updates
-- Worker app includes prebuild step that runs migrations in production
+- The worker's `build` script runs migrations first (`prebuild`); production deploys call `nest build` directly and migrate from the deploy script
 
 ## Production Deployment
 
 **The live site is served from a VPS, not from Vercel.** Vercel also builds every push, which makes it easy to look in the wrong place.
 
 - **VPS (what users reach)**: nginx in front of two pm2 apps, `yt-music-scrobbler-web` (`next start`) and `yt-music-scrobbler-worker`, plus a local PostgreSQL and Redis. The repo is checked out at `~/ytmusic-scrobbler-web` and there is a single `.env` at its root (`apps/web/.env` is a symlink to it).
-- **Vercel**: projects for `apps/web` and `apps/web-admin`. The admin dashboard is served from there. The `apps/web` build there is not what the public domain serves; the deploy workflow only waits for it to succeed before touching the VPS.
-- **Deploy**: pushing to `master` runs `.github/workflows/deploy.yml`, which SSHes into the VPS, runs `git pull`, builds and restarts through pm2. The VPS pulls with a read-only deploy key registered on the GitHub repo.
+- **Vercel**: projects for `apps/web` and `apps/web-admin`. The admin dashboard is served from there. The `apps/web` build there is not what the public domain serves; the deploy workflow does not depend on it.
+- **Deploy**: pushing to `master` runs `.github/workflows/deploy.yml`. It builds the web app and the worker **on the GitHub runner**, uploads the finished builds to the VPS and pipes `scripts/deploy/server-deploy.sh` over SSH, which moves the checkout to that commit, installs dependencies, applies migrations, swaps the builds in and restarts through pm2. If the new web build does not answer, it puts the previous one back and the run fails. The VPS fetches with a read-only deploy key registered on the GitHub repo.
 - **Connection details** (host, SSH user, cloud project) are deliberately not in this public repo. They are in `CLAUDE.local.md`, which is git-ignored; if that file is missing, ask the maintainer.
 
 ### Things that will bite you
 
 - **Environment variables for the web app and worker go in the VPS `.env`.** Setting them only in Vercel does nothing for the live site. `web-admin` reads its own from Vercel.
 - **Never put a comment after a value in a `.env` file** (`KEY="x" // note`): dotenv keeps the comment as part of the value. Use `#` on its own line.
-- **The VPS has 1 GB of RAM.** Building the web app while it is running exhausts memory and hangs the whole machine (it caused a multi-hour outage). The workflow therefore stops the web app during its build, so **every deploy that rebuilds the web app takes the site down for roughly 13 to 20 minutes** (visitors see the maintenance page). Building by hand on the server: stop both pm2 apps first.
-- **Merging to `master` deploys.** Changes under `apps/web/**`, `apps/worker/**`, `schema.prisma`, `migrations/**`, the lockfile or the workflow itself trigger it. Warn before merging.
-- **A green deploy is only trustworthy since the workflow was fixed** to fail on a failed `git pull` or build. If the live site looks older than `master`, compare `git log` on the VPS with `origin/master`.
-- **Migrations**: the VPS database is migrated by the worker's prebuild step; the Vercel build runs `prisma migrate deploy` against whatever `DATABASE_URL` Vercel has.
+- **The VPS has 1 GB of RAM: never build on it.** Building the web app there exhausts memory and hangs the whole machine (it caused a multi-hour outage), which is why builds happen on the runner. A deploy now costs the few seconds of a restart. If you ever must build by hand on the server, stop both pm2 apps first.
+- **The build has no secrets and no database.** Nothing may run at build time that needs them: a route handler without request access gets prerendered, i.e. executed during the build (mark it `export const dynamic = "force-dynamic"`), and `process.env.NEXT_PUBLIC_*` is replaced by its build-time value even in server code (read it through a computed key, as `paddleEnvironment()` does, or it will be `undefined` in production).
+- **Merging to `master` deploys.** Changes under `apps/web/**`, `apps/worker/**`, `schema.prisma`, `migrations/**`, the lockfile, `scripts/deploy/**`, `deploy/**` or the workflow itself trigger it.
+- **A green deploy means the new build answered a health check on the server.** If the live site looks older than `master`, compare `git log` on the VPS with `origin/master`.
+- **Migrations**: the VPS database is migrated by the deploy script (`prisma migrate deploy`) on every deploy; the Vercel build runs `prisma migrate deploy` against whatever `DATABASE_URL` Vercel has.
 
 ### Maintenance and error pages
 
 When the web app does not answer, nginx serves a static page instead of its bare "502 Bad Gateway" (always with status 503):
 
-- `deploy/status-pages/maintenance.html` while a deploy is rebuilding the web app. The workflow switches it on by creating `/var/www/scrobbler-status/maintenance.on.html` before it stops the app and removes it once the app answers again.
+- `deploy/status-pages/maintenance.html` while a deploy is restarting the web app. The deploy script switches it on by creating `/var/www/scrobbler-status/maintenance.on.html` before the restart and removes it once the app answers again.
 - `deploy/status-pages/error.html` at any other time, i.e. an outage nobody planned.
 
-The nginx side is `deploy/status-pages/nginx-snippet.conf`, installed by hand on the VPS as `/etc/nginx/snippets/scrobbler-status.conf` and included from the site's server block; changing it means copying it there again and reloading nginx. The two pages are copied to the server by every deploy that rebuilds the web app. Only errors produced by nginx are replaced; the app's own error responses pass through. The monitor fails if the maintenance page stays switched on for more than an hour.
+The nginx side is `deploy/status-pages/nginx-snippet.conf`, installed by hand on the VPS as `/etc/nginx/snippets/scrobbler-status.conf` and included from the site's server block; changing it means copying it there again and reloading nginx. The two pages are copied to the server by every deploy of the web app. Only errors produced by nginx are replaced; the app's own error responses pass through. The monitor fails if the maintenance page stays switched on for more than an hour.
 
 ### Checking a deploy
 

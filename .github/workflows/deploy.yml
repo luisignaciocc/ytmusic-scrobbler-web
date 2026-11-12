@@ -12,6 +12,8 @@ on:
       - "package.json"
       - "schema.prisma"
       - "migrations/**"
+      - "scripts/deploy/**"
+      - "deploy/**"
       - ".github/workflows/deploy.yml"
 
 concurrency:
@@ -38,7 +40,7 @@ jobs:
             echo "Changed files: $CHANGED_FILES"
             
             # Check worker changes
-            if echo "$CHANGED_FILES" | grep -E "(^apps/worker/|^packages/|^pnpm-lock\.yaml$|^package\.json$|^schema\.prisma$|^migrations/|^\.github/workflows/deploy\.yml$)"; then
+            if echo "$CHANGED_FILES" | grep -E "(^apps/worker/|^packages/|^pnpm-lock\.yaml$|^package\.json$|^schema\.prisma$|^migrations/|^scripts/deploy/|^\.github/workflows/deploy\.yml$)"; then
               echo "should-deploy-worker=true" >> $GITHUB_OUTPUT
               echo "Worker changes detected"
             else
@@ -47,7 +49,7 @@ jobs:
             fi
             
             # Check web changes
-            if echo "$CHANGED_FILES" | grep -E "(^apps/web/|^packages/|^pnpm-lock\.yaml$|^package\.json$|^\.github/workflows/deploy\.yml$)"; then
+            if echo "$CHANGED_FILES" | grep -E "(^apps/web/|^packages/|^pnpm-lock\.yaml$|^package\.json$|^scripts/deploy/|^deploy/|^\.github/workflows/deploy\.yml$)"; then
               echo "should-deploy-web=true" >> $GITHUB_OUTPUT
               echo "Web changes detected"
             else
@@ -59,245 +61,114 @@ jobs:
             echo "should-deploy-web=true" >> $GITHUB_OUTPUT
           fi
 
-  validate-vercel-deploy:
+  # The apps are built here, on the runner, and only the finished builds go to
+  # the server: it has 1 GB of RAM, and building there meant stopping the site
+  # for the 15 to 20 minutes the build took. See scripts/deploy/server-deploy.sh
+  # for the server side.
+  build-and-deploy:
     needs: check-changes
     if: |
       needs.check-changes.outputs.should-deploy-worker == 'true' ||
       needs.check-changes.outputs.should-deploy-web == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SHOULD_DEPLOY_WORKER: ${{ needs.check-changes.outputs.should-deploy-worker }}
+      SHOULD_DEPLOY_WEB: ${{ needs.check-changes.outputs.should-deploy-web }}
     steps:
-      - name: Wait for Vercel deployment to complete
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.3.0
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Setup Next.js build cache
+        if: env.SHOULD_DEPLOY_WEB == 'true'
+        uses: actions/cache@v4
+        with:
+          path: apps/web/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
+            ${{ runner.os }}-nextjs-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm generate
+
+      # No secrets and no database here, on purpose: nothing in the build may
+      # depend on them. Values the app needs are read at run time from the
+      # server's .env.
+      - name: Build web app
+        if: env.SHOULD_DEPLOY_WEB == 'true'
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          SENTRY_RELEASE: ${{ github.sha }}
+          NEXT_PUBLIC_SENTRY_RELEASE: ${{ github.sha }}
         run: |
-          echo "⏳ Waiting for Vercel deployment to complete..."
+          pnpm build --filter web
+          test -f apps/web/.next/BUILD_ID
+          tar -czf web.tgz -C apps/web --exclude=.next/cache .next
+          ls -lh web.tgz
 
-          # Get the current commit SHA
-          COMMIT_SHA="${{ github.sha }}"
-          echo "Looking for deployment of commit: $COMMIT_SHA"
+      # `nest build` directly: the package's own build script first applies
+      # database migrations, which only the server can do.
+      - name: Build worker
+        if: env.SHOULD_DEPLOY_WORKER == 'true'
+        run: |
+          pnpm --filter worker exec nest build
+          test -f apps/worker/dist/main.js
+          tar -czf worker.tgz -C apps/worker dist
+          ls -lh worker.tgz
 
-          # Wait up to 10 minutes for deployment
-          MAX_ATTEMPTS=60
-          ATTEMPT=0
+      - name: Copy SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
 
-          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-            echo "Attempt $((ATTEMPT + 1))/$MAX_ATTEMPTS: Checking Vercel deployments..."
-            
-            # Get deployments for this commit
-            DEPLOYMENTS=$(curl -s \
-              -H "Authorization: Bearer $VERCEL_TOKEN" \
-              "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&gitSource.sha=$COMMIT_SHA")
-            
-            if [ $? -ne 0 ]; then
-              echo "❌ Failed to fetch deployments from Vercel API"
-              exit 1
+      - name: Add SSH known hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Upload builds to the server
+        env:
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+        run: |
+          ssh $REMOTE_USER@$REMOTE_HOST 'mkdir -p ~/deploy-incoming && rm -f ~/deploy-incoming/*.tgz'
+          for build in web.tgz worker.tgz; do
+            if [ -f "$build" ]; then
+              scp "$build" $REMOTE_USER@$REMOTE_HOST:deploy-incoming/
             fi
-            
-            # Check if any deployment exists for this commit
-            DEPLOYMENT_COUNT=$(echo "$DEPLOYMENTS" | jq -r '.deployments | length')
-            
-            if [ "$DEPLOYMENT_COUNT" -gt 0 ]; then
-              # Get the latest deployment
-              LATEST_DEPLOYMENT=$(echo "$DEPLOYMENTS" | jq -r '.deployments[0]')
-              DEPLOYMENT_STATE=$(echo "$LATEST_DEPLOYMENT" | jq -r '.state')
-              DEPLOYMENT_URL=$(echo "$LATEST_DEPLOYMENT" | jq -r '.url')
-              
-              echo "Found deployment with state: $DEPLOYMENT_STATE"
-              echo "Deployment URL: https://$DEPLOYMENT_URL"
-              
-              case "$DEPLOYMENT_STATE" in
-                "READY")
-                  echo "✅ Vercel deployment completed successfully!"
-                  exit 0
-                  ;;
-                "ERROR"|"CANCELED")
-                  echo "❌ Vercel deployment failed with state: $DEPLOYMENT_STATE"
-                  echo "🚫 Cancelling VPS deployment to prevent potential issues"
-                  exit 1
-                  ;;
-                "BUILDING"|"QUEUED"|"INITIALIZING")
-                  echo "⏳ Deployment still in progress (state: $DEPLOYMENT_STATE)..."
-                  ;;
-                *)
-                  echo "🔍 Unknown deployment state: $DEPLOYMENT_STATE"
-                  ;;
-              esac
-            else
-              echo "📡 No deployment found yet for this commit..."
-            fi
-            
-            sleep 10
-            ATTEMPT=$((ATTEMPT + 1))
           done
 
-          echo "⏰ Timeout: Vercel deployment took longer than expected"
-          echo "🚫 Cancelling VPS deployment for safety"
-          exit 1
-
-  stop-worker:
-    needs: [check-changes, validate-vercel-deploy]
-    if: |
-      always() &&
-      (needs.check-changes.outputs.should-deploy-worker == 'true' ||
-       needs.check-changes.outputs.should-deploy-web == 'true') &&
-      needs.validate-vercel-deploy.result == 'success'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Copy SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-
-      - name: Add SSH known hosts
-        run: |
-          ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Stop Worker for Build
+      - name: Install the builds and restart
         env:
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
-          REMOTE_DIR: ~/ytmusic-scrobbler-web
-          SHOULD_DEPLOY_WORKER: ${{ needs.check-changes.outputs.should-deploy-worker }}
-          SHOULD_DEPLOY_WEB: ${{ needs.check-changes.outputs.should-deploy-web }}
         run: |
-          ssh $REMOTE_USER@$REMOTE_HOST << EOF
-            export PATH=$PATH:/home/$REMOTE_USER/.nvm/versions/node/v22.3.0/bin:/home/$REMOTE_USER/.local/share/pnpm
-            cd $REMOTE_DIR
-            # Without new code the build below would just redeploy the old one
-            # and still report success, so a failed pull must fail the deploy.
-            git pull || { echo "❌ git pull failed: aborting deploy"; exit 1; }
-            echo "🔄 Stopping worker to free resources for build..."
-            if [ "$SHOULD_DEPLOY_WORKER" = "true" ] && [ "$SHOULD_DEPLOY_WEB" = "true" ]; then
-              echo "   (Both worker and web will be built)"
-            elif [ "$SHOULD_DEPLOY_WORKER" = "true" ]; then
-              echo "   (Worker will be built)"  
-            else
-              echo "   (Web will be built - worker needs to be stopped to free resources)"
-            fi
-            pm2 stop yt-music-scrobbler-worker || true
-            pkill turbo || true
-            echo "✅ Worker stopped"
-          EOF
-
-  build-and-deploy:
-    needs: [check-changes, validate-vercel-deploy, stop-worker]
-    if: |
-      always() &&
-      (needs.check-changes.outputs.should-deploy-worker == 'true' || 
-       needs.check-changes.outputs.should-deploy-web == 'true') &&
-      needs.validate-vercel-deploy.result == 'success' &&
-      (needs.stop-worker.result == 'success' || needs.stop-worker.result == 'skipped')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Copy SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-
-      - name: Add SSH known hosts
-        run: |
-          ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Build and Deploy Services
-        env:
-          REMOTE_USER: ${{ secrets.REMOTE_USER }}
-          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
-          REMOTE_DIR: ~/ytmusic-scrobbler-web
-          SHOULD_DEPLOY_WORKER: ${{ needs.check-changes.outputs.should-deploy-worker }}
-          SHOULD_DEPLOY_WEB: ${{ needs.check-changes.outputs.should-deploy-web }}
-          RELEASE: ${{ github.sha }}
-        run: |
-          ssh $REMOTE_USER@$REMOTE_HOST << EOF
-            export PATH=$PATH:/home/$REMOTE_USER/.nvm/versions/node/v22.3.0/bin:/home/$REMOTE_USER/.local/share/pnpm
-            cd $REMOTE_DIR
-            
-            # This heredoc is expanded by the runner first, so anything the
-            # server itself must evaluate is escaped (\$).
-            FAILED=""
-
-            echo "📦 Installing dependencies..."
-            pnpm install || FAILED="pnpm install"
-
-            # Build worker first if needed (worker is already stopped)
-            if [ -z "\$FAILED" ] && [ "$SHOULD_DEPLOY_WORKER" = "true" ]; then
-              echo "🏗️ Building worker (offline)..."
-              if timeout 20m pnpm build --filter worker; then
-                echo "✅ Worker build completed"
-              else
-                FAILED="worker build"
-              fi
-              pkill turbo || true
-            fi
-
-            # Build web if needed. The server has 1 GB of RAM: building while
-            # the web app is running exhausts it and hangs the whole machine,
-            # so the web app is stopped for the build. The previous build is
-            # kept aside and put back if the new one fails, so a failed deploy
-            # leaves the old version online instead of no version at all.
-            if [ -z "\$FAILED" ] && [ "$SHOULD_DEPLOY_WEB" = "true" ]; then
-              echo "🏗️ Building web app (offline: the site is down during the build)..."
-              # nginx shows maintenance.on.html instead of its error page
-              # while this file exists (deploy/status-pages/nginx-snippet.conf).
-              # The pages are refreshed from the repo on the way.
-              if [ -d /var/www/scrobbler-status ]; then
-                cp deploy/status-pages/maintenance.html deploy/status-pages/error.html /var/www/scrobbler-status/ || true
-                cp deploy/status-pages/maintenance.html /var/www/scrobbler-status/maintenance.on.html || true
-              fi
-              pm2 stop yt-music-scrobbler-web || true
-              cd apps/web
-              rm -rf .next.prev
-              if [ -d .next ]; then
-                mv .next .next.prev
-                mkdir .next
-                # Keep the build cache: it makes the build lighter.
-                [ -d .next.prev/cache ] && mv .next.prev/cache .next/cache
-              fi
-              cd ../..
-              export SENTRY_RELEASE=$RELEASE
-              export NEXT_PUBLIC_SENTRY_RELEASE=$RELEASE
-              # The time limit bounds how long a build that is thrashing can
-              # keep the machine unresponsive.
-              if timeout 30m pnpm build --filter web; then
-                echo "✅ Web build completed"
-                rm -rf apps/web/.next.prev
-              else
-                FAILED="web build"
-                echo "❌ Web build failed: restoring the previous build"
-                if [ -d apps/web/.next.prev ]; then
-                  [ -d apps/web/.next/cache ] && mv apps/web/.next/cache apps/web/.next.prev/cache
-                  rm -rf apps/web/.next
-                  mv apps/web/.next.prev apps/web/.next
-                fi
-              fi
-              pkill turbo || true
-            fi
-
-            # Bring both services back whatever happened above: they must not
-            # stay down because a build failed.
-            if [ -z "\$FAILED" ] && [ "$SHOULD_DEPLOY_WORKER" = "true" ]; then
-              echo "🗑️ Clearing Redis..."
-              redis-cli flushall
-              pm2 flush
-            fi
-            echo "▶️ Starting worker..."
-            pm2 start yt-music-scrobbler-worker
-            if [ "$SHOULD_DEPLOY_WEB" = "true" ]; then
-              echo "▶️ Starting web app..."
-              pm2 restart yt-music-scrobbler-web
-              # Keep the maintenance page until the app answers (up to a
-              # minute), so visitors do not see the error page in between.
-              curl -s -o /dev/null --retry 20 --retry-delay 3 --retry-connrefused http://localhost:3000/ || true
-            fi
-            # Maintenance is over whatever happened: from here on a site
-            # that does not answer is an error, not a deploy.
-            rm -f /var/www/scrobbler-status/maintenance.on.html
-
-            if [ -n "\$FAILED" ]; then
-              echo "❌ Deployment failed at: \$FAILED (services restarted on the previous version)"
-              exit 1
-            fi
-            echo "🎉 Deployment completed successfully"
-          EOF
+          ssh $REMOTE_USER@$REMOTE_HOST 'bash -s' -- \
+            "${{ github.sha }}" "$SHOULD_DEPLOY_WEB" "$SHOULD_DEPLOY_WORKER" \
+            < scripts/deploy/server-deploy.sh
