@@ -50,13 +50,11 @@ jobs:
           #   --system-prompt "Follow our coding standards. Ensure all new code has tests. Use TypeScript for new files."
 
           claude_args: |
-            --model claude-sonnet-4-20250514
             --allowedTools "
               Bash(git:*),
-              View,
-              GlobTool,
-              GrepTool,
-              BatchTool,
+              Read,
+              Glob,
+              Grep,
               Bash(pnpm type-check:*),
               Bash(pnpm lint:*),
               Bash(pnpm get-history:*),
