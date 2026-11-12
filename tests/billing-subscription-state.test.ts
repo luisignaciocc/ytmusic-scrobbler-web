@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  paddleStatusToColumns,
   shouldApplyStripeSubscription,
   stripeSubscriptionToColumns,
 } from "../apps/web/lib/billing/subscription-state";
@@ -84,3 +85,23 @@ describe("shouldApplyStripeSubscription", () => {
     expect(shouldApplyStripeSubscription({ subscriptionId: "sub_current" }, ended)).toBe(false);
   });
 });
+
+describe("paddleStatusToColumns", () => {
+  it("keeps Pro only while Paddle is billing", () => {
+    for (const status of ["active", "trialing", "past_due"]) {
+      expect(paddleStatusToColumns(status)).toEqual({
+        subscriptionStatus: status,
+        subscriptionPlan: "pro",
+      });
+    }
+  });
+
+  it("takes Pro away when an update says the subscription was cancelled or paused", () => {
+    expect(paddleStatusToColumns("canceled")).toEqual({
+      subscriptionStatus: "cancelled",
+      subscriptionPlan: "free",
+    });
+    expect(paddleStatusToColumns("paused").subscriptionPlan).toBe("free");
+  });
+});
+
