@@ -30,8 +30,12 @@ expect site-pricing GET "$SITE/pricing" "200"
 # checking signatures; 404 means the route is missing, 500 that it is broken.
 expect stripe-webhook POST "$SITE/api/webhooks/stripe" "400"
 expect paddle-webhook POST "$SITE/api/webhooks/paddle" "400"
-# The admin dashboard answers with its page or a redirect to its login.
-expect admin-dashboard GET "$ADMIN/" "200 301 302 307 308"
+# The admin dashboard answers with its page or a redirect to its login. It is
+# served from Vercel, so the deploy's smoke test (which is about the server)
+# leaves it out with SKIP_ADMIN=1.
+if [ -z "${SKIP_ADMIN:-}" ]; then
+  expect admin-dashboard GET "$ADMIN/" "200 301 302 307 308"
+fi
 
 price=$(curl -s -m 30 "$SITE/api/subscription/price")
 if echo "$price" | grep -q '"formatted"'; then
