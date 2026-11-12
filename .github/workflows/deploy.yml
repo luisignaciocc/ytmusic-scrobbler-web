@@ -239,6 +239,13 @@ jobs:
             # leaves the old version online instead of no version at all.
             if [ -z "\$FAILED" ] && [ "$SHOULD_DEPLOY_WEB" = "true" ]; then
               echo "🏗️ Building web app (offline: the site is down during the build)..."
+              # nginx shows maintenance.on.html instead of its error page
+              # while this file exists (deploy/status-pages/nginx-snippet.conf).
+              # The pages are refreshed from the repo on the way.
+              if [ -d /var/www/scrobbler-status ]; then
+                cp deploy/status-pages/maintenance.html deploy/status-pages/error.html /var/www/scrobbler-status/ || true
+                cp deploy/status-pages/maintenance.html /var/www/scrobbler-status/maintenance.on.html || true
+              fi
               pm2 stop yt-music-scrobbler-web || true
               cd apps/web
               rm -rf .next.prev
@@ -280,7 +287,13 @@ jobs:
             if [ "$SHOULD_DEPLOY_WEB" = "true" ]; then
               echo "▶️ Starting web app..."
               pm2 restart yt-music-scrobbler-web
+              # Keep the maintenance page until the app answers (up to a
+              # minute), so visitors do not see the error page in between.
+              curl -s -o /dev/null --retry 20 --retry-delay 3 --retry-connrefused http://localhost:3000/ || true
             fi
+            # Maintenance is over whatever happened: from here on a site
+            # that does not answer is an error, not a deploy.
+            rm -f /var/www/scrobbler-status/maintenance.on.html
 
             if [ -n "\$FAILED" ]; then
               echo "❌ Deployment failed at: \$FAILED (services restarted on the previous version)"

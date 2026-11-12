@@ -94,10 +94,19 @@ Required environment variables:
 
 - **Environment variables for the web app and worker go in the VPS `.env`.** Setting them only in Vercel does nothing for the live site. `web-admin` reads its own from Vercel.
 - **Never put a comment after a value in a `.env` file** (`KEY="x" // note`): dotenv keeps the comment as part of the value. Use `#` on its own line.
-- **The VPS has 1 GB of RAM.** Building the web app while it is running exhausts memory and hangs the whole machine (it caused a multi-hour outage). The workflow therefore stops the web app during its build, so **every deploy that rebuilds the web app takes the site down for roughly 13 minutes**. Building by hand on the server: stop both pm2 apps first.
+- **The VPS has 1 GB of RAM.** Building the web app while it is running exhausts memory and hangs the whole machine (it caused a multi-hour outage). The workflow therefore stops the web app during its build, so **every deploy that rebuilds the web app takes the site down for roughly 13 to 20 minutes** (visitors see the maintenance page). Building by hand on the server: stop both pm2 apps first.
 - **Merging to `master` deploys.** Changes under `apps/web/**`, `apps/worker/**`, `schema.prisma`, `migrations/**`, the lockfile or the workflow itself trigger it. Warn before merging.
 - **A green deploy is only trustworthy since the workflow was fixed** to fail on a failed `git pull` or build. If the live site looks older than `master`, compare `git log` on the VPS with `origin/master`.
 - **Migrations**: the VPS database is migrated by the worker's prebuild step; the Vercel build runs `prisma migrate deploy` against whatever `DATABASE_URL` Vercel has.
+
+### Maintenance and error pages
+
+When the web app does not answer, nginx serves a static page instead of its bare "502 Bad Gateway" (always with status 503):
+
+- `deploy/status-pages/maintenance.html` while a deploy is rebuilding the web app. The workflow switches it on by creating `/var/www/scrobbler-status/maintenance.on.html` before it stops the app and removes it once the app answers again.
+- `deploy/status-pages/error.html` at any other time, i.e. an outage nobody planned.
+
+The nginx side is `deploy/status-pages/nginx-snippet.conf`, installed by hand on the VPS as `/etc/nginx/snippets/scrobbler-status.conf` and included from the site's server block; changing it means copying it there again and reloading nginx. The two pages are copied to the server by every deploy that rebuilds the web app. Only errors produced by nginx are replaced; the app's own error responses pass through. The monitor fails if the maintenance page stays switched on for more than an hour.
 
 ### Checking a deploy
 
