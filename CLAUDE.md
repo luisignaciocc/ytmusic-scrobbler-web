@@ -128,7 +128,9 @@ On the VPS, `pm2 ls` shows both apps and `pm2 logs <app> --lines 50 --nostream` 
 - `subscriptions-check.cjs` (piped to the VPS, so it uses the server's own `.env`): recent scrobbling activity, Pro users past their paid period, Stripe and Paddle subscriptions compared with the database, and Stripe webhook deliveries.
 - The workflow itself compares the commit deployed on the VPS with `master` for the paths that deploy.
 
-On a failure it opens an issue labelled `production-monitor`, or comments on the one already open; when everything passes again it closes it. Claude triages a newly opened issue: a pull request for a bug in this repo, a diagnosis with steps for anything else. It has no access to the server and never merges.
+`.github/workflows/uptime.yml` is the fast, shallow counterpart: every 5 minutes (GitHub may start it late) `scripts/monitor/uptime-check.sh` requests the home page, the pricing page and the worker from outside. A target that fails twice, 90 seconds apart, opens an issue labelled `outage`; the issue closes by itself when everything answers again. It can be tested from the Actions tab with `simulate_outage`.
+
+The daily monitor, on a failure, opens an issue labelled `production-monitor`, or comments on the one already open; when everything passes again it closes it. Claude triages a newly opened issue: a pull request for a bug in this repo, a diagnosis with steps for anything else. It has no access to the server and never merges.
 
 Every check prints `OK|WARN|FAIL <name> | <detail>`. That output is public (Actions logs and issues), so checks print states and counts only, never user data. To see which records a subscription check is counting, run it by hand on the VPS with `--verbose`:
 

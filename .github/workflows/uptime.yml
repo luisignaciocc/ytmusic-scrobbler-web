@@ -1,0 +1,90 @@
+name: Uptime
+
+# Looks at the public site and the worker every few minutes and opens an
+# issue labelled `outage` when one of them is down (GitHub emails the
+# maintainer about it), then closes it when everything answers again.
+#
+# This is the fast, shallow check. The thorough one is monitor.yml, once a
+# day. GitHub starts scheduled workflows late when it is busy, so "every 5
+# minutes" means an outage is noticed within roughly 5 to 20 minutes.
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      simulate_outage:
+        description: "Pretend the site is down, to test the alert (the next run closes the issue)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+env:
+  LABEL: outage
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/monitor
+
+      - name: Probe the site and the worker
+        id: probe
+        env:
+          SIMULATE: ${{ inputs.simulate_outage }}
+        run: |
+          if [ "$SIMULATE" = "true" ]; then
+            export SITE_URL=https://scrobbler.bocono-labs.com/this-page-does-not-exist RETRY_AFTER=5
+          fi
+          bash scripts/monitor/uptime-check.sh | tee result.txt
+          echo "fails=$(grep -c '^FAIL' result.txt || true)" >> "$GITHUB_OUTPUT"
+
+      - name: Open or close the outage issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          FAILS: ${{ steps.probe.outputs.fails }}
+          SIMULATE: ${{ inputs.simulate_outage }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          open=$(gh issue list --label "$LABEL" --state open --limit 1 --json number --jq '.[0].number // empty')
+          now=$(date -u '+%Y-%m-%d %H:%M UTC')
+
+          if [ "$FAILS" != "0" ]; then
+            if [ -n "$open" ]; then
+              echo "Still down; issue #$open is already open."
+              exit 0
+            fi
+            gh label create "$LABEL" --color D93F0B --description "Opened by the uptime check" 2>/dev/null || true
+            title="Outage: the site is not answering ($now)"
+            [ "$SIMULATE" = "true" ] && title="[TEST] $title"
+            {
+              echo "The uptime check found **$FAILS target(s) down** at $now, on two tries in a row."
+              echo
+              grep '^FAIL' result.txt | sed -E 's/^FAIL +([^ ]+) \| (.*)$/- **\1**: \2/'
+              echo
+              echo "Run: $RUN_URL"
+              echo
+              echo "What to look at is in \`CLAUDE.md\`, under \"Production Deployment\". This issue closes by itself when everything answers again."
+              [ "$SIMULATE" = "true" ] && echo && echo "_This is a test of the alert: nothing is down._"
+            } > body.md
+            gh issue create --label "$LABEL" --title "$title" --body-file body.md
+          elif [ -n "$open" ]; then
+            opened=$(gh issue view "$open" --json createdAt --jq .createdAt)
+            minutes=$(( ($(date +%s) - $(date -d "$opened" +%s)) / 60 ))
+            gh issue close "$open" --comment "Everything answers again at $now, about $minutes minutes after this issue was opened."
+          fi
+
+      # The run itself stays green while something is down: the issue is the
+      # alert, and a failed run every five minutes would only add an email
+      # each time.
