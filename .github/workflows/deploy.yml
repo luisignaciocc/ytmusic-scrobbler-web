@@ -172,3 +172,17 @@ jobs:
           ssh $REMOTE_USER@$REMOTE_HOST 'bash -s' -- \
             "${{ github.sha }}" "$SHOULD_DEPLOY_WEB" "$SHOULD_DEPLOY_WORKER" \
             < scripts/deploy/server-deploy.sh
+
+      # What a visitor, Stripe and Paddle get, through nginx and TLS. The
+      # server script already checked the app locally and rolled back if it
+      # was broken; a failure here means the app is fine but unreachable or
+      # misconfigured from outside, which no rollback would fix.
+      - name: Smoke test from outside
+        env:
+          SKIP_ADMIN: "1"
+        run: |
+          bash scripts/monitor/external-check.sh | tee smoke.txt
+          if grep -q '^FAIL' smoke.txt; then
+            echo "::error::The deploy finished but the site fails from outside: $(grep -c '^FAIL' smoke.txt) check(s)"
+            exit 1
+          fi

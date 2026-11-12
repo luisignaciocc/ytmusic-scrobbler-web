@@ -25,13 +25,48 @@ WEB=yt-music-scrobbler-web
 WORKER=yt-music-scrobbler-worker
 FAILED=""
 
-web_answers() {
-  # Up to 90 seconds for the app to serve a real page.
+code_of() { # <method> <url>
+  curl -s -o /dev/null -m 10 -X "$1" -w '%{http_code}' "$2"
+}
+
+# The new web build is good when it serves real pages and its payment
+# webhooks are in place. Unsigned webhook calls must be rejected with 400:
+# 404 would mean the route is gone, 500 that it is broken or unconfigured.
+# Only things that depend on this machine are checked, so that a problem at
+# Stripe or Paddle cannot make a good build look bad and roll it back.
+web_healthy() {
+  local ready="" url code
+  # Up to 90 seconds for the app to come up.
   for _ in $(seq 1 30); do
-    [ "$(curl -s -o /dev/null -m 10 -w '%{http_code}' http://localhost:3000/pricing)" = "200" ] && return 0
+    [ "$(code_of GET http://localhost:3000/pricing)" = "200" ] && { ready=1; break; }
     sleep 3
   done
-  return 1
+  [ -n "$ready" ] || { echo "   /pricing never answered 200"; return 1; }
+  code=$(code_of GET http://localhost:3000/)
+  [ "$code" = "200" ] || { echo "   / answered HTTP $code"; return 1; }
+  for url in /api/webhooks/stripe /api/webhooks/paddle; do
+    code=$(code_of POST "http://localhost:3000$url")
+    [ "$code" = "400" ] || { echo "   $url answered HTTP $code to an unsigned call (expected 400)"; return 1; }
+  done
+  return 0
+}
+
+# The worker is good when it answers and is still the same process a little
+# later: one that crashes on start is restarted by pm2 and looks "online".
+worker_healthy() {
+  local ready="" pid
+  for _ in $(seq 1 20); do
+    [ "$(code_of GET http://localhost:4000/)" = "200" ] && { ready=1; break; }
+    sleep 3
+  done
+  [ -n "$ready" ] || { echo "   the worker never answered on port 4000"; return 1; }
+  pid=$(pm2 pid "$WORKER")
+  sleep 15
+  [ -n "$pid" ] && [ "$pid" != "0" ] && [ "$(pm2 pid "$WORKER")" = "$pid" ] ||
+    { echo "   the worker restarted by itself right after starting"; return 1; }
+  [ "$(code_of GET http://localhost:4000/)" = "200" ] ||
+    { echo "   the worker stopped answering"; return 1; }
+  return 0
 }
 
 cd "$REPO" || { echo "❌ $REPO not found"; exit 1; }
@@ -66,7 +101,6 @@ if [ -z "$FAILED" ] && [ "$DEPLOY_WORKER" = "true" ]; then
     [ -f apps/worker/dist.new/main.js ]; then
     [ -d apps/worker/dist ] && mv apps/worker/dist apps/worker/dist.prev
     mv apps/worker/dist.new apps/worker/dist
-    rm -rf apps/worker/dist.prev
     echo "🗑️ Clearing Redis..."
     redis-cli flushall
     pm2 flush
@@ -77,6 +111,24 @@ if [ -z "$FAILED" ] && [ "$DEPLOY_WORKER" = "true" ]; then
 fi
 echo "▶️ Starting worker..."
 pm2 start "$WORKER"
+if [ -z "$FAILED" ]; then
+  if worker_healthy; then
+    echo "✅ The worker is running"
+  else
+    FAILED="worker health check"
+    if [ -d apps/worker/dist.prev ]; then
+      echo "❌ The new worker build is not healthy: going back to the previous one"
+      rm -rf apps/worker/dist
+      mv apps/worker/dist.prev apps/worker/dist
+      pm2 restart "$WORKER"
+      worker_healthy && echo "↩️ The previous worker build is running again" ||
+        echo "❌ The previous worker build is not healthy either"
+    else
+      echo "❌ The worker is not healthy (its build did not change in this deploy)"
+    fi
+  fi
+fi
+rm -rf apps/worker/dist.prev
 
 # --- web ------------------------------------------------------------------------
 if [ -z "$FAILED" ] && [ "$DEPLOY_WEB" = "true" ]; then
@@ -95,18 +147,18 @@ if [ -z "$FAILED" ] && [ "$DEPLOY_WEB" = "true" ]; then
     [ -d apps/web/.next ] && mv apps/web/.next apps/web/.next.prev
     mv apps/web/.next.new apps/web/.next
     pm2 restart "$WEB"
-    if web_answers; then
+    if web_healthy; then
       echo "✅ The new web build is serving"
       rm -rf apps/web/.next.prev
     else
       FAILED="web health check"
-      echo "❌ The new web build does not answer: going back to the previous one"
+      echo "❌ The new web build is not healthy: going back to the previous one"
       if [ -d apps/web/.next.prev ]; then
         rm -rf apps/web/.next
         mv apps/web/.next.prev apps/web/.next
         pm2 restart "$WEB"
-        web_answers && echo "↩️ The previous build is serving again" ||
-          echo "❌ The previous build does not answer either"
+        web_healthy && echo "↩️ The previous build is serving again" ||
+          echo "❌ The previous build is not healthy either"
       fi
     fi
   else
