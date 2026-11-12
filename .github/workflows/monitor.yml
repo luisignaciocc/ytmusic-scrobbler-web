@@ -1,0 +1,207 @@
+name: Production Monitor
+
+# Checks once a day that production is healthy: the public site, the server
+# behind it (pm2 apps, Redis, PostgreSQL, memory, disk), scrobbling activity
+# and that subscriptions in Stripe/Paddle match the database.
+#
+# When something fails it opens an issue labelled `production-monitor` (or
+# comments on the one already open) and asks Claude to triage a new issue.
+# When everything passes again it closes the issue.
+#
+# The checks only read. They live in scripts/monitor/.
+
+on:
+  schedule:
+    - cron: "17 12 * * *" # every day at 12:17 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: production-monitor
+  cancel-in-progress: false
+
+env:
+  LABEL: production-monitor
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    outputs:
+      new_issue: ${{ steps.issue.outputs.new_issue }}
+      issue_number: ${{ steps.issue.outputs.issue_number }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the deployed commit is compared with master
+
+      - name: Check the site from outside
+        run: bash scripts/monitor/external-check.sh | tee report.txt
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Check the server
+        env:
+          REMOTE: ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}
+        run: |
+          # Only the scripts' own result lines reach the report (and so the
+          # public issue); anything else the server prints stays out.
+          only_results() { grep -E '^(OK  |WARN|FAIL|INFO|DONE) |^       - ' || true; }
+          ssh_opts="-o ConnectTimeout=30 -o ServerAliveInterval=15 -o BatchMode=yes"
+
+          timeout 180 ssh $ssh_opts "$REMOTE" 'bash -s' \
+            < scripts/monitor/server-check.sh 2>/dev/null | only_results | tee -a report.txt
+          if ! grep -q '^DONE server' report.txt; then
+            echo "FAIL server-checks | the server did not finish its checks within 3 minutes: it is unreachable or out of memory" | tee -a report.txt
+          fi
+
+          timeout 300 ssh $ssh_opts "$REMOTE" \
+            'export PATH="$PATH:$(ls -d $HOME/.nvm/versions/node/*/bin | tail -1)"; cd ~/ytmusic-scrobbler-web/apps/web && node --env-file=../../.env -' \
+            < scripts/monitor/subscriptions-check.cjs 2>/dev/null | only_results | tee -a report.txt
+          if ! grep -q '^DONE subscriptions' report.txt; then
+            echo "FAIL subscription-checks | the scrobbling and subscription checks did not finish on the server" | tee -a report.txt
+          fi
+
+      - name: Check that the server runs what master expects
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Same paths that trigger a deploy in deploy.yml: commits that only
+          # touch other files are not deployed, and that is not a problem.
+          deploy_paths="apps/web apps/worker packages pnpm-lock.yaml package.json schema.prisma migrations .github/workflows/deploy.yml"
+          deployed=$(sed -n 's/^INFO deployed-commit | //p' report.txt)
+          running=$(gh run list --workflow deploy.yml --json status --jq '[.[] | select(.status != "completed")] | length')
+          last=$(gh run list --workflow deploy.yml --status completed --limit 1 --json conclusion --jq '.[0].conclusion // "none"')
+
+          if [ "$last" = "failure" ]; then
+            echo "FAIL last-deploy | the most recent deploy run failed" | tee -a report.txt
+          else
+            echo "OK   last-deploy | the most recent deploy run ended with: $last" | tee -a report.txt
+          fi
+
+          if [ -z "$deployed" ]; then
+            : # the server checks did not run; already reported above
+          elif ! git cat-file -e "$deployed^{commit}" 2>/dev/null; then
+            echo "FAIL deployed-version | the server runs commit ${deployed:0:7}, which is not in master's history" | tee -a report.txt
+          else
+            behind=$(git diff --name-only "$deployed" HEAD -- $deploy_paths | wc -l)
+            if [ "$behind" -eq 0 ]; then
+              echo "OK   deployed-version | the server runs ${deployed:0:7}, up to date with master for everything that deploys" | tee -a report.txt
+            elif [ "$running" -gt 0 ]; then
+              echo "WARN deployed-version | the server runs ${deployed:0:7}; a deploy is in progress" | tee -a report.txt
+            else
+              echo "FAIL deployed-version | the server runs ${deployed:0:7}: $behind deployable file(s) on master were never deployed" | tee -a report.txt
+            fi
+          fi
+
+      - name: Write the report
+        id: report
+        run: |
+          fails=$(grep -c '^FAIL ' report.txt || true)
+          warns=$(grep -c '^WARN ' report.txt || true)
+          passes=$(grep -c '^OK   ' report.txt || true)
+          echo "fails=$fails" >> "$GITHUB_OUTPUT"
+          echo "warns=$warns" >> "$GITHUB_OUTPUT"
+
+          bullets() { grep "^$1 " report.txt | sed -E "s/^$1 +([^|]+) \| (.*)/- **\1**: \2/" || true; }
+          {
+            if [ "$fails" -gt 0 ]; then
+              echo "The daily production monitor found **$fails problem(s)**."
+            else
+              echo "The daily production monitor found no problems."
+            fi
+            echo
+            echo "Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            if [ "$fails" -gt 0 ]; then
+              echo; echo "### Failing"; echo; bullets FAIL
+            fi
+            if [ "$warns" -gt 0 ]; then
+              echo; echo "### Warnings"; echo; bullets WARN
+            fi
+            echo; echo "<details><summary>$passes checks passing</summary>"; echo
+            bullets "OK  "
+            echo; echo "</details>"
+            if [ "$fails" -gt 0 ]; then
+              echo
+              echo "Counts only are shown here because this repository is public. The subscription checks list the affected records when run on the server with \`--verbose\` (see \`scripts/monitor/subscriptions-check.cjs\`)."
+            fi
+          } > report.md
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Open, update or close the monitor issue
+        id: issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FAILS: ${{ steps.report.outputs.fails }}
+        run: |
+          gh label create "$LABEL" --color B60205 --description "Opened by the daily production monitor" 2>/dev/null || true
+          open=$(gh issue list --label "$LABEL" --state open --limit 1 --json number --jq '.[0].number // empty')
+          echo "new_issue=false" >> "$GITHUB_OUTPUT"
+
+          if [ "$FAILS" -gt 0 ] && [ -z "$open" ]; then
+            url=$(gh issue create --label "$LABEL" \
+              --title "Production monitor: $FAILS problem(s) found on $(date -u +%Y-%m-%d)" \
+              --body-file report.md)
+            echo "Opened $url"
+            echo "new_issue=true" >> "$GITHUB_OUTPUT"
+            echo "issue_number=${url##*/}" >> "$GITHUB_OUTPUT"
+          elif [ "$FAILS" -gt 0 ]; then
+            # Still broken: add today's report to the open issue. Claude is
+            # asked to triage only when the issue is first opened.
+            gh issue comment "$open" --body-file report.md
+            echo "issue_number=$open" >> "$GITHUB_OUTPUT"
+          elif [ -n "$open" ]; then
+            gh issue comment "$open" --body-file report.md
+            gh issue close "$open" --comment "All checks pass again; closing."
+          fi
+
+      - name: Mark the run as failed when problems were found
+        if: steps.report.outputs.fails != '0'
+        run: exit 1
+
+  triage:
+    # Runs only when this run opened a new issue.
+    needs: check
+    if: always() && needs.check.outputs.new_issue == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Ask Claude to triage the issue
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            The daily production monitor of ${{ github.repository }} found problems and opened issue #${{ needs.check.outputs.issue_number }}.
+
+            Read that issue, then CLAUDE.md (the "Production Deployment" and "Billing" sections) and the check scripts in scripts/monitor/ to understand what each failing check measures.
+
+            For each failing check, work out the most likely cause from the code in this repository.
+
+            - If the cause is a bug in this repository, fix it on a new branch and open a pull request that references the issue. Run `pnpm type-check`, `pnpm lint` and `pnpm test` first.
+            - If it is an infrastructure or account problem (server unreachable or out of memory, a service down, an expired certificate, Stripe or Paddle configuration, data that needs correcting), do not change code. Say so and give the maintainer the exact steps to fix it.
+
+            You have no access to the server, the database, Stripe or Paddle, and the issue shows counts rather than records. Do not guess at data you cannot see: say what would need to be looked at.
+
+            Never merge anything: merging to master deploys to production and takes the site down while it builds.
+
+            Finish by posting one comment on the issue with what you found and what you did.
+          claude_args: |
+            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(git:*),Bash(gh issue view:*),Bash(gh issue comment:*),Bash(gh pr create:*),Bash(gh run list:*),Bash(gh run view:*),Bash(pnpm install:*),Bash(pnpm generate:*),Bash(pnpm type-check:*),Bash(pnpm lint:*),Bash(pnpm test:*)"
