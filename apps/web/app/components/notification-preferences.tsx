@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
+import DynamicText from "@/components/ui/dynamic-text";
 
 import { toggleNotifications, updateNotificationPreferences } from "../actions";
 
@@ -197,7 +198,7 @@ export default function NotificationPreferences({
             disabled={loading || !hasChanges}
             className={buttonVariants()}
           >
-            {loading ? "Saving..." : "Update Email"}
+            <DynamicText>{loading ? "Saving..." : "Update Email"}</DynamicText>
           </button>
 
           {hasChanges && (

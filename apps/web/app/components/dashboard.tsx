@@ -3,6 +3,7 @@ import { ExternalLink, Zap } from "lucide-react";
 import Link from "next/link";
 
 import { buttonVariants } from "@/components/ui/button";
+import DynamicText from "@/components/ui/dynamic-text";
 import Notice from "@/components/ui/notice";
 import { cn } from "@/lib/utils";
 
@@ -105,9 +106,11 @@ export default function Dashboard({
           <div className="min-w-0">
             <p className="flex items-center gap-2.5 text-xl font-semibold font-display">
               <span className={cn("h-3 w-3 rounded-full", dot)} aria-hidden="true" />
-              {label}
+              <DynamicText>{label}</DynamicText>
             </p>
-            <p className="mt-2 max-w-lg text-sm text-muted-foreground">{text}</p>
+            <p className="mt-2 max-w-lg text-sm text-muted-foreground">
+              <DynamicText>{text}</DynamicText>
+            </p>
           </div>
           <div className="shrink-0">
             {health === "cookie" ? (
@@ -126,9 +129,11 @@ export default function Dashboard({
               Last successful check
             </dt>
             <dd className="mt-1 font-medium">
-              {user.lastSuccessfulScrobble
-                ? timeAgo(user.lastSuccessfulScrobble)
-                : "Not yet"}
+              <DynamicText>
+                {user.lastSuccessfulScrobble
+                  ? timeAgo(user.lastSuccessfulScrobble)
+                  : "Not yet"}
+              </DynamicText>
             </dd>
           </div>
           <div>
