@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
+import DynamicText from "@/components/ui/dynamic-text";
 import Notice from "@/components/ui/notice";
 import { cn } from "@/lib/utils";
 import { checkYtmusicCookie } from "@/lib/ytmusic-cookie";
@@ -155,7 +156,7 @@ export default function SetupWizard({ isUpdate }: { isUpdate: boolean }) {
       <div className="mt-8">
         <div className="flex items-center justify-between text-sm">
           <p className="font-medium">
-            Step {step} of {TOTAL}
+            <DynamicText>{`Step ${step} of ${TOTAL}`}</DynamicText>
           </p>
           {!onForm && (
             <button
@@ -198,12 +199,20 @@ export default function SetupWizard({ isUpdate }: { isUpdate: boolean }) {
             onClick={() => setStep((current) => Math.min(TOTAL, current + 1))}
             className={buttonVariants({ variant: "primary" })}
           >
-            {step === GUIDE.length ? "I copied it" : "Next"}
+            <DynamicText>
+              {step === GUIDE.length ? "I copied it" : "Next"}
+            </DynamicText>
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </button>
         )}
       </div>
-      <section className="mt-4 rounded-xl border bg-card p-5 sm:p-6" aria-live="polite">
+      <section
+        // Keyed by step: each step is mounted fresh instead of being patched
+        // node by node, which page translation breaks (see DynamicText).
+        key={step}
+        className="mt-4 rounded-xl border bg-card p-5 sm:p-6"
+        aria-live="polite"
+      >
         {guide ? (
           <>
             <h2 className="text-xl font-semibold">{guide.title}</h2>
@@ -265,7 +274,9 @@ export default function SetupWizard({ isUpdate }: { isUpdate: boolean }) {
               className={buttonVariants({ size: "lg", className: "mt-5" })}
             >
               <Check className="h-4 w-4" aria-hidden="true" />
-              {saving ? "Saving…" : "Save and start scrobbling"}
+              <DynamicText>
+                {saving ? "Saving…" : "Save and start scrobbling"}
+              </DynamicText>
             </button>
             <p className="mt-4 text-sm text-muted-foreground">
               Stuck?{" "}

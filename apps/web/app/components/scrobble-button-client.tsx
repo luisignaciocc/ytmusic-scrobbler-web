@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
+import DynamicText from "@/components/ui/dynamic-text";
 
 import { toggleScrobble } from "../actions";
 
@@ -36,7 +37,13 @@ export default function ScrobbleBtnClient({
       aria-busy={loading}
     >
       <Icon className="h-4 w-4" aria-hidden="true" />
-      {loading ? "Saving…" : scrobbling ? "Pause scrobbling" : "Start scrobbling"}
+      <DynamicText>
+        {loading
+          ? "Saving…"
+          : scrobbling
+            ? "Pause scrobbling"
+            : "Start scrobbling"}
+      </DynamicText>
     </button>
   );
 }

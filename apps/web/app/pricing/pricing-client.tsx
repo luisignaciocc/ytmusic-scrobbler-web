@@ -3,11 +3,14 @@
 import { Check } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
+import DynamicText from "@/components/ui/dynamic-text";
 import Notice from "@/components/ui/notice";
+
+import LoginBtn from "../components/login-btn";
 
 // Type for extended user session
 interface SubscriptionInfo {
@@ -230,12 +233,11 @@ export default function PricingClient() {
     );
   } else if (!signedIn) {
     proAction = (
-      <button
-        onClick={() => signIn(undefined, { callbackUrl: "/pricing" })}
-        className={buttonVariants({ size: "lg", className: fullWidth })}
-      >
-        Sign in to subscribe
-      </button>
+      <LoginBtn
+        label="Sign in to subscribe"
+        callbackUrl="/pricing"
+        className={fullWidth}
+      />
     );
   } else if (isActivePro && hasScheduledCancellation) {
     proAction = (
@@ -250,7 +252,9 @@ export default function PricingClient() {
           aria-busy={isLoading}
           className={buttonVariants({ size: "lg", className: fullWidth })}
         >
-          {isLoading ? "Saving…" : "Keep my subscription"}
+          <DynamicText>
+            {isLoading ? "Saving…" : "Keep my subscription"}
+          </DynamicText>
         </button>
       </div>
     );
@@ -302,7 +306,9 @@ export default function PricingClient() {
             className: `${fullWidth} text-muted-foreground`,
           })}
         >
-          {isLoading ? "Saving…" : "Cancel subscription"}
+          <DynamicText>
+            {isLoading ? "Saving…" : "Cancel subscription"}
+          </DynamicText>
         </button>
       </div>
     );
@@ -320,7 +326,9 @@ export default function PricingClient() {
         aria-busy={isLoading}
         className={buttonVariants({ size: "lg", className: fullWidth })}
       >
-        {isLoading ? "Taking you to checkout…" : "Subscribe to Pro"}
+        <DynamicText>
+          {isLoading ? "Taking you to checkout…" : "Subscribe to Pro"}
+        </DynamicText>
       </button>
     );
   }
