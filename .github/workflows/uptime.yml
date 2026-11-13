@@ -1,12 +1,12 @@
 name: Uptime
 
-# Looks at the public site and the worker every few minutes and opens an
-# issue labelled `outage` when one of them is down (GitHub emails the
-# maintainer about it), then closes it when everything answers again.
+# Backup outage check. The real one is Google Cloud Monitoring (see
+# CLAUDE.md, "Production Monitor"): GitHub is asked to run this every 5
+# minutes but in practice starts it only a few times a day.
 #
-# This is the fast, shallow check. The thorough one is monitor.yml, once a
-# day. GitHub starts scheduled workflows late when it is busy, so "every 5
-# minutes" means an outage is noticed within roughly 5 to 20 minutes.
+# Looks at the public site and the worker and opens an issue labelled
+# `outage` when one of them is down, then closes it when everything answers
+# again.
 
 on:
   schedule:
