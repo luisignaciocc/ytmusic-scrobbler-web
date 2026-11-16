@@ -28,7 +28,7 @@
     "eslint-plugin-storybook": "^0.8.0",
     "eslint-plugin-unused-imports": "^4.0.0",
     "prettier": "^3.3.2",
-    "prettier-plugin-tailwindcss": "^0.6.5",
+    "prettier-plugin-tailwindcss": "^0.8.1",
     "prisma": "^5.15.0",
     "tsx": "^4.20.5",
     "turbo": "^2.0.4",
