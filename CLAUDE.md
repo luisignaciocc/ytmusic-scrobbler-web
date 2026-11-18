@@ -156,6 +156,10 @@ cd ~/ytmusic-scrobbler-web/apps/web && node --env-file=../../.env - --verbose < 
 
 To add a check, print one more such line from the script that fits; the workflow picks it up without changes.
 
+## Support agent limits
+
+- Each sender gets at most 15 automatic replies in 24 hours (`SUPPORT_MAX_REPLIES_PER_DAY` overrides it). Over that, the email is recorded as `skipped` / `rate limited` and shows up in the daily report; nobody is emailed. The analyst branch for the maintainer runs before this limit and is not affected by it.
+
 ## Daily report and questions by email
 
 - **Daily report**: the worker emails the maintainer (`REPORT_EMAIL` in the VPS `.env`) every day at 08:00 Argentina time with the previous day's figures: scrobbles, users, Pro subscriptions, expired YouTube Music sessions, support emails. Code in `apps/worker/src/daily-report.ts`; send one by hand on the VPS with `node --env-file=.env -e "require('./apps/worker/dist/daily-report').sendDailyReportNow()"` from the repo root.
