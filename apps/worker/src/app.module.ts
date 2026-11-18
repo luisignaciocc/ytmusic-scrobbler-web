@@ -10,6 +10,7 @@ import { SentryModule } from "@sentry/nestjs/setup";
 import { AppConsumer } from "./app.consumer";
 import { AppController } from "./app.controller";
 import { AppProducer } from "./app.producer";
+import { DailyReportService } from "./daily-report.service";
 import { PrismaService } from "./prisma.service";
 
 @Module({
@@ -53,7 +54,7 @@ import { PrismaService } from "./prisma.service";
     }),
   ],
   controllers: [AppController],
-  providers: [AppProducer, AppConsumer, PrismaService],
+  providers: [AppProducer, AppConsumer, DailyReportService, PrismaService],
   exports: [PrismaService],
 })
 export class AppModule {}
