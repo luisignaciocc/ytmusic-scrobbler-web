@@ -156,6 +156,12 @@ cd ~/ytmusic-scrobbler-web/apps/web && node --env-file=../../.env - --verbose < 
 
 To add a check, print one more such line from the script that fits; the workflow picks it up without changes.
 
+## Daily report and questions by email
+
+- **Daily report**: the worker emails the maintainer (`REPORT_EMAIL` in the VPS `.env`) every day at 08:00 Argentina time with the previous day's figures: scrobbles, users, Pro subscriptions, expired YouTube Music sessions, support emails. Code in `apps/worker/src/daily-report.ts`; send one by hand on the VPS with `node --env-file=.env -e "require('./apps/worker/dist/daily-report').sendDailyReportNow()"` from the repo root.
+- **Questions by email**: the report's Reply-To is the support address. When the inbound webhook (served from Vercel) gets an email from `REPORT_EMAIL` that passed SPF/DKIM/DMARC, it goes to the analyst agent (`apps/web/lib/analyst`) instead of the support agent. The analyst runs read-only SQL and emails the answer back to the maintainer only.
+- **Its database access** is the PostgreSQL role `scrobbler_analyst` (`ANALYST_DATABASE_URL` on Vercel): `SELECT` on `"Song"` and `"SupportEmail"`, and on `"User"` every column except `ytmusicCookie` and `lastFmSessionKey`; read-only by default, 10 s statement timeout. **Column grants do not cover columns added later**: after a migration adds a `User` column the analyst should read, run `GRANT SELECT ("newColumn") ON "User" TO scrobbler_analyst;` on the VPS database.
+
 ## Billing
 
 New subscriptions are billed through **Stripe**; subscriptions bought before the move stay on **Paddle** until they end. Both run side by side.

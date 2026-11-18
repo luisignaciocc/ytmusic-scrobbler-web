@@ -2,6 +2,8 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { CreateEmailOptions, Resend } from "resend";
 
+import { runAnalystAgent } from "@/lib/analyst/agent";
+import { isAnalystConfigured, runReadOnlyQuery } from "@/lib/analyst/sql";
 import {
   cancelAtPeriodEnd,
   isBillingConfigured,
@@ -64,6 +66,9 @@ function config() {
       .split(",")
       .map((d) => d.trim().toLowerCase()),
     appUrl: APP_URL ?? "https://scrobbler.bocono-labs.com",
+    // The maintainer: receives the daily report, and their verified emails
+    // (usually replies to it) go to the analyst agent instead of support.
+    reportEmail: process.env.REPORT_EMAIL?.trim().toLowerCase() || null,
   };
 }
 
@@ -178,6 +183,38 @@ export async function POST(request: Request) {
     if (skipReason) {
       await finish({ status: "skipped", detail: skipReason });
       return new Response("skipped");
+    }
+
+    // Questions from the maintainer about the data (replies to the daily
+    // report). Only for a verified sender: a forged From address falls
+    // through to the ordinary support agent, which has no database access.
+    if (
+      cfg.reportEmail &&
+      sender === cfg.reportEmail &&
+      verified &&
+      isAnalystConfigured()
+    ) {
+      const answer = await runAnalystAgent(
+        { subject: subject ?? "", text },
+        {
+          runSql: runReadOnlyQuery,
+          sendAnswer: (body: string) =>
+            sendChecked(cfg, {
+              from: cfg.from,
+              to: replyTo,
+              subject: /^re:/i.test(subject ?? "") ? subject : `Re: ${subject}`,
+              text: body,
+              headers: { "In-Reply-To": messageId, References: messageId },
+            }),
+        },
+      );
+      await finish({
+        status: answer ? "replied" : "error",
+        category: "analyst",
+        action: answer ? "reply" : null,
+        detail: (answer ?? "the analyst agent did not answer").slice(0, 500),
+      });
+      return new Response(answer ? "answered" : "not answered");
     }
 
     // Counts other emails from this sender in the last 24h that replied,
