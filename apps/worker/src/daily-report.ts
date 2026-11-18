@@ -28,6 +28,7 @@ export interface DailyStats {
   lostUsers: { total: number; last30Days: number };
   supportEmails: number;
   supportEscalated: number;
+  supportOverLimit: number; // not answered: the sender hit the daily reply limit
 }
 
 /** Offset of `timeZone` from UTC at `at`, in milliseconds. */
@@ -131,6 +132,7 @@ export async function collectDailyStats(
     lostRecent,
     supportEmails,
     supportEscalated,
+    supportOverLimit,
     newProSubscriptions,
   ] = await Promise.all([
     prisma.song.count({ where: { addedAt: inDay } }),
@@ -164,6 +166,9 @@ export async function collectDailyStats(
     prisma.user.count({ where: { ...lost, lastFailedAt: { gte: thirtyDaysAgo } } }),
     prisma.supportEmail.count({ where: { createdAt: inDay } }),
     prisma.supportEmail.count({ where: { createdAt: inDay, status: "escalated" } }),
+    prisma.supportEmail.count({
+      where: { createdAt: inDay, status: "skipped", detail: "rate limited" },
+    }),
     countNewStripeSubscriptions(start, end),
   ]);
 
@@ -187,6 +192,7 @@ export async function collectDailyStats(
     lostUsers: { total: lostTotal, last30Days: lostRecent },
     supportEmails,
     supportEscalated,
+    supportOverLimit,
   };
 }
 
@@ -230,7 +236,10 @@ export function formatDailyReport(stats: DailyStats): {
     `- Caducadas y sin reconectar: ${n(stats.lostUsers.total)} (${n(stats.lostUsers.last30Days)} en los últimos 30 días)`,
     "",
     "Soporte",
-    `- Correos recibidos: ${n(stats.supportEmails)}, escalados a ti: ${n(stats.supportEscalated)}`,
+    `- Correos recibidos: ${n(stats.supportEmails)}, escalados a ti: ${n(stats.supportEscalated)}` +
+      (stats.supportOverLimit > 0
+        ? `, sin responder por superar el límite diario: ${n(stats.supportOverLimit)}`
+        : ""),
     "",
     "Responde a este correo con cualquier pregunta sobre los datos y te contesto consultando la base.",
   ];

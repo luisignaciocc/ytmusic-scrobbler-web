@@ -35,7 +35,13 @@ export const maxDuration = 60;
 
 const prisma = new PrismaClient();
 
-const MAX_REPLIES_PER_SENDER_PER_DAY = 3;
+// Automatic replies per sender in 24 hours. Generous on purpose: it is there
+// to stop mail loops and abuse, not conversations (a user going back and
+// forth while reconnecting easily writes 4 or 5 times). Over it, the email is
+// recorded as skipped and counted in the daily report, without emailing the
+// maintainer. SUPPORT_MAX_REPLIES_PER_DAY overrides it.
+const MAX_REPLIES_PER_SENDER_PER_DAY =
+  Number(process.env.SUPPORT_MAX_REPLIES_PER_DAY) || 15;
 const MAX_BODY_CHARS = 6000;
 // A row still "processing" after this long belongs to a crashed/timed-out
 // attempt: a webhook retry may take it over (lease).
@@ -218,7 +224,7 @@ export async function POST(request: Request) {
     }
 
     // Counts other emails from this sender in the last 24h that replied,
-    // escalated or are still processing. In-flight rows count, so concurrent
+    // escalated or are still processing (skipped ones do not count). In-flight rows count, so concurrent
     // emails see each other and the cap cannot be exceeded (they may both
     // be held back, which is the safe direction).
     const others = await prisma.supportEmail.count({
@@ -230,14 +236,7 @@ export async function POST(request: Request) {
       },
     });
     if (others >= MAX_REPLIES_PER_SENDER_PER_DAY) {
-      await sendChecked(cfg, {
-        from: cfg.from,
-        to: cfg.escalationEmail,
-        replyTo,
-        subject: `[support escalation] ${subject}`,
-        text: `Reason: sender hit the daily auto-reply limit, needs a human.\nFrom: ${received.from}\n\n---\n${text}`,
-      });
-      await finish({ status: "escalated", detail: "rate limited" });
+      await finish({ status: "skipped", detail: "rate limited" });
       return new Response("rate limited");
     }
 

@@ -44,6 +44,7 @@ describe("formatDailyReport", () => {
     lostUsers: { total: 2795, last30Days: 120 },
     supportEmails: 2,
     supportEscalated: 0,
+    supportOverLimit: 0,
   };
 
   it("puts the key numbers in the subject", () => {
@@ -69,6 +70,13 @@ describe("formatDailyReport", () => {
       expect(text).toContain(expected);
     }
     expect(text.split("\n").length).toBeLessThan(25);
+  });
+
+  it("mentions emails left unanswered by the reply limit only when there are some", () => {
+    expect(formatDailyReport(stats).text).not.toContain("límite");
+    expect(formatDailyReport({ ...stats, supportOverLimit: 2 }).text).toContain(
+      "sin responder por superar el límite diario: 2",
+    );
   });
 
   it("says when new subscriptions could not be read from Stripe", () => {
