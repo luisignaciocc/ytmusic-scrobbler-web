@@ -4,6 +4,7 @@ import {
   createDeletionToken,
   hasLiveSubscription,
   parseAddress,
+  quoteOriginal,
   shouldSkipAutoReply,
   verifyDeletionToken,
 } from "../apps/web/lib/support/guards";
@@ -53,5 +54,45 @@ describe("hasLiveSubscription", () => {
     expect(hasLiveSubscription({ subscriptionId: "s", subscriptionStatus: "active" })).toBe(true);
     expect(hasLiveSubscription({ subscriptionId: "s", subscriptionStatus: "cancelled" })).toBe(false);
     expect(hasLiveSubscription({ subscriptionId: null, subscriptionStatus: "active" })).toBe(false);
+  });
+});
+
+describe("quoteOriginal", () => {
+  const from = "Julia <julia@example.com>";
+
+  it("appends the original message quoted, with sender and date", () => {
+    const result = quoteOriginal("Hi Julia,\n\nYes, that's right.\n", {
+      from,
+      text: "Did I do it right?\nThanks",
+      date: "2026-11-18T18:01:50.000Z",
+    });
+    expect(result).toBe(
+      "Hi Julia,\n\nYes, that's right.\n\n" +
+        "On Wed, 18 Nov 2026 18:01:50 UTC, Julia <julia@example.com> wrote:\n" +
+        "> Did I do it right?\n> Thanks\n",
+    );
+  });
+
+  it("leaves out the date when it is missing or invalid", () => {
+    for (const date of [undefined, null, "not a date"]) {
+      expect(quoteOriginal("Reply", { from, text: "Hello", date })).toBe(
+        "Reply\n\nJulia <julia@example.com> wrote:\n> Hello\n",
+      );
+    }
+  });
+
+  it("keeps blank lines and nests text that was already quoted", () => {
+    const result = quoteOriginal("Reply", {
+      from,
+      text: "Thanks!\r\n\r\nOn Mon, someone wrote:\r\n> earlier answer",
+    });
+    expect(result).toBe(
+      "Reply\n\nJulia <julia@example.com> wrote:\n" +
+        "> Thanks!\n>\n> On Mon, someone wrote:\n>> earlier answer\n",
+    );
+  });
+
+  it("returns the reply unchanged when the original has no text", () => {
+    expect(quoteOriginal("Reply", { from, text: "  \n " })).toBe("Reply");
   });
 });

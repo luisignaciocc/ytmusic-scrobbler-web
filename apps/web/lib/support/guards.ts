@@ -104,3 +104,29 @@ export function hasLiveSubscription(user: {
     user.subscriptionStatus ?? "",
   );
 }
+
+/**
+ * Appends the customer's message to a reply, quoted the way mail clients do
+ * ("On <date>, <sender> wrote:" and "> " on every line). The customer sees
+ * what is being answered, and so does the maintainer, who gets a blind copy
+ * of each reply but never the incoming email.
+ */
+export function quoteOriginal(
+  reply: string,
+  original: { from: string; text: string; date?: string | null },
+): string {
+  const text = original.text.replace(/\r/g, "").trim();
+  if (!text) return reply;
+
+  const parsed = original.date ? new Date(original.date) : null;
+  const when =
+    parsed && !Number.isNaN(parsed.getTime())
+      ? `On ${parsed.toUTCString().replace(" GMT", " UTC")}, `
+      : "";
+  const quoted = text
+    .split("\n")
+    .map((line) => (line.startsWith(">") ? `>${line}` : `> ${line}`).trimEnd())
+    .join("\n");
+
+  return `${reply.trimEnd()}\n\n${when}${original.from} wrote:\n${quoted}\n`;
+}
