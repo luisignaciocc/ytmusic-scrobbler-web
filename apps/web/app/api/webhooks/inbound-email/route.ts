@@ -16,6 +16,7 @@ import {
   createDeletionToken,
   hasLiveSubscription,
   parseAddress,
+  quoteOriginal,
   shouldSkipAutoReply,
 } from "@/lib/support/guards";
 import {
@@ -311,7 +312,11 @@ export async function POST(request: Request) {
           to: replyTo,
           bcc: cfg.escalationEmail,
           subject: /^re:/i.test(subject ?? "") ? subject : `Re: ${subject}`,
-          text: body,
+          text: quoteOriginal(body, {
+            from: received.from,
+            text,
+            date: (received as { created_at?: string | null }).created_at,
+          }),
           headers: threadHeaders,
         }),
 
