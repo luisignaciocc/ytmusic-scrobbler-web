@@ -40,7 +40,7 @@ jobs:
       issue_number: ${{ steps.issue.outputs.issue_number }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0 # the deployed commit is compared with master
 
@@ -191,7 +191,7 @@ jobs:
       actions: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Ask Claude to triage the issue
         uses: anthropics/claude-code-action@v1
