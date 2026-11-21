@@ -14,7 +14,7 @@
     "@prisma/client": "^5.15.0",
     "next": "14.2.35",
     "next-auth": "^4.24.15",
-    "react": "^18",
+    "react": "^19",
     "react-dom": "^18",
     "react-loading-skeleton": "^3.4.0",
     "resend": "^4.2.0",
@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@types/node": "^20",
-    "@types/react": "^18",
+    "@types/react": "^19",
     "@types/react-dom": "^18",
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
